@@ -10,12 +10,12 @@ const App: React.FC = () => {
     return (
         <Router>
             <nav>
-                <Link to="/files">檔案清單</Link> |{' '}
-                <Link to="/analysis">資料分析</Link>
+                <Link to="/">首頁</Link> |{' '}
+                <Link to="/files">檔案清單</Link>
             </nav>
             <Routes>
+                <Route path="/" element={<AnalysisPage/>}/>
                 <Route path="/files" element={<FileManagePage/>}/>
-                <Route path="/analysis" element={<AnalysisPage/>}/>
                 <Route path="/files/:id" element={<FileDetailPage/>}/>
                 <Route path="/analysis/report/:reportId" element={<AnalysisReportPage/>}/>
             </Routes>

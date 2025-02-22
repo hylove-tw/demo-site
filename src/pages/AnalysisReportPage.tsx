@@ -70,12 +70,6 @@ const AnalysisReportPage: React.FC = () => {
       <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
         {JSON.stringify(record.result, null, 2)}
       </pre>
-      <div style={{ marginTop: '1rem' }}>
-        <Link to="/analysis">返回分析報告列表</Link>
-      </div>
-      <div style={{ marginTop: '0.5rem' }}>
-        <Link to="/files">返回檔案管理頁面</Link>
-      </div>
     </div>
   );
 };

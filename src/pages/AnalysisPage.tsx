@@ -154,7 +154,7 @@ const AnalysisPage: React.FC = () => {
 
   return (
     <div>
-      <h1>檔案分析</h1>
+      <h1>腦波分析</h1>
 
       {/* 分析功能選擇與檔案選擇區 */}
       <div>
@@ -227,9 +227,6 @@ const AnalysisPage: React.FC = () => {
             </tbody>
           </table>
         )}
-      </div>
-      <div style={{ marginTop: "1rem" }}>
-        <Link to="/files">返回檔案管理頁面</Link>
       </div>
     </div>
   );
