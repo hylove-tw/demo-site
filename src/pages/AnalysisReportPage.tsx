@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useFileManager, UploadedFile } from '../hooks/useFileManager';
+import { analysisConfig, AnalysisFunctionConfig } from '../config/analysisConfig';
 
 export interface AnalysisHistory {
   id: number;
@@ -22,14 +23,18 @@ function getAnalysisHistory(): AnalysisHistory[] {
 
 const AnalysisReportPage: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
-  const [record, setRecord] = useState<AnalysisHistory | null>(null);
   const { files } = useFileManager();
+  const [record, setRecord] = useState<AnalysisHistory | null>(null);
+  const [analysisConfigItem, setAnalysisConfigItem] = useState<AnalysisFunctionConfig | null>(null);
 
-  // 讀取分析紀錄，找出對應 reportId 的紀錄
   useEffect(() => {
     const history = getAnalysisHistory();
     const rec = history.find(r => r.id === Number(reportId)) || null;
     setRecord(rec);
+    if (rec) {
+      const config = analysisConfig.find((fn: AnalysisFunctionConfig) => fn.id === rec.analysisId) || null;
+      setAnalysisConfigItem(config);
+    }
   }, [reportId]);
 
   if (!record) {
@@ -41,7 +46,7 @@ const AnalysisReportPage: React.FC = () => {
     );
   }
 
-  // 根據 record.selectedFileIds 取得檔案資訊
+  // 根據紀錄中的 selectedFileIds，產生檔案連結（若檔案已被刪除則顯示提示文字）
   const renderSelectedFiles = () => {
     return record.selectedFileIds.map((id, index) => {
       const file: UploadedFile | undefined = files.find(f => f.id === id);
@@ -64,12 +69,21 @@ const AnalysisReportPage: React.FC = () => {
       <h1>分析報告 - {record.analysisName}</h1>
       <p>分析時間：{new Date(record.timestamp).toLocaleString()}</p>
       <p>狀態：{record.status}</p>
+
       <h2>使用的檔案</h2>
       <ul>{renderSelectedFiles()}</ul>
+
       <h2>詳細報告</h2>
-      <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-        {JSON.stringify(record.result, null, 2)}
-      </pre>
+      <div>
+        {analysisConfigItem ? (
+          analysisConfigItem.renderReport(record.result)
+        ) : (
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+            {JSON.stringify(record.result, null, 2)}
+          </pre>
+        )}
+      </div>
+
     </div>
   );
 };

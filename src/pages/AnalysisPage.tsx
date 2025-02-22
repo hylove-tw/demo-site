@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useFileManager, UploadedFile } from '../hooks/useFileManager';
-import { analysisFunctions, AnalysisFunctionConfig } from '../config/analysisFunctions';
+import { analysisConfig, AnalysisFunctionConfig } from '../config/analysisConfig';
 
 export interface AnalysisHistory {
   id: number;
@@ -49,7 +49,7 @@ const AnalysisPage: React.FC = () => {
 
   const handleAnalysisChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const analysisId = e.target.value;
-    const analysis = analysisFunctions.find(fn => fn.id === analysisId) || null;
+    const analysis = analysisConfig.find(fn => fn.id === analysisId) || null;
     setSelectedAnalysis(analysis);
   };
 
@@ -69,7 +69,7 @@ const AnalysisPage: React.FC = () => {
       alert(`請選擇所有檔案：需要 ${selectedAnalysis.requiredFiles.length} 個檔案`);
       return;
     }
-    // 依序根據所選檔案 id 找出檔案資料
+    // 根據所選檔案 id 取得檔案資料
     const selectedFiles: UploadedFile[] = [];
     for (const id of selectedFileIds as number[]) {
       const file = files.find(f => f.id === id);
@@ -79,7 +79,7 @@ const AnalysisPage: React.FC = () => {
       }
       selectedFiles.push(file);
     }
-    // 合併所有選取檔案的資料（依需求可做其他處理）
+    // 合併所有選取檔案的資料（根據需求可做其他處理）
     let combinedData: any[][] = [];
     selectedFiles.forEach(file => {
       combinedData = combinedData.concat(file.data);
@@ -87,7 +87,7 @@ const AnalysisPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // 呼叫所選分析功能的函式
+      // 呼叫所選分析功能的分析方法
       const result = await selectedAnalysis.func(combinedData);
       setAnalysisResult(result);
 
@@ -124,7 +124,7 @@ const AnalysisPage: React.FC = () => {
     }
   };
 
-  // 根據 record.selectedFileIds 取得檔案資訊連結
+  // 根據歷史紀錄中的 selectedFileIds 取得檔案資訊連結
   const renderSelectedFiles = (record: AnalysisHistory) => {
     return record.selectedFileIds.map((id, index) => {
       const file = files.find(f => f.id === id);
@@ -143,7 +143,6 @@ const AnalysisPage: React.FC = () => {
     });
   };
 
-  // 刪除某筆分析紀錄
   const handleDeleteRecord = (recordId: number) => {
     if (window.confirm("確定刪除該分析紀錄嗎？")) {
       const updatedHistory = analysisHistory.filter(record => record.id !== recordId);
@@ -154,20 +153,22 @@ const AnalysisPage: React.FC = () => {
 
   return (
     <div>
-      <h1>腦波分析</h1>
+      <h1>檔案分析</h1>
 
-      {/* 分析功能選擇與檔案選擇區 */}
+      {/* 分析功能選擇 */}
       <div>
         <label>選擇分析功能：</label>
         <select value={selectedAnalysis?.id || ""} onChange={handleAnalysisChange}>
           <option value="">請選擇分析功能</option>
-          {analysisFunctions.map(fn => (
+          {analysisConfig.map(fn => (
             <option key={fn.id} value={fn.id}>
               {fn.name} (需 {fn.requiredFiles.length} 個檔案)
             </option>
           ))}
         </select>
       </div>
+
+      {/* 根據所選功能，動態產生檔案選擇欄位 */}
       {selectedAnalysis && (
         <div>
           <h2>請選擇所需的檔案</h2>
@@ -189,9 +190,11 @@ const AnalysisPage: React.FC = () => {
           ))}
         </div>
       )}
+
       <div style={{ marginTop: "1rem" }}>
         <button onClick={handleAnalyze}>分析</button>
       </div>
+
       {loading && <p>分析中，請稍候...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
