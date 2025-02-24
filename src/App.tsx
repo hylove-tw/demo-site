@@ -10,8 +10,8 @@ const App: React.FC = () => {
     return (
         <Router>
             <nav>
-                <Link to="/">首頁</Link> |{' '}
-                <Link to="/files">檔案清單</Link>
+                <Link to="/">腦波分析</Link> |{' '}
+                <Link to="/files">檔案管理</Link>
             </nav>
             <Routes>
                 <Route path="/" element={<AnalysisPage/>}/>
