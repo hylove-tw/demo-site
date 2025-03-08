@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useFileManager, UploadedFile } from '../hooks/useFileManager';
-import { analysisConfig, AnalysisFunctionConfig } from '../config/analysisConfig';
+import { analysisConfigs, AnalysisFunctionConfig } from '../config/analysisConfigs';
 
 export interface AnalysisHistory {
   id: number;
@@ -32,7 +32,7 @@ const AnalysisReportPage: React.FC = () => {
     const rec = history.find(r => r.id === Number(reportId)) || null;
     setRecord(rec);
     if (rec) {
-      const config = analysisConfig.find((fn: AnalysisFunctionConfig) => fn.id === rec.analysisId) || null;
+      const config = analysisConfigs.find((fn: AnalysisFunctionConfig) => fn.id === rec.analysisId) || null;
       setAnalysisConfigItem(config);
     }
   }, [reportId]);
