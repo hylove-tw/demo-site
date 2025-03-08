@@ -1,86 +1,264 @@
-// 下面的分析方法與報告渲染函式均為占位實作，你可以依據實際需求修改
-// 分析方法
+// src/config/analysisMethods.ts
+import axios from 'axios';
+
+const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhost:3000';
+
+/**
+ * 各分析方法的占位實作，根據傳入的 data 整合成 payload，
+ * 並透過 axios 呼叫對應的 API endpoint。
+ * 注意：此處 payload 格式與 endpoint 僅供參考，請根據實際需求調整。
+ */
+
+// 元神音：腦波影音編碼及播放系統
 export async function brainFeaturesAnalysis(data: any[][]): Promise<any> {
-    // 模擬呼叫 API
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'brainFeatures', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        brain_feature: {
+            beforeBrainData: data,  // 此處請依需求進行轉換
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/brain_features`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 亨運來：H.R 評估系統
 export async function hrAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'HR', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        hr_feature: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/compared_features`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 利養炁 - 正念修行：前測（正常睜眼）與後測（正念閉眼）
 export async function mindfulnessNormalAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Mindfulness_Normal', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        mindfulness: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 利養炁 - 練炁修行：前測（正常睜眼）與後測（運行練炁）
 export async function mindfulnessMovementAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Mindfulness_Movement', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        slope: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/slope`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 利養炁 - 練炁品階：前測（正念閉眼）與後測（運行練炁）
 export async function mindfulnessLevelAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Mindfulness_Level', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        mindfulness_level: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        // 此 endpoint 可根據實際 API 文件修改
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 貞天賦：潛能評估系統
 export async function potentialAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Potential', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        potential: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/human_resource_data`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 易 - 情緒管理系統
 export async function emotionManagementAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Emotion_Management', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        sentiment: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 易 - 寵物評比測試（視覺、觸覺）
 export async function petTestAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Pet_Test', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        pet_test: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        // 假設此端點用於此測試模式
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 易 - 品茶/品酒/品咖啡評比測試（嗅覺、味覺）
 export async function beverageTestAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Beverage_Test', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        beverage: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 易 - 香水評比測試（嗅覺）
 export async function perfumeTestAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Perfume_Test', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        perfume: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 易 - 音樂演奏/歌曲演唱評比測試（聽覺）
 export async function musicTestAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Music_Test', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        music: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 易 - 短視頻廣告評比測試（視覺、聽覺）
 export async function videoTestAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Video_Test', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        video: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 珍寶炁：最佳炁場之礦物結晶體測試系統
 export async function mineralCrystalAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Mineral_Crystal', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        mineral: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }
 
+// 情香意：最佳炁場之香氛測試系統
 export async function qingxiangyiAnalysis(data: any[][]): Promise<any> {
-    return new Promise((resolve) =>
-        setTimeout(() => resolve({analysis: 'Qingxiangyi', dataLength: data.length}), 1000)
-    );
+    const payload = {
+        qingxiangyi: {
+            beforeBrainData: data,
+            afterBrainData: data,
+        },
+    };
+    try {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+            headers: {'Content-Type': 'application/json'},
+        });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 }

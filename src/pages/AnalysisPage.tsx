@@ -4,6 +4,11 @@ import {Link} from 'react-router-dom';
 import {useFileManager, UploadedFile} from '../hooks/useFileManager';
 import {analysisConfigs, AnalysisConfig, AnalysisOptions} from '../config/analysisConfigs';
 
+export enum AnalysisStatus {
+    Success = '成功',
+    Failure = '失敗',
+}
+
 export interface AnalysisHistory {
     id: number;
     analysisId: string;
@@ -11,7 +16,7 @@ export interface AnalysisHistory {
     selectedFileIds: number[];
     result: any;
     timestamp: string;
-    status: '成功' | '失敗';
+    status: AnalysisStatus;
 }
 
 const ANALYSIS_HISTORY_KEY = 'analysisHistory';
@@ -97,7 +102,7 @@ const AnalysisPage: React.FC = () => {
                 selectedFileIds: selectedFileIds as number[],
                 result,
                 timestamp: new Date().toISOString(),
-                status: '成功'
+                status: AnalysisStatus.Success
             };
             const updatedHistory = [newRecord, ...analysisHistory];
             setAnalysisHistory(updatedHistory);
@@ -112,7 +117,7 @@ const AnalysisPage: React.FC = () => {
                 selectedFileIds: selectedFileIds as number[],
                 result: err.message || "未知錯誤",
                 timestamp: new Date().toISOString(),
-                status: '失敗'
+                status: AnalysisStatus.Failure
             };
             const updatedHistory = [newRecord, ...analysisHistory];
             setAnalysisHistory(updatedHistory);
@@ -140,6 +145,39 @@ const AnalysisPage: React.FC = () => {
             );
         });
     };
+
+    const handleRetry = (recordId: number) => {
+        const record = analysisHistory.find(r => r.id === recordId);
+        if (record) {
+            const selectedFiles = record.selectedFileIds.map(id => files.find(f => f.id === id));
+            if (selectedFiles.some(f => !f)) {
+                alert("選擇的檔案不存在，無法重試");
+                return;
+            }
+            const combinedData: any[][] = selectedFiles.map(f => f!.data).reduce((acc, data) => acc.concat(data), []);
+            setLoading(true);
+            setError(null);
+            try {
+                const result = selectedAnalysis?.func(combinedData);
+                if (result) {
+                    const updatedRecord = {...record, result, status: AnalysisStatus.Success};
+                    const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
+                    setAnalysisHistory(updatedHistory);
+                    saveAnalysisHistory(updatedHistory);
+                } else {
+                    throw new Error("分析失敗");
+                }
+            } catch (err: any) {
+                setError(err.message || "分析失敗");
+                const updatedRecord = {...record, result: err.message || "未知錯誤", status: AnalysisStatus.Failure};
+                const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
+                setAnalysisHistory(updatedHistory);
+                saveAnalysisHistory(updatedHistory);
+            } finally {
+                setLoading(false);
+            }
+        }
+    }
 
     const handleDeleteRecord = (recordId: number) => {
         if (window.confirm("確定刪除該分析紀錄嗎？")) {
@@ -223,7 +261,15 @@ const AnalysisPage: React.FC = () => {
                                 <td>{renderSelectedFiles(record)}</td>
                                 <td>{record.status}</td>
                                 <td>
-                                    <Link to={`/analysis/report/${record.id}`}>瀏覽報告</Link>{" "}
+                                    {/* if status is '成功', show link */}
+                                    {record.status === AnalysisStatus.Success && (
+                                        <Link to={`/analysis/report/${record.id}`}>瀏覽報告</Link>
+                                    )}
+                                    {/* if status is '失敗', show retry button */}
+                                    {record.status === AnalysisStatus.Failure && (
+                                        <button onClick={() => handleRetry(record.id)}>重試</button>
+                                    )}
+                                    {/* show delete button */}
                                     <button onClick={() => handleDeleteRecord(record.id)}>刪除</button>
                                 </td>
                             </tr>
