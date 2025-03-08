@@ -2,7 +2,7 @@
 import React, {useState, useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {useFileManager, UploadedFile} from '../hooks/useFileManager';
-import {analysisConfigs, AnalysisFunctionConfig} from '../config/analysisConfigs';
+import {analysisConfigs, AnalysisConfig} from '../config/analysisConfigs';
 
 export interface AnalysisHistory {
     id: number;
@@ -27,7 +27,7 @@ function saveAnalysisHistory(history: AnalysisHistory[]) {
 
 const AnalysisPage: React.FC = () => {
     const {files} = useFileManager();
-    const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisFunctionConfig | null>(null);
+    const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisConfig | null>(null);
     const [selectedFileIds, setSelectedFileIds] = useState<(number | null)[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -169,7 +169,9 @@ const AnalysisPage: React.FC = () => {
             {/* 根據所選功能，動態產生檔案選擇欄位 */}
             {selectedAnalysis && (
                 <div>
-                    <h2>請選擇所需的檔案</h2>
+                    <h2>已選擇：{selectedAnalysis.name}</h2>
+                    <p>{selectedAnalysis.description}</p>
+                    <h3>請選擇所需的檔案</h3>
                     {selectedAnalysis.requiredFiles.map((reqFile, index) => (
                         <div key={index}>
                             <label>{reqFile.verbose_name}：</label>

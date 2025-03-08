@@ -1,5 +1,3 @@
-
-
 // 下面的分析方法與報告渲染函式均為占位實作，你可以依據實際需求修改
 // 分析方法
 export async function brainFeaturesAnalysis(data: any[][]): Promise<any> {
@@ -78,5 +76,11 @@ export async function videoTestAnalysis(data: any[][]): Promise<any> {
 export async function mineralCrystalAnalysis(data: any[][]): Promise<any> {
     return new Promise((resolve) =>
         setTimeout(() => resolve({analysis: 'Mineral_Crystal', dataLength: data.length}), 1000)
+    );
+}
+
+export async function qingxiangyiAnalysis(data: any[][]): Promise<any> {
+    return new Promise((resolve) =>
+        setTimeout(() => resolve({analysis: 'Qingxiangyi', dataLength: data.length}), 1000)
     );
 }

@@ -38,3 +38,10 @@ export const renderMineralReport = (result: any): React.ReactNode => (
         <pre>{JSON.stringify(result, null, 2)}</pre>
     </div>
 );
+
+export const renderQingxiangyiReport = (result: any): React.ReactNode => (
+    <div>
+        <h3>情香意報告</h3>
+        <pre>{JSON.stringify(result, null, 2)}</pre>
+    </div>
+);

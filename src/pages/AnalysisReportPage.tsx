@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useFileManager, UploadedFile } from '../hooks/useFileManager';
-import { analysisConfigs, AnalysisFunctionConfig } from '../config/analysisConfigs';
+import { analysisConfigs, AnalysisConfig } from '../config/analysisConfigs';
 
 export interface AnalysisHistory {
   id: number;
@@ -25,14 +25,14 @@ const AnalysisReportPage: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const { files } = useFileManager();
   const [record, setRecord] = useState<AnalysisHistory | null>(null);
-  const [analysisConfigItem, setAnalysisConfigItem] = useState<AnalysisFunctionConfig | null>(null);
+  const [analysisConfigItem, setAnalysisConfigItem] = useState<AnalysisConfig | null>(null);
 
   useEffect(() => {
     const history = getAnalysisHistory();
     const rec = history.find(r => r.id === Number(reportId)) || null;
     setRecord(rec);
     if (rec) {
-      const config = analysisConfigs.find((fn: AnalysisFunctionConfig) => fn.id === rec.analysisId) || null;
+      const config = analysisConfigs.find((fn: AnalysisConfig) => fn.id === rec.analysisId) || null;
       setAnalysisConfigItem(config);
     }
   }, [reportId]);
