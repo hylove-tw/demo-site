@@ -3,6 +3,7 @@ import React, {useState, useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {useFileManager, UploadedFile} from '../hooks/useFileManager';
 import {analysisConfigs, AnalysisConfig, AnalysisOptions} from '../config/analysisConfigs';
+import {useUserManager} from '../hooks/useUserManager';
 
 export enum Status {
     Success = '成功',
@@ -16,6 +17,7 @@ export interface AnalysisHistory {
     selectedFileIds: number[];
     result: any;
     timestamp: string;
+    userId: string;
     status: Status;
 }
 
@@ -32,6 +34,7 @@ function saveAnalysisHistory(history: AnalysisHistory[]) {
 
 const AnalysisPage: React.FC = () => {
     const {files} = useFileManager();
+    const {currentUser, users} = useUserManager();
     const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisConfig | null>(null);
     const [selectedFileIds, setSelectedFileIds] = useState<(number | null)[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -89,7 +92,7 @@ const AnalysisPage: React.FC = () => {
             combinedData = combinedData.concat(file.data);
         });
 
-        console.log(combinedData)
+        console.log(combinedData);
 
         setLoading(true);
         try {
@@ -104,7 +107,8 @@ const AnalysisPage: React.FC = () => {
                 selectedFileIds: selectedFileIds as number[],
                 result,
                 timestamp: new Date().toISOString(),
-                status: Status.Success
+                userId: currentUser ? currentUser.id : 'unknown',
+                status: Status.Success,
             };
             const updatedHistory = [newRecord, ...analysisHistory];
             setAnalysisHistory(updatedHistory);
@@ -119,7 +123,8 @@ const AnalysisPage: React.FC = () => {
                 selectedFileIds: selectedFileIds as number[],
                 result: err.message || "未知錯誤",
                 timestamp: new Date().toISOString(),
-                status: Status.Failure
+                userId: currentUser ? currentUser.id : 'unknown',
+                status: Status.Failure,
             };
             const updatedHistory = [newRecord, ...analysisHistory];
             setAnalysisHistory(updatedHistory);
@@ -159,27 +164,31 @@ const AnalysisPage: React.FC = () => {
             const combinedData: any[][] = selectedFiles.map(f => f!.data).reduce((acc, data) => acc.concat(data), []);
             setLoading(true);
             setError(null);
-            try {
-                const result = selectedAnalysis?.func(combinedData);
-                if (result) {
-                    const updatedRecord = {...record, result, status: Status.Success};
+            // 為避免重複使用 currentAnalysis，使用 record 分析方法
+            record.analysisId &&
+            (async () => {
+                try {
+                    const result = await (analysisConfigs.find(fn => fn.id === record.analysisId)?.func(combinedData));
+                    if (result) {
+                        const updatedRecord = {...record, result, status: Status.Success};
+                        const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
+                        setAnalysisHistory(updatedHistory);
+                        saveAnalysisHistory(updatedHistory);
+                    } else {
+                        throw new Error("分析失敗");
+                    }
+                } catch (err: any) {
+                    setError(err.message || "分析失敗");
+                    const updatedRecord = {...record, result: err.message || "未知錯誤", status: Status.Failure};
                     const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
                     setAnalysisHistory(updatedHistory);
                     saveAnalysisHistory(updatedHistory);
-                } else {
-                    throw new Error("分析失敗");
+                } finally {
+                    setLoading(false);
                 }
-            } catch (err: any) {
-                setError(err.message || "分析失敗");
-                const updatedRecord = {...record, result: err.message || "未知錯誤", status: Status.Failure};
-                const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
-                setAnalysisHistory(updatedHistory);
-                saveAnalysisHistory(updatedHistory);
-            } finally {
-                setLoading(false);
-            }
+            })();
         }
-    }
+    };
 
     const handleDeleteRecord = (recordId: number) => {
         if (window.confirm("確定刪除該分析紀錄嗎？")) {
@@ -204,7 +213,6 @@ const AnalysisPage: React.FC = () => {
             {/* 根據所選功能，動態產生檔案選擇欄位 */}
             {selectedAnalysis && (
                 <div>
-                    {/* 如果有 group 則同時顯示 group 與 name */}
                     <h2>
                         已選擇：
                         {selectedAnalysis.group
@@ -250,32 +258,34 @@ const AnalysisPage: React.FC = () => {
                         <tr>
                             <th>分析時間</th>
                             <th>分析功能</th>
+                            <th>使用者</th>
                             <th>選擇檔案</th>
                             <th>結果</th>
                             <th>操作</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {analysisHistory.map(record => (
-                            <tr key={record.id}>
-                                <td>{new Date(record.timestamp).toLocaleString()}</td>
-                                <td>{record.analysisName}</td>
-                                <td>{renderSelectedFiles(record)}</td>
-                                <td>{record.status}</td>
-                                <td>
-                                    {/* if status is '成功', show link */}
-                                    {record.status === Status.Success && (
-                                        <Link to={`/analysis/report/${record.id}`}>瀏覽報告</Link>
-                                    )}
-                                    {/* if status is '失敗', show retry button */}
-                                    {record.status === Status.Failure && (
-                                        <button onClick={() => handleRetry(record.id)}>重試</button>
-                                    )}
-                                    {/* show delete button */}
-                                    <button onClick={() => handleDeleteRecord(record.id)}>刪除</button>
-                                </td>
-                            </tr>
-                        ))}
+                        {analysisHistory.map(record => {
+                            const userForRecord = users.find(u => u.id === record.userId);
+                            return (
+                                <tr key={record.id}>
+                                    <td>{new Date(record.timestamp).toLocaleString()}</td>
+                                    <td>{record.analysisName}</td>
+                                    <td>{userForRecord ? userForRecord.name : record.userId}</td>
+                                    <td>{renderSelectedFiles(record)}</td>
+                                    <td>{record.status}</td>
+                                    <td>
+                                        {record.status === Status.Success && (
+                                            <Link to={`/analysis/report/${record.id}`}>瀏覽報告</Link>
+                                        )}
+                                        {record.status === Status.Failure && (
+                                            <button onClick={() => handleRetry(record.id)}>重試</button>
+                                        )}
+                                        <button onClick={() => handleDeleteRecord(record.id)}>刪除</button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                         </tbody>
                     </table>
                 )}

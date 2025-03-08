@@ -5,7 +5,7 @@ import FileManagePage from './pages/FileManagePage';
 import AnalysisPage from './pages/AnalysisPage';
 import FileDetailPage from './pages/FileDetailPage';
 import AnalysisReportPage from './pages/AnalysisReportPage';
-import UsersPage from './pages/UserPages';
+import UsersPage from './pages/UsersPage';
 import UserPage from './pages/UserPage';
 import { useUserManager } from './hooks/useUserManager';
 
