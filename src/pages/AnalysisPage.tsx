@@ -2,7 +2,7 @@
 import React, {useState, useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {useFileManager, UploadedFile} from '../hooks/useFileManager';
-import {analysisConfigs, AnalysisConfig} from '../config/analysisConfigs';
+import {analysisConfigs, AnalysisConfig, AnalysisOptions} from '../config/analysisConfigs';
 
 export interface AnalysisHistory {
     id: number;
@@ -152,24 +152,25 @@ const AnalysisPage: React.FC = () => {
     return (
         <div>
             <h1>腦波分析</h1>
-
             {/* 分析功能選擇 */}
             <div>
                 <label>選擇分析功能：</label>
                 <select value={selectedAnalysis?.id || ""} onChange={handleAnalysisChange}>
                     <option value="">請選擇分析功能</option>
-                    {analysisConfigs.map(fn => (
-                        <option key={fn.id} value={fn.id}>
-                            {fn.name} (需 {fn.requiredFiles.length} 個檔案)
-                        </option>
-                    ))}
+                    <AnalysisOptions/>
                 </select>
             </div>
 
             {/* 根據所選功能，動態產生檔案選擇欄位 */}
             {selectedAnalysis && (
                 <div>
-                    <h2>已選擇：{selectedAnalysis.name}</h2>
+                    {/* 如果有 group 則同時顯示 group 與 name */}
+                    <h2>
+                        已選擇：
+                        {selectedAnalysis.group
+                            ? `${selectedAnalysis.group} - ${selectedAnalysis.name}`
+                            : selectedAnalysis.name}
+                    </h2>
                     <p>{selectedAnalysis.description}</p>
                     <h3>請選擇所需的檔案</h3>
                     {selectedAnalysis.requiredFiles.map((reqFile, index) => (
