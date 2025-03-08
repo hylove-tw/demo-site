@@ -76,7 +76,7 @@ const AnalysisReportPage: React.FC = () => {
       <h2>詳細報告</h2>
       <div>
         {analysisConfigItem ? (
-          analysisConfigItem.renderReport(record.result)
+          analysisConfigItem.renderReport(record)
         ) : (
           <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
             {JSON.stringify(record.result, null, 2)}
