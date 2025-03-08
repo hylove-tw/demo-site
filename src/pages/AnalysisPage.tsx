@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom';
 import {useFileManager, UploadedFile} from '../hooks/useFileManager';
 import {analysisConfigs, AnalysisConfig, AnalysisOptions} from '../config/analysisConfigs';
 
-export enum AnalysisStatus {
+export enum Status {
     Success = '成功',
     Failure = '失敗',
 }
@@ -16,7 +16,7 @@ export interface AnalysisHistory {
     selectedFileIds: number[];
     result: any;
     timestamp: string;
-    status: AnalysisStatus;
+    status: Status;
 }
 
 const ANALYSIS_HISTORY_KEY = 'analysisHistory';
@@ -89,6 +89,8 @@ const AnalysisPage: React.FC = () => {
             combinedData = combinedData.concat(file.data);
         });
 
+        console.log(combinedData)
+
         setLoading(true);
         try {
             // 呼叫所選分析功能的分析方法
@@ -102,7 +104,7 @@ const AnalysisPage: React.FC = () => {
                 selectedFileIds: selectedFileIds as number[],
                 result,
                 timestamp: new Date().toISOString(),
-                status: AnalysisStatus.Success
+                status: Status.Success
             };
             const updatedHistory = [newRecord, ...analysisHistory];
             setAnalysisHistory(updatedHistory);
@@ -117,7 +119,7 @@ const AnalysisPage: React.FC = () => {
                 selectedFileIds: selectedFileIds as number[],
                 result: err.message || "未知錯誤",
                 timestamp: new Date().toISOString(),
-                status: AnalysisStatus.Failure
+                status: Status.Failure
             };
             const updatedHistory = [newRecord, ...analysisHistory];
             setAnalysisHistory(updatedHistory);
@@ -160,7 +162,7 @@ const AnalysisPage: React.FC = () => {
             try {
                 const result = selectedAnalysis?.func(combinedData);
                 if (result) {
-                    const updatedRecord = {...record, result, status: AnalysisStatus.Success};
+                    const updatedRecord = {...record, result, status: Status.Success};
                     const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
                     setAnalysisHistory(updatedHistory);
                     saveAnalysisHistory(updatedHistory);
@@ -169,7 +171,7 @@ const AnalysisPage: React.FC = () => {
                 }
             } catch (err: any) {
                 setError(err.message || "分析失敗");
-                const updatedRecord = {...record, result: err.message || "未知錯誤", status: AnalysisStatus.Failure};
+                const updatedRecord = {...record, result: err.message || "未知錯誤", status: Status.Failure};
                 const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
                 setAnalysisHistory(updatedHistory);
                 saveAnalysisHistory(updatedHistory);
@@ -262,11 +264,11 @@ const AnalysisPage: React.FC = () => {
                                 <td>{record.status}</td>
                                 <td>
                                     {/* if status is '成功', show link */}
-                                    {record.status === AnalysisStatus.Success && (
+                                    {record.status === Status.Success && (
                                         <Link to={`/analysis/report/${record.id}`}>瀏覽報告</Link>
                                     )}
                                     {/* if status is '失敗', show retry button */}
-                                    {record.status === AnalysisStatus.Failure && (
+                                    {record.status === Status.Failure && (
                                         <button onClick={() => handleRetry(record.id)}>重試</button>
                                     )}
                                     {/* show delete button */}

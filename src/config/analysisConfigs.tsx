@@ -30,7 +30,7 @@ import {
 // 定義單一檔案需求型別
 export interface AnalysisRequiredFile {
     verbose_name: string; // 用於 UI 顯示的名稱，例如「前測資料」
-    name: string;         // 內部識別鍵，例如 "beforeData"
+    name: string;         // 內部識別鍵，例如 "beforeBrainData"
 }
 
 // 定義分析功能設定型別，新增 description 屬性
@@ -51,8 +51,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '元神音',
         description: '單人腦波影音編碼及播放系統，專注於個人腦波數據的動態編碼與影音展示。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: brainFeaturesAnalysis,
         renderReport: renderBrainFeaturesReport,
@@ -63,8 +63,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '亨運來',
         description: 'H.R 評估系統，用於評估個人的人力資源潛能及工作適配度。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: hrAnalysis,
         renderReport: renderHRReport,
@@ -75,8 +75,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '正念修行',
         description: '正念修行模式，通過前測（正常睜眼）與後測（正念閉眼）的數據對比，評估身心指數。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: mindfulnessNormalAnalysis,
         renderReport: renderMindfulnessReport,
@@ -87,8 +87,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '練炁修行',
         description: '練炁修行模式，前測為正常睜眼，後測為運行練炁，評估能量運行狀態。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: mindfulnessMovementAnalysis,
         renderReport: renderMindfulnessReport,
@@ -99,8 +99,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '練炁品階',
         description: '練炁品階模式，前測為正念閉眼，後測為運行練炁，評估修行層級及品質。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: mindfulnessLevelAnalysis,
         renderReport: renderMindfulnessReport,
@@ -111,8 +111,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '貞天賦',
         description: '潛能評估系統，通過腦波數據評估個人的潛能表現與能量分布。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: potentialAnalysis,
         renderReport: renderPotentialReport,
@@ -123,8 +123,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '情緒管理系統',
         description: '情緒管理系統，針對情緒狀態進行評估與管理，涵蓋多種情緒測試模式。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: emotionManagementAnalysis,
         renderReport: renderEmotionReport,
@@ -135,8 +135,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '寵物評比測試',
         description: '透過視覺與觸覺測試，評估並匹配最適合的寵物相關指標。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: petTestAnalysis,
         renderReport: renderEmotionReport,
@@ -147,8 +147,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '品茶/品酒/品咖啡評比測試',
         description: '基於嗅覺與味覺評比，提供茶、酒、咖啡等飲品的評估參考。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: beverageTestAnalysis,
         renderReport: renderEmotionReport,
@@ -159,8 +159,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '香水評比測試',
         description: '以嗅覺為主的測試模式，評估並推薦最適合使用者的香水。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: perfumeTestAnalysis,
         renderReport: renderEmotionReport,
@@ -171,8 +171,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '音樂演奏/歌曲演唱評比測試',
         description: '針對聽覺進行的評比測試，檢視音樂表現及腦波反應。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: musicTestAnalysis,
         renderReport: renderEmotionReport,
@@ -183,8 +183,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '短視頻廣告評比測試',
         description: '綜合視覺與聽覺的評比，評估視頻廣告對情緒與認知的影響。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: videoTestAnalysis,
         renderReport: renderEmotionReport,
@@ -195,8 +195,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '珍寶炁',
         description: '最佳炁場之礦物結晶體測試系統，利用腦波與情緒數據推薦最適合的結晶體產品（台灣專利）。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: mineralCrystalAnalysis,
         renderReport: renderMineralReport,
@@ -207,8 +207,8 @@ export const analysisConfigs: AnalysisConfig[] = [
         name: '情香意',
         description: '最佳炁場之香氛測試系統，通過腦波與情緒數據分析，推薦適合的香氛產品，並提供詳細報告與對照表。',
         requiredFiles: [
-            {verbose_name: '前測資料', name: 'beforeData'},
-            {verbose_name: '後測資料', name: 'afterData'},
+            {verbose_name: '前測資料', name: 'beforeBrainData'},
+            {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
         func: qingxiangyiAnalysis,
         renderReport: renderQingxiangyiReport,

@@ -13,8 +13,8 @@ const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhos
 export async function brainFeaturesAnalysis(data: any[][]): Promise<any> {
     const payload = {
         brain_feature: {
-            beforeBrainData: data,  // 此處請依需求進行轉換
-            afterBrainData: data,
+            beforeBrainData: data[0],  // 此處請依需求進行轉換
+            afterBrainData: data[1],
         },
     };
     try {
@@ -30,13 +30,11 @@ export async function brainFeaturesAnalysis(data: any[][]): Promise<any> {
 // 亨運來：H.R 評估系統
 export async function hrAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        hr_feature: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+        beforeBrainData: data[0],
+        afterBrainData: data[1],
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/compared_features`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/human_resource_data`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;
@@ -48,13 +46,12 @@ export async function hrAnalysis(data: any[][]): Promise<any> {
 // 利養炁 - 正念修行：前測（正常睜眼）與後測（正念閉眼）
 export async function mindfulnessNormalAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        mindfulness: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+        // find data object name which is same as the payload object name
+        beforeBrainData: data[0],
+        afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/mindfulness`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;
@@ -66,13 +63,11 @@ export async function mindfulnessNormalAnalysis(data: any[][]): Promise<any> {
 // 利養炁 - 練炁修行：前測（正常睜眼）與後測（運行練炁）
 export async function mindfulnessMovementAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        slope: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+        beforeBrainData: data[0],
+        afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/slope`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/mindfulness`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;
@@ -84,14 +79,12 @@ export async function mindfulnessMovementAnalysis(data: any[][]): Promise<any> {
 // 利養炁 - 練炁品階：前測（正念閉眼）與後測（運行練炁）
 export async function mindfulnessLevelAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        mindfulness_level: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+        beforeBrainData: data[0],
+        afterBrainData: data[1]
     };
     try {
         // 此 endpoint 可根據實際 API 文件修改
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/mindfulness`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;
@@ -103,13 +96,11 @@ export async function mindfulnessLevelAnalysis(data: any[][]): Promise<any> {
 // 貞天賦：潛能評估系統
 export async function potentialAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        potential: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+        beforeBrainData: data[0],
+        afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/human_resource_data`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/talent`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;
@@ -121,10 +112,8 @@ export async function potentialAnalysis(data: any[][]): Promise<any> {
 // 易 - 情緒管理系統
 export async function emotionManagementAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        sentiment: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
@@ -139,10 +128,8 @@ export async function emotionManagementAnalysis(data: any[][]): Promise<any> {
 // 易 - 寵物評比測試（視覺、觸覺）
 export async function petTestAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        pet_test: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         // 假設此端點用於此測試模式
@@ -158,10 +145,8 @@ export async function petTestAnalysis(data: any[][]): Promise<any> {
 // 易 - 品茶/品酒/品咖啡評比測試（嗅覺、味覺）
 export async function beverageTestAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        beverage: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
@@ -176,10 +161,8 @@ export async function beverageTestAnalysis(data: any[][]): Promise<any> {
 // 易 - 香水評比測試（嗅覺）
 export async function perfumeTestAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        perfume: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
@@ -194,10 +177,8 @@ export async function perfumeTestAnalysis(data: any[][]): Promise<any> {
 // 易 - 音樂演奏/歌曲演唱評比測試（聽覺）
 export async function musicTestAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        music: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
@@ -212,10 +193,8 @@ export async function musicTestAnalysis(data: any[][]): Promise<any> {
 // 易 - 短視頻廣告評比測試（視覺、聽覺）
 export async function videoTestAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        video: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
@@ -230,10 +209,8 @@ export async function videoTestAnalysis(data: any[][]): Promise<any> {
 // 珍寶炁：最佳炁場之礦物結晶體測試系統
 export async function mineralCrystalAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        mineral: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
@@ -248,10 +225,8 @@ export async function mineralCrystalAnalysis(data: any[][]): Promise<any> {
 // 情香意：最佳炁場之香氛測試系統
 export async function qingxiangyiAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        qingxiangyi: {
-            beforeBrainData: data,
-            afterBrainData: data,
-        },
+            beforeBrainData: data[0],
+            afterBrainData: data[1]
     };
     try {
         const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
