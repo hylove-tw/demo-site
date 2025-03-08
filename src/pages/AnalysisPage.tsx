@@ -151,7 +151,7 @@ const AnalysisPage: React.FC = () => {
 
     return (
         <div>
-            <h1>檔案分析</h1>
+            <h1>腦波分析</h1>
 
             {/* 分析功能選擇 */}
             <div>
@@ -192,7 +192,7 @@ const AnalysisPage: React.FC = () => {
             )}
 
             <div style={{marginTop: "1rem"}}>
-                <button onClick={handleAnalyze}>分析</button>
+                <button onClick={handleAnalyze} disabled={!selectedAnalysis}>開始分析</button>
             </div>
 
             {loading && <p>分析中，請稍候...</p>}
