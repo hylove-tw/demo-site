@@ -13,7 +13,7 @@ const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhos
 export async function brainFeaturesAnalysis(data: any[][]): Promise<any> {
     const payload = {
         brain_feature: {
-            beforeBrainData: data[0],  // 此處請依需求進行轉換
+            beforeBrainData: data[0],
             afterBrainData: data[1],
         },
     };
@@ -213,7 +213,7 @@ export async function mineralCrystalAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/ore`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;

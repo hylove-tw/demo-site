@@ -33,19 +33,12 @@ export const renderEmotionReport = (result: any): React.ReactNode => (
         <pre>{JSON.stringify(result, null, 2)}</pre>
     </div>
 );
-export const renderMineralReport = (result: any): React.ReactNode => {
-    // 這裡假設 result 中的 recommendedProducts 改名為 recommendedResults
-    return (
-        <ReportLayout
-            companyInfo={result.companyInfo}
-            testInfo={result.testInfo}
-            firstTest={result.firstTest}
-            secondTest={result.secondTest}
-            recommendedResults={result.recommendedResults}
-            explanation={result.explanation}
-        />
-    );
-};
+export const renderMineralReport = (result: any): React.ReactNode => (
+    <div>
+        <h3>礦物報告</h3>
+        <pre>{JSON.stringify(result, null, 2)}</pre>
+    </div>
+);
 export const renderQingxiangyiReport = (result: any): React.ReactNode => (
     <div>
         <h3>情香意報告</h3>
