@@ -1,7 +1,7 @@
 // src/pages/UserPage.tsx
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useUserManager, MemberInfo, UserRole } from '../hooks/useUserManager';
+import { useUserManager, UserInfo, UserRole } from '../hooks/useUserManager';
 import UserForm from '../components/UserForm';
 
 const UserPage: React.FC = () => {
@@ -16,7 +16,7 @@ const UserPage: React.FC = () => {
     return <div>找不到該使用者</div>;
   }
 
-  const handleSave = (updatedUser: MemberInfo) => {
+  const handleSave = (updatedUser: UserInfo) => {
     updateUser(updatedUser);
     setIsEditing(false);
   };

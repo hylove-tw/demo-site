@@ -5,15 +5,14 @@ import { useFileManager, UploadedFile } from '../hooks/useFileManager';
 
 const FileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const fileId = Number(id);
   const { files } = useFileManager();
-
-  const file: UploadedFile | undefined = files.find((f) => f.id === fileId);
+  const fileId = Number(id);
+  const file: UploadedFile | undefined = files.find(f => f.id === fileId);
 
   if (!file) {
     return (
       <div>
-        <p>找不到該檔案。</p>
+        <p>找不到該檔案</p>
         <Link to="/files">返回檔案列表</Link>
       </div>
     );
@@ -22,15 +21,17 @@ const FileDetailPage: React.FC = () => {
   return (
     <div>
       <h1>檔案詳細資訊</h1>
-      <h2>{file.alias}</h2>
+      <h2>{file.alias || file.fileName}</h2>
       <p><strong>原檔名：</strong>{file.fileName}</p>
       <p><strong>上傳時間：</strong>{new Date(file.uploadedAt).toLocaleString()}</p>
-      <h3>資料內容：</h3>
+      <p><strong>所屬使用者：</strong>{file.userId}</p>
+      <h3>檔案內容</h3>
       <textarea
         readOnly
         style={{ width: '100%', height: '400px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
         value={JSON.stringify(file.data, null, 2)}
       />
+      <br />
       <Link to="/files">返回檔案列表</Link>
     </div>
   );

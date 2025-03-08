@@ -1,89 +1,44 @@
 // src/pages/AnalysisReportPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useFileManager, UploadedFile } from '../hooks/useFileManager';
 import { analysisConfigs, AnalysisConfig } from '../config/analysisConfigs';
-
-export interface AnalysisHistory {
-  id: number;
-  analysisId: string;
-  analysisName: string;
-  selectedFileIds: number[];
-  result: any;
-  timestamp: string;
-  status: '成功' | '失敗';
-}
-
-const ANALYSIS_HISTORY_KEY = 'analysisHistory';
-
-function getAnalysisHistory(): AnalysisHistory[] {
-  const stored = window.localStorage.getItem(ANALYSIS_HISTORY_KEY);
-  return stored ? JSON.parse(stored) : [];
-}
+import { useAnalysisManager, AnalysisHistory } from '../hooks/useAnalysisManager';
 
 const AnalysisReportPage: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
-  const { files } = useFileManager();
+  const { history } = useAnalysisManager();
   const [record, setRecord] = useState<AnalysisHistory | null>(null);
-  const [analysisConfigItem, setAnalysisConfigItem] = useState<AnalysisConfig | null>(null);
+  const [config, setConfig] = useState<AnalysisConfig | null>(null);
 
   useEffect(() => {
-    const history = getAnalysisHistory();
-    const rec = history.find(r => r.id === Number(reportId)) || null;
-    setRecord(rec);
-    if (rec) {
-      const config = analysisConfigs.find((fn: AnalysisConfig) => fn.id === rec.analysisId) || null;
-      setAnalysisConfigItem(config);
+    if (reportId) {
+      const id = Number(reportId);
+      const foundRecord = history.find(r => r.id === id) || null;
+      setRecord(foundRecord);
+      if (foundRecord) {
+        const foundConfig = analysisConfigs.find(c => c.id === foundRecord.analysisId) || null;
+        setConfig(foundConfig);
+      }
     }
-  }, [reportId]);
+  }, [reportId, history]);
 
   if (!record) {
     return (
       <div>
-        <p>找不到該分析報告。</p>
-        <Link to="/analysis">返回分析報告列表</Link>
+        找不到報告。<Link to="/">返回分析頁</Link>
       </div>
     );
   }
 
-  // 根據紀錄中的 selectedFileIds，產生檔案連結（若檔案已被刪除則顯示提示文字）
-  const renderSelectedFiles = () => {
-    return record.selectedFileIds.map((id, index) => {
-      const file: UploadedFile | undefined = files.find(f => f.id === id);
-      return (
-        <li key={id}>
-          {file ? (
-            <Link to={`/files/${file.id}`}>
-              {file.alias || file.fileName}
-            </Link>
-          ) : (
-            <span>ID {id} (已刪除)</span>
-          )}
-        </li>
-      );
-    });
-  };
-
   return (
     <div>
-      <h1>分析報告 - {record.analysisName}</h1>
-      <p>分析時間：{new Date(record.timestamp).toLocaleString()}</p>
-      <p>狀態：{record.status}</p>
-
-      <h2>使用的檔案</h2>
-      <ul>{renderSelectedFiles()}</ul>
-
-      <h2>詳細報告</h2>
-      <div>
-        {analysisConfigItem ? (
-          analysisConfigItem.renderReport(record)
-        ) : (
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-            {JSON.stringify(record.result, null, 2)}
-          </pre>
-        )}
-      </div>
-
+      <h1>分析報告</h1>
+      {config ? (
+        config.renderReport(record.result)
+      ) : (
+        <p>找不到對應的分析配置。</p>
+      )}
+      <Link to="/">返回分析頁</Link>
     </div>
   );
 };

@@ -1,15 +1,15 @@
 // src/components/UserForm.tsx
 import React, { useState } from 'react';
-import { MemberInfo, UserRole } from '../hooks/useUserManager';
+import { UserInfo, UserRole } from '../hooks/useUserManager';
 
 interface UserFormProps {
-  initialInfo?: MemberInfo;
-  onSave: (info: MemberInfo) => void;
+  initialInfo?: UserInfo;
+  onSave: (info: UserInfo) => void;
   onCancel: () => void;
 }
 
 const UserForm: React.FC<UserFormProps> = ({ initialInfo, onSave, onCancel }) => {
-  const [form, setForm] = useState<MemberInfo>(
+  const [form, setForm] = useState<UserInfo>(
     initialInfo || {
       id: '',
       name: '',

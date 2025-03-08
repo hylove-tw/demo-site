@@ -3,49 +3,24 @@ import React, {useState, useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {useFileManager, UploadedFile} from '../hooks/useFileManager';
 import {analysisConfigs, AnalysisConfig, AnalysisOptions} from '../config/analysisConfigs';
-import {useUserManager} from '../hooks/useUserManager';
+import {useUserManager} from "../hooks/useUserManager";
+import {useAnalysisManager, AnalysisHistory} from '../hooks/useAnalysisManager';
 
 export enum Status {
     Success = '成功',
     Failure = '失敗',
 }
 
-export interface AnalysisHistory {
-    id: number;
-    analysisId: string;
-    analysisName: string;
-    selectedFileIds: number[];
-    result: any;
-    timestamp: string;
-    userId: string;
-    status: Status;
-}
-
-const ANALYSIS_HISTORY_KEY = 'analysisHistory';
-
-function getAnalysisHistory(): AnalysisHistory[] {
-    const stored = window.localStorage.getItem(ANALYSIS_HISTORY_KEY);
-    return stored ? JSON.parse(stored) : [];
-}
-
-function saveAnalysisHistory(history: AnalysisHistory[]) {
-    window.localStorage.setItem(ANALYSIS_HISTORY_KEY, JSON.stringify(history));
-}
-
 const AnalysisPage: React.FC = () => {
     const {files} = useFileManager();
     const {currentUser, users} = useUserManager();
+    const {history, addHistoryRecord, updateHistoryRecord, removeHistoryRecord} = useAnalysisManager();
+
     const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisConfig | null>(null);
     const [selectedFileIds, setSelectedFileIds] = useState<(number | null)[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistory[]>([]);
 
-    useEffect(() => {
-        setAnalysisHistory(getAnalysisHistory());
-    }, []);
-
-    // 當選擇的分析功能改變時，初始化對應數量的檔案選擇欄位
     useEffect(() => {
         if (selectedAnalysis) {
             setSelectedFileIds(Array(selectedAnalysis.requiredFiles.length).fill(null));
@@ -92,14 +67,9 @@ const AnalysisPage: React.FC = () => {
             combinedData = combinedData.concat(file.data);
         });
 
-        console.log(combinedData);
-
         setLoading(true);
         try {
-            // 呼叫所選分析功能的分析方法
             const result = await selectedAnalysis.func(combinedData);
-
-            // 建立新的分析歷史紀錄（成功）
             const newRecord: AnalysisHistory = {
                 id: Date.now(),
                 analysisId: selectedAnalysis.id,
@@ -110,12 +80,9 @@ const AnalysisPage: React.FC = () => {
                 userId: currentUser ? currentUser.id : 'unknown',
                 status: Status.Success,
             };
-            const updatedHistory = [newRecord, ...analysisHistory];
-            setAnalysisHistory(updatedHistory);
-            saveAnalysisHistory(updatedHistory);
+            addHistoryRecord(newRecord);
         } catch (err: any) {
             setError(err.message || "分析失敗");
-            // 失敗也記錄下來
             const newRecord: AnalysisHistory = {
                 id: Date.now(),
                 analysisId: selectedAnalysis.id,
@@ -126,9 +93,7 @@ const AnalysisPage: React.FC = () => {
                 userId: currentUser ? currentUser.id : 'unknown',
                 status: Status.Failure,
             };
-            const updatedHistory = [newRecord, ...analysisHistory];
-            setAnalysisHistory(updatedHistory);
-            saveAnalysisHistory(updatedHistory);
+            addHistoryRecord(newRecord);
         } finally {
             setLoading(false);
         }
@@ -154,7 +119,7 @@ const AnalysisPage: React.FC = () => {
     };
 
     const handleRetry = (recordId: number) => {
-        const record = analysisHistory.find(r => r.id === recordId);
+        const record = history.find(r => r.id === recordId);
         if (record) {
             const selectedFiles = record.selectedFileIds.map(id => files.find(f => f.id === id));
             if (selectedFiles.some(f => !f)) {
@@ -164,25 +129,17 @@ const AnalysisPage: React.FC = () => {
             const combinedData: any[][] = selectedFiles.map(f => f!.data).reduce((acc, data) => acc.concat(data), []);
             setLoading(true);
             setError(null);
-            // 為避免重複使用 currentAnalysis，使用 record 分析方法
-            record.analysisId &&
             (async () => {
                 try {
-                    const result = await (analysisConfigs.find(fn => fn.id === record.analysisId)?.func(combinedData));
-                    if (result) {
-                        const updatedRecord = {...record, result, status: Status.Success};
-                        const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
-                        setAnalysisHistory(updatedHistory);
-                        saveAnalysisHistory(updatedHistory);
-                    } else {
-                        throw new Error("分析失敗");
-                    }
+                    const func = analysisConfigs.find(fn => fn.id === record.analysisId)?.func;
+                    if (!func) throw new Error("找不到分析方法");
+                    const result = await func(combinedData);
+                    const updatedRecord = {...record, result, status: Status.Success};
+                    updateHistoryRecord(recordId, updatedRecord);
                 } catch (err: any) {
                     setError(err.message || "分析失敗");
                     const updatedRecord = {...record, result: err.message || "未知錯誤", status: Status.Failure};
-                    const updatedHistory = analysisHistory.map(r => (r.id === recordId ? updatedRecord : r));
-                    setAnalysisHistory(updatedHistory);
-                    saveAnalysisHistory(updatedHistory);
+                    updateHistoryRecord(recordId, updatedRecord);
                 } finally {
                     setLoading(false);
                 }
@@ -192,9 +149,7 @@ const AnalysisPage: React.FC = () => {
 
     const handleDeleteRecord = (recordId: number) => {
         if (window.confirm("確定刪除該分析紀錄嗎？")) {
-            const updatedHistory = analysisHistory.filter(record => record.id !== recordId);
-            setAnalysisHistory(updatedHistory);
-            saveAnalysisHistory(updatedHistory);
+            removeHistoryRecord(recordId);
         }
     };
 
@@ -250,7 +205,7 @@ const AnalysisPage: React.FC = () => {
             {/* 分析歷史紀錄區 */}
             <div style={{marginTop: "2rem"}}>
                 <h2>分析歷史紀錄</h2>
-                {analysisHistory.length === 0 ? (
+                {history.length === 0 ? (
                     <p>尚無分析歷史</p>
                 ) : (
                     <table border={1} cellPadding={5}>
@@ -265,7 +220,7 @@ const AnalysisPage: React.FC = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {analysisHistory.map(record => {
+                        {history.map(record => {
                             const userForRecord = users.find(u => u.id === record.userId);
                             return (
                                 <tr key={record.id}>

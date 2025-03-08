@@ -1,13 +1,13 @@
 // src/pages/UsersPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUserManager, MemberInfo, UserRole } from '../hooks/useUserManager';
+import { useUserManager, UserInfo, UserRole } from '../hooks/useUserManager';
 import UserForm from '../components/UserForm';
 
 const UsersPage: React.FC = () => {
   const { users, currentUser, setCurrentUser, addUser, updateUser, removeUser } = useUserManager();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [form, setForm] = useState<MemberInfo | null>(null);
+  const [form, setForm] = useState<UserInfo | null>(null);
   const navigate = useNavigate();
 
   // 切換使用者（直接設定 currentUser）
@@ -39,7 +39,7 @@ const UsersPage: React.FC = () => {
   };
 
   // 編輯使用者：載入選擇的使用者資料
-  const handleEditUser = (user: MemberInfo) => {
+  const handleEditUser = (user: UserInfo) => {
     setForm(user);
     setIsEditing(true);
   };
@@ -52,7 +52,7 @@ const UsersPage: React.FC = () => {
   };
 
   // 表單提交：新增或更新使用者
-  const handleSubmit = (info: MemberInfo) => {
+  const handleSubmit = (info: UserInfo) => {
     if (info.id) {
       updateUser(info);
     } else {
@@ -63,7 +63,7 @@ const UsersPage: React.FC = () => {
   };
 
   // 導向使用者詳細資訊頁面
-  const handleNavToUserDetail = (user: MemberInfo) => {
+  const handleNavToUserDetail = (user: UserInfo) => {
     navigate(`/users/${user.id}`);
   };
 

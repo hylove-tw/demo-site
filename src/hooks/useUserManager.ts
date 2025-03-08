@@ -14,7 +14,7 @@ export enum UserRole {
     Basic = '一般使用者',
 }
 
-export interface MemberInfo {
+export interface UserInfo {
     id: string;
     name: string;
     phone: string;
@@ -24,13 +24,13 @@ export interface MemberInfo {
 }
 
 export function useUserManager() {
-    const [users, setUsers] = useState<MemberInfo[]>([]);
-    const [currentUser, setCurrentUser] = useState<MemberInfo | null>(null);
+    const [users, setUsers] = useState<UserInfo[]>([]);
+    const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem('memberInfos');
         if (stored) {
-            const parsed = JSON.parse(stored) as MemberInfo[];
+            const parsed = JSON.parse(stored) as UserInfo[];
             setUsers(parsed);
             if (parsed.length > 0) {
                 setCurrentUser(parsed[0]);
@@ -38,18 +38,18 @@ export function useUserManager() {
         }
     }, []);
 
-    const saveUsers = (users: MemberInfo[]) => {
+    const saveUsers = (users: UserInfo[]) => {
         localStorage.setItem('memberInfos', JSON.stringify(users));
     };
 
-    const addUser = (user: MemberInfo) => {
+    const addUser = (user: UserInfo) => {
         const newUsers = [...users, user];
         setUsers(newUsers);
         saveUsers(newUsers);
         setCurrentUser(user);
     };
 
-    const updateUser = (user: MemberInfo) => {
+    const updateUser = (user: UserInfo) => {
         const updatedUsers = users.map(u => (u.id === user.id ? user : u));
         setUsers(updatedUsers);
         saveUsers(updatedUsers);
