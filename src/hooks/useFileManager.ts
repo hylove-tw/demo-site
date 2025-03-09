@@ -1,6 +1,5 @@
 // src/hooks/useFileManager.ts
 import { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
 import { transformCSVDataToPayload } from '../utils/transformCSVDataToPayload';
 import { transformExcelDataToPayload } from '../utils/transformExcelDataToPayload';
 
@@ -12,15 +11,6 @@ export interface UploadedFile {
   data: any[][]; // 解析後的資料（例如二維陣列）
   userId: string; // 已更新：該檔案所屬的使用者 ID
 }
-
-/**
- * 簡單的 CSV 解析函式：依照換行符號拆分，再以逗號拆分各欄位
- */
-function parseCSV(csvText: string): any[][] {
-  const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== "");
-  return lines.map(line => line.split(",").map(item => item.trim()));
-}
-
 export function useFileManager() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
