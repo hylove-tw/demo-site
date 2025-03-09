@@ -9,7 +9,7 @@ interface CompanyInfo {
     fax: string;
 }
 
-interface MemberInfo {
+interface User {
     id: string;
     name: string;
     phone: string;
@@ -24,7 +24,7 @@ interface TestInfo {
 }
 
 interface ReportLayoutProps {
-    memberInfo: MemberInfo;
+    user: User;
     testInfo: TestInfo;
     resultContent: any;
     explanation: string;
@@ -32,7 +32,7 @@ interface ReportLayoutProps {
 
 export const ReportLayout: React.FC<ReportLayoutProps> = (
     {
-        memberInfo,
+        user,
         testInfo,
         resultContent,
         explanation,
@@ -41,10 +41,10 @@ export const ReportLayout: React.FC<ReportLayoutProps> = (
         <div style={{fontFamily: 'Arial, sans-serif', lineHeight: 1.6}}>
             {/* 公司資訊區 */}
             <div>
-                <h2>{memberInfo.company.name}</h2>
-                <p>{memberInfo.company.address}</p>
-                <p>統一編號: {memberInfo.company.id}</p>
-                <p>Phone: {memberInfo.company.phone} | Fax: {memberInfo.company.fax}</p>
+                <h2>{user.company.name}</h2>
+                <p>{user.company.address}</p>
+                <p>統一編號: {user.company.id}</p>
+                <p>Phone: {user.company.phone} | Fax: {user.company.fax}</p>
             </div>
             <hr/>
 
@@ -52,7 +52,7 @@ export const ReportLayout: React.FC<ReportLayoutProps> = (
             <div>
                 <h3>測試基本資料</h3>
                 <p>測試名稱: {testInfo.testName}</p>
-                <p>會員編號: {memberInfo.id}</p>
+                <p>會員編號: {user.id}</p>
                 <p>測試時間: {testInfo.testTime}</p>
             </div>
             <hr/>

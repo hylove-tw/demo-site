@@ -1,32 +1,31 @@
 // src/pages/UsersPage.tsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUserManager, UserInfo, UserRole } from '../hooks/useUserManager';
+import { useUserContext } from '../context/UserContext';
+import { User, UserRole } from '../hooks/useUserManager';
 import UserForm from '../components/UserForm';
 
 const UsersPage: React.FC = () => {
-  const { users, currentUser, setCurrentUser, addUser, updateUser, removeUser } = useUserManager();
+  const { users, currentUser, setCurrentUser, addUser, updateUser, removeUser } = useUserContext();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [form, setForm] = useState<UserInfo | null>(null);
-  const navigate = useNavigate();
+  const [form, setForm] = useState<User | null>(null);
 
-  // 切換使用者（直接設定 currentUser）
+  // 切換當前使用者
   const handleSelectUser = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
-    const selected = users.find((user) => user.id === selectedId);
+    const selected = users.find(u => u.id === selectedId);
     if (selected) {
       setCurrentUser(selected);
     }
   };
 
-  // 新增使用者：啟動編輯模式並清空表單
+  // 進入新增使用者狀態
   const handleAddUser = () => {
     setForm({
       id: '',
       name: '',
       phone: '',
       email: '',
-      role: UserRole.Basic,
+      role: UserRole.Basic, // 預設角色
       company: {
         name: '',
         address: '',
@@ -38,8 +37,8 @@ const UsersPage: React.FC = () => {
     setIsEditing(true);
   };
 
-  // 編輯使用者：載入選擇的使用者資料
-  const handleEditUser = (user: UserInfo) => {
+  // 進入編輯使用者狀態
+  const handleEditUser = (user: User) => {
     setForm(user);
     setIsEditing(true);
   };
@@ -51,26 +50,20 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  // 表單提交：新增或更新使用者
-  const handleSubmit = (info: UserInfo) => {
-    if (info.id) {
-      updateUser(info);
+  // 表單提交：若 id 為空則新增，否則更新
+  const handleSubmit = (user: User) => {
+    if (!user.id) {
+      addUser({ ...user, id: Date.now().toString() });
     } else {
-      // 新增使用者：自動產生 id
-      addUser({ ...info, id: Date.now().toString() });
+      updateUser(user);
     }
     setIsEditing(false);
-  };
-
-  // 導向使用者詳細資訊頁面
-  const handleNavToUserDetail = (user: UserInfo) => {
-    navigate(`/users/${user.id}`);
   };
 
   return (
     <div>
       <h1>使用者管理</h1>
-      <div>
+      <div style={{ marginBottom: '1rem' }}>
         <label>切換使用者：</label>
         <select value={currentUser?.id || ''} onChange={handleSelectUser}>
           <option value="">請選擇使用者</option>
@@ -82,7 +75,6 @@ const UsersPage: React.FC = () => {
         </select>
         {currentUser && (
           <>
-            <button onClick={() => handleNavToUserDetail(currentUser)}>檢視詳細資訊</button>
             <button onClick={() => setIsEditing(true)}>編輯使用者資訊</button>
           </>
         )}
@@ -90,11 +82,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       {isEditing && form ? (
-        <UserForm
-          initialInfo={form}
-          onSave={handleSubmit}
-          onCancel={() => setIsEditing(false)}
-        />
+        <UserForm initialInfo={form} onSave={handleSubmit} onCancel={() => setIsEditing(false)} />
       ) : (
         currentUser && (
           <div style={{ marginTop: '1rem' }}>
@@ -122,13 +110,13 @@ const UsersPage: React.FC = () => {
               <strong>統一編號：</strong> {currentUser.company.id}
             </p>
             <p>
-              <strong>公司電話：</strong> {currentUser.company.phone} | <strong>傳真：</strong> {currentUser.company.fax}
+              <strong>公司電話：</strong> {currentUser.company.phone} |{' '}
+              <strong>傳真：</strong> {currentUser.company.fax}
             </p>
           </div>
         )
       )}
 
-      {/* 列出所有使用者 */}
       <h2 style={{ marginTop: '2rem' }}>所有使用者</h2>
       {users.length === 0 ? (
         <p>尚無使用者</p>
@@ -154,7 +142,6 @@ const UsersPage: React.FC = () => {
                 <td>{user.company.name}</td>
                 <td>
                   <button onClick={() => setCurrentUser(user)}>切換</button>
-                  <button onClick={() => handleNavToUserDetail(user)}>檢視</button>
                   <button onClick={() => handleEditUser(user)}>編輯</button>
                   <button onClick={() => handleDeleteUser(user.id)}>刪除</button>
                 </td>

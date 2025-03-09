@@ -2,7 +2,7 @@
 import React from "react";
 import {ReportLayout} from "../components/ReportLayout";
 
-const memberInfo = {
+const user = {
     id: 'U123456',
     name: '王大明',
     phone: '0912345678',
@@ -43,7 +43,7 @@ export const renderHRReport = (result: any): React.ReactNode => {
 
     return (
         <ReportLayout
-            memberInfo={memberInfo}
+            user={user}
             testInfo={testInfo}
             resultContent={resultContent}
             explanation={explanation}

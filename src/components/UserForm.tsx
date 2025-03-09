@@ -1,21 +1,21 @@
 // src/components/UserForm.tsx
 import React, { useState } from 'react';
-import { UserInfo, UserRole } from '../hooks/useUserManager';
+import { User, UserRole } from '../hooks/useUserManager';
 
 interface UserFormProps {
-  initialInfo?: UserInfo;
-  onSave: (info: UserInfo) => void;
+  initialInfo?: User;
+  onSave: (info: User) => void;
   onCancel: () => void;
 }
 
 const UserForm: React.FC<UserFormProps> = ({ initialInfo, onSave, onCancel }) => {
-  const [form, setForm] = useState<UserInfo>(
+  const [form, setForm] = useState<User>(
     initialInfo || {
       id: '',
       name: '',
       phone: '',
       email: '',
-      role: UserRole.Basic,
+      role: UserRole.Basic, // 預設角色
       company: {
         name: '',
         address: '',
@@ -32,7 +32,10 @@ const UserForm: React.FC<UserFormProps> = ({ initialInfo, onSave, onCancel }) =>
       const key = name.split('.')[1];
       setForm({
         ...form,
-        company: { ...form.company, [key]: value },
+        company: {
+          ...form.company,
+          [key]: value,
+        },
       });
     } else if (name === 'role') {
       setForm({ ...form, role: value as UserRole });
@@ -43,8 +46,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialInfo, onSave, onCancel }) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 若 id 為空則自動產生
-    onSave({ ...form, id: form.id || Date.now().toString() });
+    onSave({ ...form });
   };
 
   return (
