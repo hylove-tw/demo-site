@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useUserContext } from '../context/UserContext';
 
 const Navbar: React.FC = () => {
-  const { users, currentUser, setCurrentUser } = useUserContext();
+  const { currentUser, users, setCurrentUser } = useUserContext();
 
   const handleSwitchUser = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
@@ -13,26 +13,40 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav style={{ marginBottom: '1rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem' }}>
-      <Link to="/">腦波分析</Link> |{' '}
-      <Link to="/files">檔案管理</Link> |{' '}
-      <Link to="/users">使用者管理</Link> |{' '}
-      <span>
+    <nav className="navbar bg-base-100 shadow-lg px-4 py-2">
+      <div className="flex-1">
+        <span className="normal-case text-2xl font-bold">
+          Hylove Demo
+        </span>
+        <Link to="/" className="btn btn-ghost normal-case">
+          腦波分析
+        </Link>
+        <Link to="/files" className="btn btn-ghost normal-case">
+          檔案管理
+        </Link>
+        <Link to="/users" className="btn btn-ghost normal-case">
+          使用者管理
+        </Link>
+      </div>
+      <div className="flex-none">
         {currentUser ? (
-          <>
-            當前使用者: {currentUser.name}{' '}
-            <select value={currentUser.id} onChange={handleSwitchUser}>
+          <div className="form-control">
+            <select
+              className="select select-bordered"
+              value={currentUser.id}
+              onChange={handleSwitchUser}
+            >
               {users.map(user => (
                 <option key={user.id} value={user.id}>
                   {user.name}
                 </option>
               ))}
             </select>
-          </>
+          </div>
         ) : (
-          "尚未選擇使用者"
+          <span className="text-sm">尚未設定使用者</span>
         )}
-      </span>
+      </div>
     </nav>
   );
 };

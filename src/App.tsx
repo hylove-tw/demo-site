@@ -6,21 +6,22 @@ import FileManagePage from './pages/FileManagePage';
 import FileDetailPage from './pages/FileDetailPage';
 import AnalysisReportPage from './pages/AnalysisReportPage';
 import UsersPage from './pages/UsersPage';
-import Navbar from './components/Navbar';
+import PageWrapper from './components/PageWrapper';
 import { UserProvider } from './context/UserContext';
 
 const App: React.FC = () => {
   return (
     <UserProvider>
       <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<AnalysisPage />} />
-          <Route path="/files" element={<FileManagePage />} />
-          <Route path="/files/:id" element={<FileDetailPage />} />
-          <Route path="/analysis/report/:reportId" element={<AnalysisReportPage />} />
-          <Route path="/users" element={<UsersPage />} />
-        </Routes>
+        <PageWrapper>
+          <Routes>
+            <Route path="/" element={<AnalysisPage />} />
+            <Route path="/files" element={<FileManagePage />} />
+            <Route path="/files/:id" element={<FileDetailPage />} />
+            <Route path="/analysis/report/:reportId" element={<AnalysisReportPage />} />
+            <Route path="/users" element={<UsersPage />} />
+          </Routes>
+        </PageWrapper>
       </Router>
     </UserProvider>
   );
