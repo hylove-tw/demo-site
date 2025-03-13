@@ -24,21 +24,32 @@ const AnalysisReportPage: React.FC = () => {
 
   if (!record) {
     return (
-      <div>
-        找不到報告。<Link to="/">返回分析頁</Link>
+      <div className="container mx-auto p-4">
+        <div className="alert alert-error">
+          <span>找不到報告。 </span>
+          <Link className="link" to="/">返回分析頁</Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>分析報告</h1>
-      {config ? (
-        config.renderReport(record.result)
-      ) : (
-        <p>找不到對應的分析配置。</p>
-      )}
-      <Link to="/">返回分析頁</Link>
+    <div className="container mx-auto p-4">
+      <div className="card bg-base-100 shadow-xl">
+        <div className="card-body">
+          <h1 className="card-title">分析報告</h1>
+          {config ? (
+            <div>{config.renderReport(record.result)}</div>
+          ) : (
+            <p>找不到對應的分析配置。</p>
+          )}
+          <div className="card-actions justify-end">
+            <Link to="/" className="btn btn-primary">
+              返回分析頁
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
