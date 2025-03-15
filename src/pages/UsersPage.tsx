@@ -87,11 +87,6 @@ const UsersPage: React.FC = () => {
           </select>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-2">
-          {currentUser && (
-            <button className="btn btn-secondary" onClick={() => setIsModalOpen(true)}>
-              編輯使用者
-            </button>
-          )}
           <button className="btn btn-primary" onClick={handleAddUser}>
             新增使用者
           </button>

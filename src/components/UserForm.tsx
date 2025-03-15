@@ -46,7 +46,7 @@ const UserForm: React.FC<UserFormProps> = ({initialInfo, onSave, onCancel}) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // 若 id 為空則自動產生一個 id
-        onSave({...form, id: form.id || Date.now().toString()});
+        onSave({...form});
     };
 
     return (
