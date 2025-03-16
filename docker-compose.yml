@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    environment:
+      # 設定 ENABLE_AUTH 為 "true" 或 "false" 來控制是否啟用 Basic Auth
+      - ENABLE_AUTH=true
+    volumes:
+      # 如果存在本地的 .htpasswd，則掛載到容器中；如果不存在，則不會掛載
+      - "${HTPASSWD_PATH:-./.htpasswd}:/etc/nginx/.htpasswd:ro"
