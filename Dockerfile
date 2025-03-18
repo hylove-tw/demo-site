@@ -1,5 +1,5 @@
 # Stage 1: Build React App
-FROM node:16-alpine AS build
+FROM node:latest AS build
 
 WORKDIR /app
 COPY package*.json ./
@@ -8,7 +8,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Use Nginx to serve the built app with optional Basic Auth
-FROM nginx:alpine
+FROM nginx:latest
 
 # 複製建構出來的靜態檔案
 COPY --from=build /app/build /usr/share/nginx/html

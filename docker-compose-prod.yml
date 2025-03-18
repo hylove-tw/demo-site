@@ -1,9 +1,10 @@
 services:
   web:
-    build: .
+    image: p988744/hylove-demo:latest
     ports:
-      - "8080:80"
+      - "80:80"
     environment:
       - ENABLE_AUTH=true
+    restart: always
     volumes:
       - "${HTPASSWD_PATH:-./.htpasswd}:/etc/nginx/.htpasswd:ro"

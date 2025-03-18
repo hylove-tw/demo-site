@@ -1,46 +1,34 @@
-# Getting Started with Create React App
+# HyLove Demo Site v2
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+https://hylove-demo.good-nas.cc
+admin / lovehy2025
 
-## Available Scripts
+主要更新：
+- 安全性問題修正（密碼改成伺服器端驗證）
+- 多使用者暫存功能，為多人社交平台demo準備（記錄在個人瀏覽器）
+- 檔案暫存功能（記錄在個人瀏覽器）
+- 分析結果暫存功能（記錄在個人瀏覽器）
 
-In the project directory, you can run:
+## Deploy
+### build image
+```bash
+# create a builder (for apple silicon)
+docker buildx create --use --name mybuilder
 
-### `npm start`
+# login to docker hub
+docker login
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+# build image
+docker buildx build --platform linux/amd64,linux/arm64 -t p988744/hylove-demo:latest . --push
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+# prepare nginx basic auth file (Optional)
+htpasswd -c ./nginx/.htpasswd admin
+export HTPASSWD_PATH=$(pwd)/nginx/.htpasswd 
 
-### `npm test`
+# run with docker-compose `docker-compose-prod.yml`
+docker compose up -f docker-compose-prod.yml
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Extra
+### setup cloudflare Tunnel
+`網路` > `Tunnels` > `設定` > `公用主機名稱`
