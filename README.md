@@ -19,7 +19,7 @@ docker buildx create --use --name mybuilder
 docker login
 
 # build image
-docker buildx build --platform linux/amd64,linux/arm64 -t p988744/hylove-demo:latest . --push
+docker buildx build --platform linux/amd64,linux/arm64 -t p988744/hylove-demo:2.1 -t p988744/hylove-demo:latest . --push
 
 # prepare nginx basic auth file (Optional)
 htpasswd -c ./nginx/.htpasswd admin
