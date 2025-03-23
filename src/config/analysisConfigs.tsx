@@ -2,7 +2,7 @@
 import React from 'react';
 import {
     beverageTestAnalysis,
-    brainFeaturesAnalysis,
+    musicAnalysis,
     emotionManagementAnalysis,
     hrAnalysis,
     mindfulnessLevelAnalysis,
@@ -17,7 +17,7 @@ import {
     qingxiangyiAnalysis
 } from './analysisMethods';
 import {
-    renderBrainFeaturesReport,
+    renderBrainWaveMusicReport,
     renderEmotionReport,
     renderHRReport,
     renderMindfulnessReport,
@@ -27,21 +27,33 @@ import {
 } from './analysisRenderers';
 
 
-// 定義單一檔案需求型別
 export interface AnalysisRequiredFile {
-    verbose_name: string; // 用於 UI 顯示的名稱，例如「前測資料」
-    name: string;         // 內部識別鍵，例如 "beforeBrainData"
+    verbose_name: string;
+    name: string;
 }
 
-// 定義分析功能設定型別，新增 description 屬性
+export interface CustomField {
+    label: string;        // 顯示名稱
+    fieldName: string;    // 用來當 key
+    type?: 'string' | 'number' | 'boolean';
+    defaultValue?: any;   // 預設值
+}
+
 export interface AnalysisConfig {
-    id: string;                     // 唯一識別碼
-    group: string;                  // 功能分類群組
-    name: string;                   // 顯示名稱
-    description: string;            // 功能說明
-    requiredFiles: AnalysisRequiredFile[]; // 必須上傳的檔案需求
-    func: (data: any[][]) => Promise<any>;   // 分析方法（例如呼叫 API）
-    renderReport: (result: any) => React.ReactNode; // 報告呈現函式
+    id: string;
+    group: string;
+    name: string;
+    description: string;
+    requiredFiles: AnalysisRequiredFile[];
+    func: (data: any[][], customParams?: Record<string, any>) => Promise<any>;
+    renderReport: (result: any, customParams?: any) => React.ReactNode;
+    // 讓使用者自訂欄位
+    customFields?: CustomField[];
+    // 編輯元件，接收目前的 customParams 與 onChange callback
+    editComponent?: React.FC<{
+        customParams: Record<string, any>;
+        onChange: (newParams: Record<string, any>) => void;
+    }>;
 }
 
 export const analysisConfigs: AnalysisConfig[] = [
@@ -49,13 +61,55 @@ export const analysisConfigs: AnalysisConfig[] = [
         id: 'yuanshenyin',
         group: '',
         name: '元神音',
-        description: '單人腦波影音編碼及播放系統，專注於個人腦波數據的動態編碼與影音展示。',
+        description:
+            '單人腦波影音編碼及播放系統，專注於個人腦波數據的動態編碼與影音展示。',
         requiredFiles: [
             {verbose_name: '前測資料', name: 'beforeBrainData'},
             {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
-        func: brainFeaturesAnalysis,
-        renderReport: renderBrainFeaturesReport,
+        func: musicAnalysis,
+        renderReport: renderBrainWaveMusicReport,
+        customFields: [
+            {
+                label: '樂譜標題',
+                fieldName: 'sheetTitle',
+                type: 'string',
+                defaultValue: 'My Music',
+            },
+            {
+                label: '速度',
+                fieldName: 'soundTempo',
+                type: 'number',
+                defaultValue: 60,
+            },
+        ],
+        editComponent: ({customParams, onChange}) => {
+            return (
+                <div className="flex flex-col space-y-2 p-4 border rounded">
+                    <input
+                        type="text"
+                        className="input input-bordered"
+                        placeholder="樂譜標題"
+                        value={customParams.sheetTitle ?? ""}
+                        onChange={(e) =>
+                            onChange({...customParams, sheetTitle: e.target.value})
+                        }
+                    />
+                    <input
+                        type="number"
+                        className="input input-bordered"
+                        placeholder="速度"
+                        value={customParams.soundTempo ?? ""}
+                        onChange={(e) =>
+                            onChange({
+                                ...customParams,
+                                soundTempo: parseInt(e.target.value) || 0,
+                            })
+                        }
+                    />
+                </div>
+            );
+        },
     },
     {
         id: 'hengyunlai',
@@ -216,37 +270,37 @@ export const analysisConfigs: AnalysisConfig[] = [
 ];
 
 export const AnalysisOptions: React.FC = () => {
-  // 篩選出沒有設定 group 的項目
-  const noGroup = analysisConfigs.filter(fn => !fn.group || fn.group.trim() === "");
-  // 篩選出有 group 的項目
-  const withGroup = analysisConfigs.filter(fn => fn.group && fn.group.trim() !== "");
+    // 篩選出沒有設定 group 的項目
+    const noGroup = analysisConfigs.filter(fn => !fn.group || fn.group.trim() === "");
+    // 篩選出有 group 的項目
+    const withGroup = analysisConfigs.filter(fn => fn.group && fn.group.trim() !== "");
 
-  // 將有 group 的項目依據 group 分組
-  const grouped = withGroup.reduce((acc: Record<string, any[]>, fn) => {
-    const group = fn.group!;
-    if (!acc[group]) {
-      acc[group] = [];
-    }
-    acc[group].push(fn);
-    return acc;
-  }, {});
+    // 將有 group 的項目依據 group 分組
+    const grouped = withGroup.reduce((acc: Record<string, any[]>, fn) => {
+        const group = fn.group!;
+        if (!acc[group]) {
+            acc[group] = [];
+        }
+        acc[group].push(fn);
+        return acc;
+    }, {});
 
-  return (
-    <>
-      {noGroup.map(fn => (
-        <option key={fn.id} value={fn.id}>
-            {fn.name} (需 {fn.requiredFiles.length} 個檔案)
-        </option>
-      ))}
-      {Object.entries(grouped).map(([group, funcs]) => (
-        <optgroup key={group} label={group}>
-          {funcs.map(fn => (
-            <option key={fn.id} value={fn.id}>
-              {group} - {fn.name} (需 {fn.requiredFiles.length} 個檔案)
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </>
-  );
+    return (
+        <>
+            {noGroup.map(fn => (
+                <option key={fn.id} value={fn.id}>
+                    {fn.name} (需 {fn.requiredFiles.length} 個檔案)
+                </option>
+            ))}
+            {Object.entries(grouped).map(([group, funcs]) => (
+                <optgroup key={group} label={group}>
+                    {funcs.map(fn => (
+                        <option key={fn.id} value={fn.id}>
+                            {group} - {fn.name} (需 {fn.requiredFiles.length} 個檔案)
+                        </option>
+                    ))}
+                </optgroup>
+            ))}
+        </>
+    );
 };

@@ -10,15 +10,13 @@ const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhos
  */
 
 // 元神音：腦波影音編碼及播放系統
-export async function brainFeaturesAnalysis(data: any[][]): Promise<any> {
+export async function musicAnalysis(data: any[][]): Promise<any> {
     const payload = {
-        brain_feature: {
             beforeBrainData: data[0],
             afterBrainData: data[1],
-        },
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/brain_features`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/v1/music`, payload, {
             headers: {'Content-Type': 'application/json'},
         });
         return response.data;

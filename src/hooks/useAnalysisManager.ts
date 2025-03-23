@@ -8,6 +8,7 @@ export interface AnalysisHistory {
   analysisName: string;
   selectedFileIds: number[];
   result: any;         // 分析結果，等同於 analysisReport
+  customParams?: Record<string, any>;
   timestamp: string;
   userId: string;
   status: Status;
