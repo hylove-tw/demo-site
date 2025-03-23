@@ -1,5 +1,7 @@
 import synth from 'synth-js'; // Available under the MIT License. https://github.com/patrickroberts/synth-js
 
+
+
 export default class MidiConverter {
     constructor(midi) {
         this.midi = midi;
@@ -19,3 +21,4 @@ export default class MidiConverter {
     }
 
 }
+
