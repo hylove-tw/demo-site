@@ -5,6 +5,7 @@ services:
       - "80:80"
     environment:
       - ENABLE_AUTH=true
+      - REACT_APP_ANALYSIS_API_BASE=/
     restart: always
     volumes:
       - "${HTPASSWD_PATH:-./.htpasswd}:/etc/nginx/.htpasswd:ro"
