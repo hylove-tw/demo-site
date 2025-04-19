@@ -211,12 +211,67 @@ export const renderHRReport = (result: any): React.ReactNode => {
     );
 };
 
-export const renderMindfulnessReport = (result: any): React.ReactNode => (
-    <div>
-        <h3>利養炁報告</h3>
-        <pre>{JSON.stringify(result, null, 2)}</pre>
-    </div>
-);
+export interface MindfulnessReportData {
+    practiceType: string;
+    practiceLevel: string;
+    bodyMind: { comment: string; type: string };
+    vitality: { comment: string; type: string };
+    delta: { comment: string; type: string };
+    theta: { comment: string; type: string };
+    lowAlpha: { comment: string; type: string };
+    highAlpha: { comment: string; type: string };
+    lowBeta: { comment: string; type: string };
+    highBeta: { comment: string; type: string };
+    lowGamma: { comment: string; type: string };
+    highGamma: { comment: string; type: string };
+    en?: any; // 留作未來擴充
+}
+
+export const renderMindfulnessReport = (result: MindfulnessReportData): React.ReactNode => {
+    // 將要渲染的區塊依序放在這裡
+    const sections: Array<[string, { comment: string; type: string }]> = [
+        ['身心狀態', result.bodyMind],
+        ['元氣狀態', result.vitality],
+        ['Delta 頻段', result.delta],
+        ['Theta 頻段', result.theta],
+        ['低 Alpha 頻段', result.lowAlpha],
+        ['高 Alpha 頻段', result.highAlpha],
+        ['低 Beta 頻段', result.lowBeta],
+        ['高 Beta 頻段', result.highBeta],
+        ['低 Gamma 頻段', result.lowGamma],
+        ['高 Gamma 頻段', result.highGamma],
+    ];
+
+    return (
+        <div className="p-6 space-y-6">
+            {/* 報告標題 */}
+            <h2 className="text-3xl font-bold">利養炁報告</h2>
+
+            {/* 修行類型與等級 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="card bg-base-100 shadow p-4">
+                    <h3 className="text-lg font-semibold">修行類型</h3>
+                    <p className="mt-2">{result.practiceType}</p>
+                </div>
+                <div className="card bg-base-100 shadow p-4">
+                    <h3 className="text-lg font-semibold">修行等級</h3>
+                    <p className="mt-2">{result.practiceLevel}</p>
+                </div>
+            </div>
+
+            {/* 各頻段與身心／元氣詳細 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sections.map(([title, info]) => (
+                    <div key={title} className="card bg-base-100 shadow p-4">
+                        <h4 className="text-md font-medium mb-2">{title}</h4>
+                        <p className="text-sm mb-1">{info.comment}</p>
+                        <p className="text-xs text-gray-500">{info.type}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 export const renderPotentialReport = (result: any): React.ReactNode => {
     const fields = [
         result.delta,
@@ -275,7 +330,7 @@ export const renderPotentialReport = (result: any): React.ReactNode => {
 export const renderEmotionReport = (result: any): React.ReactNode => {
     const beforeScores = result.sentimentBefore.data.map((d: any) => d.score);
     const afterScores = result.sentimentAfter.data.map((d: any) => d.score);
-    const categories = result.sentimentBefore.data.map((_: any, i: number) => `樣本 ${i + 1}`);
+    const categories = result.sentimentBefore.data.map((_: any, i: number) => `T ${i + 1}`);
 
     const options: Highcharts.Options = {
         chart: {
@@ -298,7 +353,7 @@ export const renderEmotionReport = (result: any): React.ReactNode => {
                 {
                     value: result.sentimentBefore.sentimentAvg,
                     color: '#f87171',
-                    width: 2,
+                    width: 1,
                     dashStyle: 'ShortDash',
                     label: {
                         text: `前測平均: ${result.sentimentBefore.sentimentAvg}`,
@@ -309,7 +364,7 @@ export const renderEmotionReport = (result: any): React.ReactNode => {
                 {
                     value: result.sentimentAfter.sentimentAvg,
                     color: '#60a5fa',
-                    width: 2,
+                    width: 1,
                     dashStyle: 'ShortDash',
                     label: {
                         text: `後測平均: ${result.sentimentAfter.sentimentAvg}`,
@@ -352,12 +407,47 @@ export const renderEmotionReport = (result: any): React.ReactNode => {
         </div>
     );
 };
-export const renderMineralReport = (result: any): React.ReactNode => (
-    <div>
-        <h3>礦物報告</h3>
-        <pre>{JSON.stringify(result, null, 2)}</pre>
-    </div>
-);
+
+export interface MineralReportData {
+    delta: string;
+    theta: string;
+    lowAlpha: string;
+    highAlpha: string;
+    lowBeta: string;
+    highBeta: string;
+    lowGamma: string;
+    highGamma: string;
+}
+
+export const renderMineralReport = (result: MineralReportData): React.ReactNode => {
+    const sections: Array<[string, string]> = [
+        ['Delta 頻段', result.delta],
+        ['Theta 頻段', result.theta],
+        ['低 Alpha 頻段', result.lowAlpha],
+        ['高 Alpha 頻段', result.highAlpha],
+        ['低 Beta 頻段', result.lowBeta],
+        ['高 Beta 頻段', result.highBeta],
+        ['低 Gamma 頻段', result.lowGamma],
+        ['高 Gamma 頻段', result.highGamma],
+    ];
+
+    return (
+        <div className="p-6 space-y-6">
+            {/* 報告標題 */}
+            <h2 className="text-3xl font-bold">礦物報告</h2>
+
+            {/* 各頻段效果卡片 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {sections.map(([title, comment]) => (
+                    <div key={title} className="card bg-base-100 shadow-md p-4">
+                        <h4 className="text-lg font-medium mb-2">{title}</h4>
+                        <p className="text-sm text-gray-700">{comment}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 export const renderQingxiangyiReport = (result: any): React.ReactNode => (
     <div>
         <h3>情香意報告</h3>
