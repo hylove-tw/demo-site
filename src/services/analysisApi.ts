@@ -1,5 +1,5 @@
 // src/services/analysisApi.ts
-import axios from 'axios';
+import axios from 'axios/dist/node/axios.cjs';
 
 const BASE_URL = 'https://example.com/api'; // 後端 API 網址
 

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from 'axios/dist/node/axios.cjs';
 
 const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhost:3000';
 
