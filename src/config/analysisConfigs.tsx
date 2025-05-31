@@ -8,22 +8,22 @@ import {
     mindfulnessLevelAnalysis,
     mindfulnessMovementAnalysis,
     mindfulnessNormalAnalysis,
-    mineralCrystalAnalysis,
+    treasureAnalysis,
     musicTestAnalysis,
     perfumeTestAnalysis,
     petTestAnalysis,
     potentialAnalysis,
     videoTestAnalysis,
-    qingxiangyiAnalysis
+    perfumeAnalysis
 } from './analysisMethods';
 import {
     renderBrainWaveMusicReport,
     renderEmotionReport,
     renderHRReport,
     renderMindfulnessReport,
-    renderMineralReport,
+    renderTreasureReport,
     renderPotentialReport,
-    renderQingxiangyiReport
+    renderPerfumeReport
 } from './analysisRenderers';
 
 
@@ -252,8 +252,8 @@ export const analysisConfigs: AnalysisConfig[] = [
             {verbose_name: '前測資料', name: 'beforeBrainData'},
             {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
-        func: mineralCrystalAnalysis,
-        renderReport: renderMineralReport,
+        func: treasureAnalysis,
+        renderReport: renderTreasureReport,
     },
     {
         id: 'qingxiangyi',
@@ -264,8 +264,8 @@ export const analysisConfigs: AnalysisConfig[] = [
             {verbose_name: '前測資料', name: 'beforeBrainData'},
             {verbose_name: '後測資料', name: 'afterBrainData'},
         ],
-        func: qingxiangyiAnalysis,
-        renderReport: renderQingxiangyiReport,
+        func: perfumeAnalysis,
+        renderReport: renderPerfumeReport,
     },
 ];
 

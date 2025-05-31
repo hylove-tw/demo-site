@@ -205,33 +205,45 @@ export async function videoTestAnalysis(data: any[][]): Promise<any> {
 }
 
 // 珍寶炁：最佳炁場之礦物結晶體測試系統
-export async function mineralCrystalAnalysis(data: any[][]): Promise<any> {
-    const payload = {
-            beforeBrainData: data[0],
-            afterBrainData: data[1]
-    };
-    try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+export async function treasureAnalysis(data: any[][]): Promise<any> {
+  const payload1 = { beforeBrainData: data[0], afterBrainData: data[1] };
+  // 1) stage1
+  const stage1 = await axios.post(`${API_BASE_URL}/api/v1/treasure/stage1`, payload1);
+  // 2) 以下依 PDF，te_score、te_comment、ea0、ea1、me_score 都在 stage1 回傳
+  //    假設 stage1.data 已含 { te_scores, te_comments, ea0, ea1, me_score }
+  const stage1Data = stage1.data;
+
+  // 3) stage2：時序圖 + wear_ea + pillow_ea
+  const payload2 = {
+    ea_before_timing_diagram: stage1Data.ea0_timing_diagram,
+    ea_after_timing_diagram: stage1Data.ea1_timing_diagram,
+    wear_ea: stage1Data.wear_ea,
+    pillow_ea: stage1Data.pillow_ea,
+  };
+  const stage2 = await axios.post(`${API_BASE_URL}/api/v1/treasure/stage2`, payload2);
+  const stage2Data = stage2.data.stage2 || stage2.data;
+
+  // 合併回傳
+  return {
+    ...stage1Data,
+    ...stage2Data,
+  };
 }
 
 // 情香意：最佳炁場之香氛測試系統
-export async function qingxiangyiAnalysis(data: any[][]): Promise<any> {
-    const payload = {
-            beforeBrainData: data[0],
-            afterBrainData: data[1]
-    };
-    try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
-    } catch (error) {
-        throw error;
-    }
+export async function perfumeAnalysis(data: any[][]): Promise<any> {
+  const payload1 = { beforeBrainData: data[0], afterBrainData: data[1] };
+  const stage1 = await axios.post(`${API_BASE_URL}/api/v1/perfume/stage1`, payload1);
+  const s1 = stage1.data;
+  // 第二階段
+  const payload2 = {
+    ea_before_timing_diagram: s1.ea0_timing_diagram,
+    ea_after_timing_diagram: s1.ea1_timing_diagram,
+    // perfume 特有
+    fragrances: s1.te_comment.te1.fragrances,
+    brands: s1.te_comment.te1.brands,
+  };
+  const stage2 = await axios.post(`${API_BASE_URL}/api/v1/perfume/stage2`, payload2);
+  const s2 = stage2.data.stage2 || stage2.data;
+  return { ...s1, ...s2 };
 }

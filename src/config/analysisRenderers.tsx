@@ -419,38 +419,84 @@ export interface MineralReportData {
     highGamma: string;
 }
 
-export const renderMineralReport = (result: MineralReportData): React.ReactNode => {
-    const sections: Array<[string, string]> = [
-        ['Delta 頻段', result.delta],
-        ['Theta 頻段', result.theta],
-        ['低 Alpha 頻段', result.lowAlpha],
-        ['高 Alpha 頻段', result.highAlpha],
-        ['低 Beta 頻段', result.lowBeta],
-        ['高 Beta 頻段', result.highBeta],
-        ['低 Gamma 頻段', result.lowGamma],
-        ['高 Gamma 頻段', result.highGamma],
-    ];
+export const renderTreasureReport = (result: any): React.ReactNode => {
+    const {te_scores, te_comments, ea0, ea1, me_score, ea_before_timing_diagram, ea_after_timing_diagram} = result;
 
     return (
         <div className="p-6 space-y-6">
-            {/* 報告標題 */}
-            <h2 className="text-3xl font-bold">礦物報告</h2>
+            <h2 className="text-3xl font-bold">珍寶炁報告</h2>
 
-            {/* 各頻段效果卡片 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {sections.map(([title, comment]) => (
-                    <div key={title} className="card bg-base-100 shadow-md p-4">
-                        <h4 className="text-lg font-medium mb-2">{title}</h4>
-                        <p className="text-sm text-gray-700">{comment}</p>
+            {/* TE4 分數表格 */}
+            <div className="grid grid-cols-2 gap-4">
+                {['te1', 'te2', 'te3', 'te4'].map((k, i) => (
+                    <div key={k} className="card bg-base-100 shadow p-4">
+                        <h4 className="font-semibold">TE{i + 1} 分數</h4>
+                        <p>{te_scores[k]}</p>
+                        <p className="text-sm text-gray-500">{te_comments[k]}</p>
                     </div>
                 ))}
+            </div>
+
+            {/* EAn 與 ME */}
+            <div className="grid grid-cols-3 gap-4">
+                <div className="card p-4">EA0: {ea0}</div>
+                <div className="card p-4">EA1: {ea1}</div>
+                <div className="card p-4">ME: {me_score}</div>
+            </div>
+
+            {/* 時序圖（用 Highcharts 當示意） */}
+            <div className="card p-4">
+                <h4 className="mb-2">情緒前後測時序圖</h4>
+                <HighchartsReact
+                    highcharts={Highcharts}
+                    options={{
+                        chart: {type: 'line'},
+                        title: {text: ''},
+                        xAxis: {categories: ea_before_timing_diagram.map((_v: any, i: number) => `T${i + 1}`)},
+                        series: [
+                            {name: '前測', data: ea_before_timing_diagram, type: 'line'},
+                            {name: '後測', data: ea_after_timing_diagram, type: 'line'},
+                        ],
+                    }}
+                />
+            </div>
+
+            {/* 固定文字 A/B */}
+            <div className="card p-4">
+                <h4 className="font-semibold">A.最佳炁場之礦物結晶體</h4>
+                <p>（見 PDF 表二：粉色藍寶石、…）</p>
+            </div>
+            <div className="card p-4">
+                <h4 className="font-semibold">B.推薦市場著名結晶體</h4>
+                <ul className="list-disc list-inside">
+                    <li>Jo Malone …</li>
+                    <li>TOM FORD …</li>
+                    {/* … */}
+                </ul>
             </div>
         </div>
     );
 };
-export const renderQingxiangyiReport = (result: any): React.ReactNode => (
-    <div>
-        <h3>情香意報告</h3>
-        <pre>{JSON.stringify(result, null, 2)}</pre>
-    </div>
-);
+export const renderPerfumeReport = (result: any): React.ReactNode => {
+    const {
+        te_scores, te_comments, ea0, ea1, me_score,
+        ea_before_timing_diagram, ea_after_timing_diagram,
+        fragrances, brands
+    } = result;
+
+    return (
+        <div className="p-6 space-y-6">
+            <h2 className="text-3xl font-bold">情香意報告</h2>
+            {/* 同 TE/EAn/ME/Card, 時序圖 */}
+            {/* … */}
+            <div className="card p-4">
+                <h4 className="font-semibold">A.最佳炁場之中調香氛</h4>
+                <p>{fragrances.join('、')}</p>
+            </div>
+            <div className="card p-4">
+                <h4 className="font-semibold">B.推薦市場著名香氛</h4>
+                <p>{brands.join('、')}</p>
+            </div>
+        </div>
+    );
+};
