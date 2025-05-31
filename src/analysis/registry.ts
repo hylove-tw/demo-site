@@ -36,8 +36,3 @@ export function registerPlugin(plugin: AnalysisPlugin) {
 export function getPlugins(): AnalysisPlugin[] {
   return plugins;
 }
-
-// 僅供測試用途，清除所有已註冊的 plugins
-export function clearPluginsForTest() {
-  plugins.length = 0;
-}
