@@ -1,7 +1,7 @@
 // src/pages/AnalysisReportPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { analysisConfigs, AnalysisConfig } from '../config/analysisConfigs';
+import { getPlugins, AnalysisPlugin } from '../analysis/registry';
 import { useAnalysisManager, AnalysisHistory } from '../hooks/useAnalysisManager';
 import { useUserContext } from '../context/UserContext';
 import ReportLayout, { ReportLayoutProps } from '../components/ReportLayout';
@@ -11,7 +11,7 @@ const AnalysisReportPage: React.FC = () => {
   const { history } = useAnalysisManager();
   const { users } = useUserContext();
   const [record, setRecord] = useState<AnalysisHistory | null>(null);
-  const [config, setConfig] = useState<AnalysisConfig | null>(null);
+  const [config, setConfig] = useState<AnalysisPlugin | null>(null);
 
   useEffect(() => {
     if (reportId) {
@@ -20,7 +20,7 @@ const AnalysisReportPage: React.FC = () => {
       setRecord(foundRecord);
       if (foundRecord) {
         const foundConfig =
-          analysisConfigs.find((c) => c.id === foundRecord.analysisId) || null;
+          getPlugins().find((c) => c.id === foundRecord.analysisId) || null;
         setConfig(foundConfig);
       }
     }

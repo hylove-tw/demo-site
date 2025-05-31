@@ -1,7 +1,5 @@
 // src/config/analysisMethods.ts
-import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhost:3000';
+import { post } from '../services/api';
 
 /**
  * 各分析方法的占位實作，根據傳入的 data 整合成 payload，
@@ -16,10 +14,7 @@ export async function musicAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1],
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/music`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/music', payload);
     } catch (error) {
         throw error;
     }
@@ -32,10 +27,7 @@ export async function hrAnalysis(data: any[][]): Promise<any> {
         afterBrainData: data[1],
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/human_resource_data`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/human_resource_data', payload);
     } catch (error) {
         throw error;
     }
@@ -49,10 +41,7 @@ export async function mindfulnessNormalAnalysis(data: any[][]): Promise<any> {
         afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/mindfulness`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/mindfulness', payload);
     } catch (error) {
         throw error;
     }
@@ -65,10 +54,7 @@ export async function mindfulnessMovementAnalysis(data: any[][]): Promise<any> {
         afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/mindfulness`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/mindfulness', payload);
     } catch (error) {
         throw error;
     }
@@ -82,10 +68,7 @@ export async function mindfulnessLevelAnalysis(data: any[][]): Promise<any> {
     };
     try {
         // 此 endpoint 可根據實際 API 文件修改
-        const response = await axios.post(`${API_BASE_URL}/api/v1/mindfulness`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/mindfulness', payload);
     } catch (error) {
         throw error;
     }
@@ -98,10 +81,7 @@ export async function potentialAnalysis(data: any[][]): Promise<any> {
         afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/talent`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/talent', payload);
     } catch (error) {
         throw error;
     }
@@ -114,10 +94,7 @@ export async function emotionManagementAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/sentiment`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/analysis/sentiment', payload);
     } catch (error) {
         throw error;
     }
@@ -131,10 +108,7 @@ export async function petTestAnalysis(data: any[][]): Promise<any> {
     };
     try {
         // 假設此端點用於此測試模式
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/analysis/ore', payload);
     } catch (error) {
         throw error;
     }
@@ -147,10 +121,7 @@ export async function beverageTestAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/analysis/ore', payload);
     } catch (error) {
         throw error;
     }
@@ -163,10 +134,7 @@ export async function perfumeTestAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/analysis/ore', payload);
     } catch (error) {
         throw error;
     }
@@ -179,10 +147,7 @@ export async function musicTestAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/analysis/ore', payload);
     } catch (error) {
         throw error;
     }
@@ -195,10 +160,7 @@ export async function videoTestAnalysis(data: any[][]): Promise<any> {
             afterBrainData: data[1]
     };
     try {
-        const response = await axios.post(`${API_BASE_URL}/api/v1/analysis/ore`, payload, {
-            headers: {'Content-Type': 'application/json'},
-        });
-        return response.data;
+        return await post('/api/v1/analysis/ore', payload);
     } catch (error) {
         throw error;
     }
@@ -208,10 +170,10 @@ export async function videoTestAnalysis(data: any[][]): Promise<any> {
 export async function treasureAnalysis(data: any[][]): Promise<any> {
   const payload1 = { beforeBrainData: data[0], afterBrainData: data[1] };
   // 1) stage1
-  const stage1 = await axios.post(`${API_BASE_URL}/api/v1/treasure/stage1`, payload1);
+  const stage1 = await post('/api/v1/treasure/stage1', payload1);
   // 2) 以下依 PDF，te_score、te_comment、ea0、ea1、me_score 都在 stage1 回傳
-  //    假設 stage1.data 已含 { te_scores, te_comments, ea0, ea1, me_score }
-  const stage1Data = stage1.data;
+  //    假設 stage1 已含 { te_scores, te_comments, ea0, ea1, me_score }
+  const stage1Data = stage1;
 
   // 3) stage2：時序圖 + wear_ea + pillow_ea
   const payload2 = {
@@ -220,8 +182,8 @@ export async function treasureAnalysis(data: any[][]): Promise<any> {
     wear_ea: stage1Data.wear_ea,
     pillow_ea: stage1Data.pillow_ea,
   };
-  const stage2 = await axios.post(`${API_BASE_URL}/api/v1/treasure/stage2`, payload2);
-  const stage2Data = stage2.data.stage2 || stage2.data;
+  const stage2 = await post('/api/v1/treasure/stage2', payload2);
+  const stage2Data = stage2.stage2 || stage2;
 
   // 合併回傳
   return {
@@ -233,8 +195,8 @@ export async function treasureAnalysis(data: any[][]): Promise<any> {
 // 情香意：最佳炁場之香氛測試系統
 export async function perfumeAnalysis(data: any[][]): Promise<any> {
   const payload1 = { beforeBrainData: data[0], afterBrainData: data[1] };
-  const stage1 = await axios.post(`${API_BASE_URL}/api/v1/perfume/stage1`, payload1);
-  const s1 = stage1.data;
+  const stage1 = await post('/api/v1/perfume/stage1', payload1);
+  const s1 = stage1;
   // 第二階段
   const payload2 = {
     ea_before_timing_diagram: s1.ea0_timing_diagram,
@@ -243,7 +205,7 @@ export async function perfumeAnalysis(data: any[][]): Promise<any> {
     fragrances: s1.te_comment.te1.fragrances,
     brands: s1.te_comment.te1.brands,
   };
-  const stage2 = await axios.post(`${API_BASE_URL}/api/v1/perfume/stage2`, payload2);
-  const s2 = stage2.data.stage2 || stage2.data;
+  const stage2 = await post('/api/v1/perfume/stage2', payload2);
+  const s2 = stage2.stage2 || stage2;
   return { ...s1, ...s2 };
 }

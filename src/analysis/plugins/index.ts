@@ -1,0 +1,14 @@
+import './yuanshenyin';
+import './hengyunlai';
+import './mindei_normal';
+import './mindei_movement';
+import './mindei_level';
+import './zhentianfu';
+import './emotion_management';
+import './pet_test';
+import './beverage_test';
+import './perfume_test';
+import './music_test';
+import './video_test';
+import './zhenbaoqi';
+import './qingxiangyi';
