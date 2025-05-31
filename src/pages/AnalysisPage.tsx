@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFileManager, UploadedFile } from "../hooks/useFileManager";
 import { getPlugins, AnalysisPlugin } from "../analysis/registry";
-import MultiSelectDropdown from "../components/MultiSelectDropdown";
+import MultiSelectModal from "../components/MultiSelectModal";
 import { useUserContext } from "../context/UserContext";
 import {
   useAnalysisManager,
@@ -417,22 +417,24 @@ const AnalysisPage: React.FC = () => {
           <label className="label">
             <span className="label-text">篩選分析功能</span>
           </label>
-          <MultiSelectDropdown
+          <MultiSelectModal
             options={getPlugins().map((p) => ({ value: p.id, label: p.name }))}
             selected={filterAnalysisIds}
             onChange={setFilterAnalysisIds}
             placeholder="全部"
+            title="篩選分析功能"
           />
         </div>
         <div className="form-control">
           <label className="label">
             <span className="label-text">篩選使用者</span>
           </label>
-          <MultiSelectDropdown
+          <MultiSelectModal
             options={users.map((u) => ({ value: u.id, label: u.name }))}
             selected={filterUserIds}
             onChange={setFilterUserIds}
             placeholder="全部"
+            title="篩選使用者"
           />
         </div>
         <div className="form-control">
