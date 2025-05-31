@@ -1,5 +1,6 @@
 import { registerPlugin, getPlugins, clearPluginsForTest } from './registry';
 
+
 describe('plugin registry', () => {
   beforeEach(() => {
     clearPluginsForTest();
@@ -24,5 +25,6 @@ describe('plugin registry', () => {
     const pluginModule = require('./plugins/beverage_test');
     const plugin = pluginModule.default;
     expect(getPlugins()).toContain(plugin);
+
   });
 });
