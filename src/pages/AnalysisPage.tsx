@@ -21,6 +21,14 @@ const AnalysisPage: React.FC = () => {
   const [customParams, setCustomParams] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filterAnalysisId, setFilterAnalysisId] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterAnalysisId, history]);
 
   // 當選擇的分析功能改變時，初始化檔案選擇欄位與自訂參數
   useEffect(() => {
@@ -152,6 +160,56 @@ const AnalysisPage: React.FC = () => {
     return null;
   };
 
+  const filteredHistory = history.filter((record) => {
+    if (filterAnalysisId && record.analysisId !== filterAnalysisId) {
+      return false;
+    }
+    if (!searchTerm) return true;
+    const userForRecord = users.find((u) => u.id === record.userId);
+    const fileNames = record.selectedFileIds
+      .map((id) => {
+        const f = files.find((fl) => fl.id === id);
+        return f?.alias || f?.fileName || '';
+      })
+      .join(' ');
+    const target = `${record.analysisName} ${userForRecord?.name || ''} ${fileNames}`.toLowerCase();
+    return target.includes(searchTerm.toLowerCase());
+  });
+
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const paginatedHistory = filteredHistory.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const renderPagination = () => (
+    <div className="flex justify-center mt-4">
+      <div className="btn-group">
+        <button
+          className="btn"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+        >
+          上一頁
+        </button>
+        <button className="btn" disabled>
+          第 {currentPage} / {totalPages || 1} 頁
+        </button>
+        <button
+          className="btn"
+          disabled={currentPage === totalPages || totalPages === 0}
+          onClick={() =>
+            setCurrentPage((p) =>
+              Math.min(totalPages === 0 ? 1 : totalPages, p + 1)
+            )
+          }
+        >
+          下一頁
+        </button>
+      </div>
+    </div>
+  );
+
   // 使用 DaisyUI 樣式顯示分析歷史
   const renderHistoryTable = () => (
     <div className="overflow-x-auto">
@@ -167,7 +225,7 @@ const AnalysisPage: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {history.map((record) => {
+          {paginatedHistory.map((record) => {
             const userForRecord = users.find((u) => u.id === record.userId);
             return (
               <tr key={record.id}>
@@ -214,6 +272,7 @@ const AnalysisPage: React.FC = () => {
           })}
         </tbody>
       </table>
+      {renderPagination()}
     </div>
   );
 
@@ -260,7 +319,38 @@ const AnalysisPage: React.FC = () => {
       </div>
 
       <h2 className="text-2xl font-bold mb-2">分析歷史紀錄</h2>
-      {history.length === 0 ? <p>尚無分析歷史</p> : renderHistoryTable()}
+      <div className="mb-4 flex flex-col md:flex-row md:items-end space-y-2 md:space-y-0 md:space-x-4">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">篩選分析功能</span>
+          </label>
+          <select
+            className="select select-bordered"
+            value={filterAnalysisId}
+            onChange={(e) => setFilterAnalysisId(e.target.value)}
+          >
+            <option value="">全部</option>
+            {getPlugins().map((config) => (
+              <option key={config.id} value={config.id}>
+                {config.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">搜尋</span>
+          </label>
+          <input
+            type="text"
+            className="input input-bordered"
+            placeholder="輸入關鍵字"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+      {filteredHistory.length === 0 ? <p>找不到符合的歷史紀錄</p> : renderHistoryTable()}
     </div>
   );
 };
