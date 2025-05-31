@@ -33,11 +33,17 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     .map((opt) => opt.label)
     .join(', ');
 
+  const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setOpen(false);
+    }
+  };
+
   return (
     <div
       className={`dropdown w-full${open ? ' dropdown-open' : ''}`}
       tabIndex={0}
-      onBlur={() => setOpen(false)}
+      onBlur={handleBlur}
     >
       <div
         className="btn w-full justify-between"
@@ -55,7 +61,25 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
         </svg>
       </div>
       {open && (
-        <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box max-h-60 overflow-auto w-full">
+        <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box max-h-60 overflow-auto w-full space-y-1">
+          <li className="px-2">
+            <button
+              type="button"
+              className="btn btn-sm w-full"
+              onClick={() => onChange(options.map((o) => o.value))}
+            >
+              全選
+            </button>
+          </li>
+          <li className="px-2">
+            <button
+              type="button"
+              className="btn btn-sm w-full"
+              onClick={() => onChange([])}
+            >
+              清空
+            </button>
+          </li>
           {options.map((opt) => (
             <li key={opt.value} className="px-2">
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -69,6 +93,15 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
               </label>
             </li>
           ))}
+          <li className="px-2 pt-2">
+            <button
+              type="button"
+              className="btn btn-primary btn-sm w-full"
+              onClick={() => setOpen(false)}
+            >
+              確認
+            </button>
+          </li>
         </ul>
       )}
     </div>

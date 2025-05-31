@@ -39,6 +39,19 @@ const AnalysisPage: React.FC = () => {
   const itemsPerPage = 5;
 
   useEffect(() => {
+    if (filterAnalysisIds.length === 0) {
+      setFilterAnalysisIds(getPlugins().map((p) => p.id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (filterUserIds.length === 0 && users.length > 0) {
+      setFilterUserIds(users.map((u) => u.id));
+    }
+  }, [users]);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterAnalysisIds, filterUserIds, history]);
 
