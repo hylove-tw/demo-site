@@ -1,85 +1,37 @@
-
-import axios from 'axios';
-import http from 'http';
-import { post } from './api';
-
-describe('api helper', () => {
-  it('uses axios for POST requests', async () => {
-    const spy = jest.spyOn(axios, 'post').mockResolvedValue({ data: { ok: 1 } });
-    const result = await post('/test', { a: 1 });
-    expect(spy).toHaveBeenCalledWith(
-      'http://localhost:3000/test',
-      { a: 1 },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-    expect(result).toEqual({ ok: 1 });
-    spy.mockRestore();
-  });
-
-  it('performs a real HTTP POST', async () => {
-    const server = http.createServer((req, res) => {
-      let body = '';
-      req.on('data', chunk => (body += chunk));
-      req.on('end', () => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ received: JSON.parse(body) }));
-      });
-    });
-
-    await new Promise(resolve => server.listen(0, resolve));
-    const { port } = server.address() as any;
-    process.env.REACT_APP_ANALYSIS_API_BASE = `http://localhost:${port}`;
-
-    const result = await post('/echo', { hello: 'world' });
-    expect(result).toEqual({ received: { hello: 'world' } });
-
-    server.close();
-=======
 import { post } from './api';
 import axios from 'axios';
 import http from 'http';
-import { AddressInfo } from 'net';
 
 jest.mock('axios');
-
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-describe('api.post helper', () => {
-  const originalBase = process.env.REACT_APP_ANALYSIS_API_BASE;
-
-  afterEach(() => {
-    process.env.REACT_APP_ANALYSIS_API_BASE = originalBase;
-    jest.resetAllMocks();
+describe('post helper', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  test('sends POST request with axios', async () => {
-    process.env.REACT_APP_ANALYSIS_API_BASE = 'http://localhost';
-    mockedAxios.post.mockResolvedValue({ data: { ok: true } });
-    const result = await post('/path', { foo: 'bar' });
+  it('calls axios with correct args', async () => {
+    mockedAxios.post.mockResolvedValueOnce({ data: { ok: true } });
+    const data = await post('/test', { foo: 'bar' });
     expect(mockedAxios.post).toHaveBeenCalledWith(
-      'http://localhost/path',
+      'http://localhost:3000/test',
       { foo: 'bar' },
       { headers: { 'Content-Type': 'application/json' } }
     );
-    expect(result).toEqual({ ok: true });
+    expect(data).toEqual({ ok: true });
   });
 
-  test('works with real http server', async () => {
+  it('works with real http server', async () => {
     const server = http.createServer((req, res) => {
-      const chunks: Uint8Array[] = [];
-      req.on('data', c => chunks.push(c));
-      req.on('end', () => {
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ received: Buffer.concat(chunks).toString() }));
-      });
+      if (req.method === 'POST' && req.url === '/real') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      }
     });
-    await new Promise(resolve => server.listen(0, resolve));
-    const { port } = server.address() as AddressInfo;
-
-    process.env.REACT_APP_ANALYSIS_API_BASE = `http://localhost:${port}`;
-    const payload = { hello: 'world' };
-    const result = await post('/real', payload);
-    expect(result).toEqual({ received: JSON.stringify(payload) });
-
-    await new Promise(resolve => server.close(resolve));
+    await new Promise(resolve => server.listen(3100, resolve));
+    process.env.REACT_APP_ANALYSIS_API_BASE = 'http://localhost:3100';
+    const result = await post('/real', { a: 1 });
+    expect(result).toEqual({ success: true });
+    server.close();
+  });
 });

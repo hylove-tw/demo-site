@@ -1,6 +1,5 @@
 import { registerPlugin, getPlugins, clearPluginsForTest } from './registry';
 
-
 describe('plugin registry', () => {
   beforeEach(() => {
     clearPluginsForTest();
@@ -9,22 +8,19 @@ describe('plugin registry', () => {
   it('registers plugin manually', () => {
     const plugin = {
       id: 'test',
-      name: 'Test Plugin',
-      description: 'desc',
+      name: 'Test',
+      description: 'd',
       requiredFiles: [],
-      execute: jest.fn(),
-      renderReport: jest.fn(),
+      execute: async () => null,
+      renderReport: () => null,
     };
-    registerPlugin(plugin as any);
-    expect(getPlugins()).toContain(plugin as any);
+    registerPlugin(plugin);
+    expect(getPlugins()).toContain(plugin);
   });
 
-  it('auto registers plugin when module imported', () => {
-    jest.resetModules();
-    clearPluginsForTest();
-    const pluginModule = require('./plugins/beverage_test');
-    const plugin = pluginModule.default;
-    expect(getPlugins()).toContain(plugin);
-
+  it('auto registers plugin when module imported', async () => {
+    await import('./plugins/music_test');
+    const found = getPlugins().find(p => p.id === 'music_test');
+    expect(found).toBeDefined();
   });
 });
