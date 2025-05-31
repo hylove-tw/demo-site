@@ -1,5 +1,5 @@
 import { post } from './api';
-import axios from 'axios/dist/node/axios.cjs';
+import axios from 'axios';
 import http from 'http';
 
 jest.mock('axios');
