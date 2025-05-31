@@ -32,13 +32,14 @@ const AnalysisPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterAnalysisId, setFilterAnalysisId] = useState<string>("");
+  const [filterAnalysisIds, setFilterAnalysisIds] = useState<string[]>([]);
+  const [filterUserIds, setFilterUserIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterAnalysisId, history]);
+  }, [searchTerm, filterAnalysisIds, filterUserIds, history]);
 
   // 當選擇的分析功能改變時，初始化檔案選擇欄位與自訂參數
   useEffect(() => {
@@ -184,7 +185,13 @@ const AnalysisPage: React.FC = () => {
   };
 
   const filteredHistory = history.filter((record) => {
-    if (filterAnalysisId && record.analysisId !== filterAnalysisId) {
+    if (
+      filterAnalysisIds.length > 0 &&
+      !filterAnalysisIds.includes(record.analysisId)
+    ) {
+      return false;
+    }
+    if (filterUserIds.length > 0 && !filterUserIds.includes(record.userId)) {
       return false;
     }
     if (!searchTerm) return true;
@@ -397,14 +404,39 @@ const AnalysisPage: React.FC = () => {
             <span className="label-text">篩選分析功能</span>
           </label>
           <select
-            className="select select-bordered"
-            value={filterAnalysisId}
-            onChange={(e) => setFilterAnalysisId(e.target.value)}
+            multiple
+            className="select select-bordered h-32"
+            value={filterAnalysisIds}
+            onChange={(e) =>
+              setFilterAnalysisIds(
+                Array.from(e.target.selectedOptions).map((opt) => opt.value),
+              )
+            }
           >
-            <option value="">全部</option>
             {getPlugins().map((config) => (
               <option key={config.id} value={config.id}>
                 {config.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">篩選使用者</span>
+          </label>
+          <select
+            multiple
+            className="select select-bordered h-32"
+            value={filterUserIds}
+            onChange={(e) =>
+              setFilterUserIds(
+                Array.from(e.target.selectedOptions).map((opt) => opt.value),
+              )
+            }
+          >
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name}
               </option>
             ))}
           </select>
