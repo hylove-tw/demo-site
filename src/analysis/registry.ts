@@ -36,7 +36,6 @@ export function registerPlugin(plugin: AnalysisPlugin) {
 export function getPlugins(): AnalysisPlugin[] {
   return plugins;
 }
-
 // Helper used only in tests to reset the registry state
 export function clearPluginsForTest() {
   plugins.length = 0;

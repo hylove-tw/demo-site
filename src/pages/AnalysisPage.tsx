@@ -81,7 +81,6 @@ const AnalysisPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // 使用插件的 execute 方法進行分析，並傳入自訂參數
       const result = await selectedAnalysis.execute(combinedData, customParams);
       // 建立新的分析歷史紀錄（成功）
       const newRecord: AnalysisHistory = {
