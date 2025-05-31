@@ -30,18 +30,33 @@ const MultiSelectModal: React.FC<MultiSelectModalProps> = ({
     }
   };
 
-  const selectedLabels = options
-    .filter((opt) => selected.includes(opt.value))
-    .map((opt) => opt.label)
-    .join(', ');
+  const selectedOptions = options.filter((opt) => selected.includes(opt.value));
 
   return (
     <>
       <button className="btn w-full justify-between" onClick={() => setOpen(true)}>
         <span className="truncate flex-grow text-left">
-          {selected.length === 0 ? placeholder : selectedLabels}
+          {selected.length === 0
+            ? placeholder
+            : `已選 ${selected.length}/${options.length}`}
         </span>
       </button>
+      {selectedOptions.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {selectedOptions.map((opt) => (
+            <span key={opt.value} className="badge gap-1">
+              {opt.label}
+              <button
+                type="button"
+                className="ml-1"
+                onClick={() => toggleOption(opt.value)}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       {open && (
         <div className="modal modal-open">
           <div className="modal-box relative">
