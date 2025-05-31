@@ -28,7 +28,9 @@ describe('post helper', () => {
         res.end(JSON.stringify({ success: true }));
       }
     });
-    await new Promise(resolve => server.listen(3100, resolve));
+    await new Promise<void>(resolve => {
+      server.listen(3100, () => resolve());
+    });
     process.env.REACT_APP_ANALYSIS_API_BASE = 'http://localhost:3100';
     const result = await post('/real', { a: 1 });
     expect(result).toEqual({ success: true });
