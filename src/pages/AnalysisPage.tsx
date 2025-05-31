@@ -81,8 +81,8 @@ const AnalysisPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // 傳入 customParams 給 func，使使用者自訂欄位設定能影響分析
-      const result = await selectedAnalysis.func(combinedData, customParams);
+      // 傳入 customParams 給 execute，使使用者自訂欄位設定能影響分析
+      const result = await selectedAnalysis.execute(combinedData, customParams);
       // 建立新的分析歷史紀錄（成功）
       const newRecord: AnalysisHistory = {
         id: Date.now(),
