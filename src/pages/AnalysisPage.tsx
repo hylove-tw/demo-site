@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useFileManager, UploadedFile } from "../hooks/useFileManager";
 import { getPlugins, AnalysisPlugin } from "../analysis/registry";
+import MultiSelectDropdown from "../components/MultiSelectDropdown";
 import { useUserContext } from "../context/UserContext";
 import {
   useAnalysisManager,
@@ -403,43 +404,23 @@ const AnalysisPage: React.FC = () => {
           <label className="label">
             <span className="label-text">篩選分析功能</span>
           </label>
-          <select
-            multiple
-            className="select select-bordered h-32"
-            value={filterAnalysisIds}
-            onChange={(e) =>
-              setFilterAnalysisIds(
-                Array.from(e.target.selectedOptions).map((opt) => opt.value),
-              )
-            }
-          >
-            {getPlugins().map((config) => (
-              <option key={config.id} value={config.id}>
-                {config.name}
-              </option>
-            ))}
-          </select>
+          <MultiSelectDropdown
+            options={getPlugins().map((p) => ({ value: p.id, label: p.name }))}
+            selected={filterAnalysisIds}
+            onChange={setFilterAnalysisIds}
+            placeholder="全部"
+          />
         </div>
         <div className="form-control">
           <label className="label">
             <span className="label-text">篩選使用者</span>
           </label>
-          <select
-            multiple
-            className="select select-bordered h-32"
-            value={filterUserIds}
-            onChange={(e) =>
-              setFilterUserIds(
-                Array.from(e.target.selectedOptions).map((opt) => opt.value),
-              )
-            }
-          >
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
+          <MultiSelectDropdown
+            options={users.map((u) => ({ value: u.id, label: u.name }))}
+            selected={filterUserIds}
+            onChange={setFilterUserIds}
+            placeholder="全部"
+          />
         </div>
         <div className="form-control">
           <label className="label">
