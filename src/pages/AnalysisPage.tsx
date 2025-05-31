@@ -1,28 +1,38 @@
 // src/pages/AnalysisPage.tsx
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useFileManager, UploadedFile } from '../hooks/useFileManager';
-import { getPlugins, AnalysisPlugin } from '../analysis/registry';
-import { useUserContext } from '../context/UserContext';
-import { useAnalysisManager, AnalysisHistory } from '../hooks/useAnalysisManager';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useFileManager, UploadedFile } from "../hooks/useFileManager";
+import { getPlugins, AnalysisPlugin } from "../analysis/registry";
+import { useUserContext } from "../context/UserContext";
+import {
+  useAnalysisManager,
+  AnalysisHistory,
+} from "../hooks/useAnalysisManager";
 
 export enum Status {
-  Success = '成功',
-  Failure = '失敗',
+  Success = "成功",
+  Failure = "失敗",
 }
 
 const AnalysisPage: React.FC = () => {
   const { files } = useFileManager();
   const { currentUser, users } = useUserContext();
-  const { history, addHistoryRecord, removeHistoryRecord } = useAnalysisManager();
+  const {
+    history,
+    addHistoryRecord,
+    removeHistoryRecord,
+    updateHistoryRecord,
+  } = useAnalysisManager();
 
-  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisPlugin | null>(null);
+  const [selectedAnalysis, setSelectedAnalysis] =
+    useState<AnalysisPlugin | null>(null);
   const [selectedFileIds, setSelectedFileIds] = useState<(number | null)[]>([]);
   const [customParams, setCustomParams] = useState<Record<string, any>>({});
+  const [description, setDescription] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filterAnalysisId, setFilterAnalysisId] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterAnalysisId, setFilterAnalysisId] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
 
@@ -33,7 +43,9 @@ const AnalysisPage: React.FC = () => {
   // 當選擇的分析功能改變時，初始化檔案選擇欄位與自訂參數
   useEffect(() => {
     if (selectedAnalysis) {
-      setSelectedFileIds(Array(selectedAnalysis.requiredFiles.length).fill(null));
+      setSelectedFileIds(
+        Array(selectedAnalysis.requiredFiles.length).fill(null),
+      );
       if (selectedAnalysis.customFields) {
         const defaults: Record<string, any> = {};
         selectedAnalysis.customFields.forEach((field) => {
@@ -43,9 +55,11 @@ const AnalysisPage: React.FC = () => {
       } else {
         setCustomParams({});
       }
+      setDescription("");
     } else {
       setSelectedFileIds([]);
       setCustomParams({});
+      setDescription("");
     }
   }, [selectedAnalysis]);
 
@@ -64,11 +78,13 @@ const AnalysisPage: React.FC = () => {
   const handleAnalyze = async () => {
     setError(null);
     if (!selectedAnalysis) {
-      alert('請先選擇分析功能');
+      alert("請先選擇分析功能");
       return;
     }
     if (selectedFileIds.some((id) => id === null)) {
-      alert(`請選擇所有檔案：需要 ${selectedAnalysis.requiredFiles.length} 個檔案`);
+      alert(
+        `請選擇所有檔案：需要 ${selectedAnalysis.requiredFiles.length} 個檔案`,
+      );
       return;
     }
     // 根據所選檔案 id 取得檔案資料
@@ -76,7 +92,7 @@ const AnalysisPage: React.FC = () => {
     for (const id of selectedFileIds as number[]) {
       const file = files.find((f) => f.id === id);
       if (!file) {
-        alert('選擇的檔案不存在，請重新選擇');
+        alert("選擇的檔案不存在，請重新選擇");
         return;
       }
       selectedFiles.push(file);
@@ -98,27 +114,31 @@ const AnalysisPage: React.FC = () => {
         selectedFileIds: selectedFileIds as number[],
         result,
         timestamp: new Date().toISOString(),
-        userId: currentUser ? currentUser.id : 'unknown',
+        userId: currentUser ? currentUser.id : "unknown",
         status: Status.Success,
         // 假設在 history 中也儲存使用者自訂欄位
         customParams,
+        description,
       };
       addHistoryRecord(newRecord);
+      setDescription("");
     } catch (err: any) {
-      setError(err.message || '分析失敗');
+      setError(err.message || "分析失敗");
       // 失敗也記錄下來
       const newRecord: AnalysisHistory = {
         id: Date.now(),
         analysisId: selectedAnalysis.id,
         analysisName: selectedAnalysis.name,
         selectedFileIds: selectedFileIds as number[],
-        result: err.message || '未知錯誤',
+        result: err.message || "未知錯誤",
         timestamp: new Date().toISOString(),
-        userId: currentUser ? currentUser.id : 'unknown',
+        userId: currentUser ? currentUser.id : "unknown",
         status: Status.Failure,
         customParams,
+        description,
       };
       addHistoryRecord(newRecord);
+      setDescription("");
     } finally {
       setLoading(false);
     }
@@ -153,7 +173,10 @@ const AnalysisPage: React.FC = () => {
       const EditComponent = selectedAnalysis.editComponent;
       return (
         <div className="mb-4">
-          <EditComponent customParams={customParams} onChange={setCustomParams} />
+          <EditComponent
+            customParams={customParams}
+            onChange={setCustomParams}
+          />
         </div>
       );
     }
@@ -169,17 +192,18 @@ const AnalysisPage: React.FC = () => {
     const fileNames = record.selectedFileIds
       .map((id) => {
         const f = files.find((fl) => fl.id === id);
-        return f?.alias || f?.fileName || '';
+        return f?.alias || f?.fileName || "";
       })
-      .join(' ');
-    const target = `${record.analysisName} ${userForRecord?.name || ''} ${fileNames}`.toLowerCase();
+      .join(" ");
+    const target =
+      `${record.analysisName} ${userForRecord?.name || ""} ${fileNames} ${record.description || ""}`.toLowerCase();
     return target.includes(searchTerm.toLowerCase());
   });
 
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
   const paginatedHistory = filteredHistory.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const renderPagination = () => (
@@ -200,7 +224,7 @@ const AnalysisPage: React.FC = () => {
           disabled={currentPage === totalPages || totalPages === 0}
           onClick={() =>
             setCurrentPage((p) =>
-              Math.min(totalPages === 0 ? 1 : totalPages, p + 1)
+              Math.min(totalPages === 0 ? 1 : totalPages, p + 1),
             )
           }
         >
@@ -219,6 +243,7 @@ const AnalysisPage: React.FC = () => {
             <th>分析時間</th>
             <th>分析功能</th>
             <th>使用者</th>
+            <th>描述</th>
             <th>選擇檔案</th>
             <th>結果</th>
             <th>操作</th>
@@ -232,12 +257,16 @@ const AnalysisPage: React.FC = () => {
                 <td>{new Date(record.timestamp).toLocaleString()}</td>
                 <td>{record.analysisName}</td>
                 <td>{userForRecord ? userForRecord.name : record.userId}</td>
+                <td>{record.description || ""}</td>
                 <td>
                   {record.selectedFileIds.map((fileId, index) => {
                     const file = files.find((f) => f.id === fileId);
                     return (
                       <span key={index} className="mr-2">
-                        <Link className="badge badge-outline badge-sm" to={`/files/${file?.id}`}>
+                        <Link
+                          className="badge badge-outline badge-sm"
+                          to={`/files/${file?.id}`}
+                        >
                           {file?.alias || file?.fileName}
                         </Link>
                       </span>
@@ -246,7 +275,9 @@ const AnalysisPage: React.FC = () => {
                 </td>
                 <td>
                   {record.status === Status.Success ? (
-                    <span className="badge badge-success">{Status.Success}</span>
+                    <span className="badge badge-success">
+                      {Status.Success}
+                    </span>
                   ) : (
                     <span className="badge badge-error">{Status.Failure}</span>
                   )}
@@ -254,15 +285,41 @@ const AnalysisPage: React.FC = () => {
                 <td>
                   <div className="flex space-x-2">
                     {record.status === Status.Success ? (
-                      <Link to={`/analysis/report/${record.id}`} className="btn btn-sm btn-primary">
+                      <Link
+                        to={`/analysis/report/${record.id}`}
+                        className="btn btn-sm btn-primary"
+                      >
                         檢視報告
                       </Link>
                     ) : (
-                      <button className="btn btn-sm btn-warning" onClick={() => handleAnalyze()}>
+                      <button
+                        className="btn btn-sm btn-warning"
+                        onClick={() => handleAnalyze()}
+                      >
                         重試
                       </button>
                     )}
-                    <button className="btn btn-sm btn-error" onClick={() => removeHistoryRecord(record.id)}>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => {
+                        const desc = prompt(
+                          "更新描述",
+                          record.description || "",
+                        );
+                        if (desc !== null) {
+                          updateHistoryRecord(record.id, {
+                            ...record,
+                            description: desc,
+                          });
+                        }
+                      }}
+                    >
+                      編輯
+                    </button>
+                    <button
+                      className="btn btn-sm btn-error"
+                      onClick={() => removeHistoryRecord(record.id)}
+                    >
                       刪除
                     </button>
                   </div>
@@ -310,8 +367,23 @@ const AnalysisPage: React.FC = () => {
             {renderFileSelections()}
             {/* 自訂欄位編輯介面 */}
             {renderCustomFields()}
-            <button className="btn btn-primary mt-4" onClick={handleAnalyze} disabled={loading}>
-              {loading ? '分析中...' : '開始分析'}
+            <div className="form-control mb-4">
+              <label className="label">
+                <span className="label-text">分析描述</span>
+              </label>
+              <textarea
+                className="textarea textarea-bordered"
+                placeholder="輸入此分析的描述"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <button
+              className="btn btn-primary mt-4"
+              onClick={handleAnalyze}
+              disabled={loading}
+            >
+              {loading ? "分析中..." : "開始分析"}
             </button>
             {error && <p className="text-red-500 mt-2">{error}</p>}
           </div>
@@ -350,7 +422,11 @@ const AnalysisPage: React.FC = () => {
           />
         </div>
       </div>
-      {filteredHistory.length === 0 ? <p>找不到符合的歷史紀錄</p> : renderHistoryTable()}
+      {filteredHistory.length === 0 ? (
+        <p>找不到符合的歷史紀錄</p>
+      ) : (
+        renderHistoryTable()
+      )}
     </div>
   );
 };
