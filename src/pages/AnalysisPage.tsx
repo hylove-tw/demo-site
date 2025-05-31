@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useFileManager, UploadedFile } from '../hooks/useFileManager';
-import { analysisConfigs, AnalysisConfig } from '../config/analysisConfigs';
+import { getPlugins, AnalysisPlugin } from '../analysis/registry';
 import { useUserContext } from '../context/UserContext';
 import { useAnalysisManager, AnalysisHistory } from '../hooks/useAnalysisManager';
 
@@ -16,7 +16,7 @@ const AnalysisPage: React.FC = () => {
   const { currentUser, users } = useUserContext();
   const { history, addHistoryRecord, removeHistoryRecord } = useAnalysisManager();
 
-  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisConfig | null>(null);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisPlugin | null>(null);
   const [selectedFileIds, setSelectedFileIds] = useState<(number | null)[]>([]);
   const [customParams, setCustomParams] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<boolean>(false);
@@ -43,7 +43,7 @@ const AnalysisPage: React.FC = () => {
 
   const handleAnalysisChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const analysisId = e.target.value;
-    const analysis = analysisConfigs.find((fn) => fn.id === analysisId) || null;
+    const analysis = getPlugins().find((fn) => fn.id === analysisId) || null;
     setSelectedAnalysis(analysis);
   };
 
@@ -232,7 +232,7 @@ const AnalysisPage: React.FC = () => {
             onChange={handleAnalysisChange}
           >
             <option value="">請選擇分析功能</option>
-            {analysisConfigs.map((config) => (
+            {getPlugins().map((config) => (
               <option key={config.id} value={config.id}>
                 {config.name} (需 {config.requiredFiles.length} 個檔案)
               </option>
