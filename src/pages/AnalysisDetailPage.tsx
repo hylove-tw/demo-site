@@ -24,10 +24,17 @@ const AnalysisDetailPage: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
 
   // 篩選出屬於當前分析功能的歷史紀錄
   const pluginHistory = history.filter((record) => record.analysisId === id);
+
+  // 群組樣式
+  const groupMeta: Record<string, { badgeClass: string }> = {
+    '主要功能': { badgeClass: 'badge-primary' },
+    '利養炁': { badgeClass: 'badge-secondary' },
+    '易 Motion': { badgeClass: 'badge-accent' },
+  };
 
   useEffect(() => {
     const foundPlugin = getPlugins().find((p) => p.id === id);
@@ -151,10 +158,34 @@ const AnalysisDetailPage: React.FC = () => {
         </ul>
       </div>
 
-      <h1 className="text-3xl font-bold mb-2">
-        {plugin.group ? `${plugin.group} - ${plugin.name}` : plugin.name}
-      </h1>
-      <p className="text-base-content/70 mb-6">{plugin.description}</p>
+      {/* 頁面標題 */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            {plugin.group && (
+              <span className={`badge ${groupMeta[plugin.group]?.badgeClass || 'badge-ghost'}`}>
+                {plugin.group}
+              </span>
+            )}
+            <h1 className="text-2xl font-bold">{plugin.name}</h1>
+          </div>
+          <p className="text-base-content/70">{plugin.description}</p>
+        </div>
+        {pluginHistory.length > 0 && (
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            className="btn btn-ghost gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            歷史紀錄
+            <span className="badge badge-primary badge-sm">
+              {pluginHistory.filter(r => r.status === Status.Success).length}
+            </span>
+          </button>
+        )}
+      </div>
 
       {/* 設定卡片 */}
       <div className="card bg-base-100 shadow-md">
@@ -242,119 +273,94 @@ const AnalysisDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 分析歷史紀錄 */}
-      <div className="card bg-base-100 shadow-md mt-6">
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          className="w-full flex items-center justify-between p-5 hover:bg-base-200 transition-colors rounded-xl"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+      {/* 歷史紀錄 Modal */}
+      {showHistoryModal && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg">歷史紀錄</h3>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="btn btn-sm btn-circle btn-ghost"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="text-left">
-              <h3 className="font-medium">分析歷史</h3>
-              <p className="text-sm text-base-content/60">{pluginHistory.length} 筆紀錄</p>
-            </div>
-          </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className={`h-4 w-4 text-base-content/40 transition-transform duration-300 ${showHistory ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {showHistory && (
-          <div className="border-t border-base-200">
-            {pluginHistory.length === 0 ? (
-              <div className="p-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <p className="font-medium">尚無分析紀錄</p>
-                <p className="text-sm text-base-content/60 mt-1">完成分析後紀錄將顯示於此</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-base-200">
-                {pluginHistory.map((record) => {
-                  const userForRecord = users.find((u) => u.id === record.userId);
-                  return (
-                    <div key={record.id} className="p-4 hover:bg-base-200/50 transition-colors">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">
-                              {record.description || '無描述'}
-                            </span>
-                            {record.status === Status.Success ? (
-                              <span className="badge badge-success badge-sm">完成</span>
-                            ) : (
-                              <span className="badge badge-error badge-sm">失敗</span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mb-2">
-                            <span>{userForRecord?.name || '未知受測者'}</span>
-                            <span>·</span>
-                            <span>{new Date(record.timestamp).toLocaleString()}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {record.selectedFileIds.map((fileId, index) => {
-                              const file = files.find((f) => f.id === fileId);
-                              return (
-                                <Link
-                                  key={index}
-                                  to={`/files/${file?.id}`}
-                                  className="badge badge-ghost"
-                                >
-                                  {file?.alias || file?.fileName || '未知'}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
+            <div className="divide-y divide-base-200 max-h-96 overflow-y-auto">
+              {pluginHistory.map((record) => {
+                const userForRecord = users.find((u) => u.id === record.userId);
+                return (
+                  <div key={record.id} className="py-4 first:pt-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">
+                            {record.description || '無描述'}
+                          </span>
                           {record.status === Status.Success ? (
-                            <Link
-                              to={`/analysis/report/${record.id}`}
-                              className="btn btn-primary btn-sm"
-                            >
-                              檢視
-                            </Link>
+                            <span className="badge badge-success badge-sm">完成</span>
                           ) : (
-                            <span className="btn btn-ghost btn-sm btn-disabled">失敗</span>
+                            <span className="badge badge-error badge-sm">失敗</span>
                           )}
-                          <button
-                            onClick={() => {
-                              if (window.confirm('確定要刪除此紀錄嗎？')) {
-                                removeHistoryRecord(record.id);
-                              }
-                            }}
-                            className="btn btn-ghost btn-sm text-error"
-                            title="刪除紀錄"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mb-2">
+                          <span>{userForRecord?.name || '未知受測者'}</span>
+                          <span>·</span>
+                          <span>{new Date(record.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {record.selectedFileIds.map((fileId, index) => {
+                            const file = files.find((f) => f.id === fileId);
+                            return (
+                              <span key={index} className="badge badge-ghost badge-sm">
+                                {file?.alias || file?.fileName || '未知'}
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
+                      <div className="flex items-center gap-1">
+                        {record.status === Status.Success ? (
+                          <Link
+                            to={`/analysis/report/${record.id}`}
+                            className="btn btn-primary btn-sm"
+                            onClick={() => setShowHistoryModal(false)}
+                          >
+                            檢視
+                          </Link>
+                        ) : (
+                          <span className="btn btn-ghost btn-sm btn-disabled">失敗</span>
+                        )}
+                        <button
+                          onClick={() => {
+                            if (window.confirm('確定要刪除此紀錄嗎？')) {
+                              removeHistoryRecord(record.id);
+                            }
+                          }}
+                          className="btn btn-ghost btn-sm text-error"
+                          title="刪除紀錄"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="modal-action">
+              <button onClick={() => setShowHistoryModal(false)} className="btn">
+                關閉
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+          <div className="modal-backdrop" onClick={() => setShowHistoryModal(false)}></div>
+        </div>
+      )}
     </div>
   );
 };
