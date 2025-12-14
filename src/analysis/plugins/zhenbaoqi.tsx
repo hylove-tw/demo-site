@@ -4,7 +4,7 @@ import { renderTreasureReport } from '../../config/analysisRenderers';
 
 const plugin: AnalysisPlugin = {
   id: 'zhenbaoqi',
-  group: '',
+  group: '主要功能',
   name: '珍寶炁',
   shortDescription: '珍寶炁場礦物結晶體測試（台灣專利），推薦最合適的水晶寶石',
   description: '珍寶炁場之礦物結晶體測試系統（台灣專利），透過腦波情緒分析評估不同水晶、寶石等結晶體對人體能量場的影響，推薦與使用者氣場最相合的結晶體產品，達到身心平衡與能量調和的效果。',

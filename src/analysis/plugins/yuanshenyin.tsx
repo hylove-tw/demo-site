@@ -18,7 +18,7 @@ const INSTRUMENTS = [
 
 const plugin: AnalysisPlugin = {
   id: 'yuanshenyin',
-  group: '',
+  group: '主要功能',
   name: '元神音',
   shortDescription: '腦波影音編碼系統，將個人腦波轉換為獨特的心靈音樂五線譜',
   description: '腦波影音編碼及播放系統，將個人腦波數據轉換為獨特的音樂旋律，透過前測（正常睜眼）與後測（正念閉眼）的腦波特徵，編碼生成專屬的心靈音樂五線譜並播放。',

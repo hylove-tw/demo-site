@@ -174,20 +174,18 @@ const AnalysisDetailPage: React.FC = () => {
           <h1 className="text-2xl font-bold mb-2">{plugin.name}</h1>
           <p className="text-base-content/70">{plugin.description}</p>
         </div>
-        {pluginHistory.length > 0 && (
-          <button
-            onClick={() => setShowHistoryModal(true)}
-            className="btn btn-ghost gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            歷史紀錄
-            <span className="badge badge-primary badge-sm">
-              {pluginHistory.filter(r => r.status === Status.Success).length}
-            </span>
-          </button>
-        )}
+        <button
+          onClick={() => setShowHistoryModal(true)}
+          className="btn btn-ghost gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          歷史紀錄
+          <span className="badge badge-primary badge-sm">
+            {pluginHistory.filter(r => r.status === Status.Success).length}
+          </span>
+        </button>
       </div>
 
       {/* 設定卡片 */}
@@ -292,7 +290,17 @@ const AnalysisDetailPage: React.FC = () => {
               </button>
             </div>
             <div className="divide-y divide-base-200 max-h-96 overflow-y-auto">
-              {pluginHistory.map((record) => {
+              {pluginHistory.length === 0 ? (
+                <div className="py-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center mx-auto mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="font-medium">尚無分析紀錄</p>
+                  <p className="text-sm text-base-content/60 mt-1">完成分析後紀錄將顯示於此</p>
+                </div>
+              ) : pluginHistory.map((record) => {
                 const userForRecord = users.find((u) => u.id === record.userId);
                 return (
                   <div key={record.id} className="py-4 first:pt-0">
@@ -353,7 +361,8 @@ const AnalysisDetailPage: React.FC = () => {
                     </div>
                   </div>
                 );
-              })}
+              })
+              }
             </div>
             <div className="modal-action">
               <button onClick={() => setShowHistoryModal(false)} className="btn">
