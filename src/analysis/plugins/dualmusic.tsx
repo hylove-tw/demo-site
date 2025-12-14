@@ -22,10 +22,8 @@ const plugin: AnalysisPlugin = {
   name: '雙人腦波音樂',
   description: '雙人腦波影音編碼系統，將兩人的腦波數據轉化為合奏樂譜。',
   requiredFiles: [
-    { verbose_name: '第一人前測資料', name: 'first_before' },
-    { verbose_name: '第一人後測資料', name: 'first_after' },
-    { verbose_name: '第二人前測資料', name: 'second_before' },
-    { verbose_name: '第二人後測資料', name: 'second_after' },
+    { verbose_name: '第一人腦波資料', name: 'first_player' },
+    { verbose_name: '第二人腦波資料', name: 'second_player' },
   ],
   execute: dualMusicAnalysis,
   renderReport: renderDualMusicReport,

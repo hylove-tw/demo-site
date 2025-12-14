@@ -180,7 +180,7 @@ test.describe('雙人腦波音樂 (dualmusic) Analysis', () => {
     expect(await instrumentSelects.count()).toBeGreaterThanOrEqual(7);
   });
 
-  test('should require 4 files for dual-person analysis', async ({ page }) => {
+  test('should require 2 files for dual-person analysis', async ({ page }) => {
     await setupTestUser(page);
     await setupDualTestFiles(page);
     await page.goto('');
@@ -190,14 +190,14 @@ test.describe('雙人腦波音樂 (dualmusic) Analysis', () => {
     // Click individual selection button
     await page.locator('button:has-text("個別選擇")').click();
 
-    // Verify 4 file dropdowns are visible (they have "請選擇" placeholder)
+    // Verify 2 file dropdowns are visible (they have "請選擇" placeholder)
     const fileSelects = page.locator('select').filter({ hasText: '請選擇' });
-    await expect(fileSelects).toHaveCount(4);
+    await expect(fileSelects).toHaveCount(2);
   });
 
   test('should complete analysis with custom parameters', async ({ page }) => {
     await setupTestUser(page);
-    const { firstBeforeId, firstAfterId, secondBeforeId, secondAfterId } = await setupDualTestFiles(page);
+    const { firstPlayerId, secondPlayerId } = await setupDualTestFiles(page);
     await page.goto('');
 
     await navigateToAnalysis(page, 'dualmusic');
@@ -225,8 +225,8 @@ test.describe('雙人腦波音樂 (dualmusic) Analysis', () => {
     await instrumentSelects.nth(4).selectOption('cello'); // Second P2
     await instrumentSelects.nth(5).selectOption('flute'); // Second P3
 
-    // Select all 4 files
-    await selectDualFilesForAnalysis(page, firstBeforeId, firstAfterId, secondBeforeId, secondAfterId);
+    // Select 2 files for dual-person analysis
+    await selectDualFilesForAnalysis(page, firstPlayerId, secondPlayerId);
 
     // Start analysis
     await startAnalysis(page);

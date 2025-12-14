@@ -51,77 +51,53 @@ export async function setupTestFiles(page: Page): Promise<{ beforeFileId: number
 }
 
 /**
- * Setup 4 test files for dual-person analysis (e.g., dualmusic)
+ * Setup 2 test files for dual-person analysis (e.g., dualmusic)
  */
 export async function setupDualTestFiles(page: Page): Promise<{
-  firstBeforeId: number;
-  firstAfterId: number;
-  secondBeforeId: number;
-  secondAfterId: number;
+  firstPlayerId: number;
+  secondPlayerId: number;
 }> {
-  const firstBeforeData = generateMockBrainwaveData(100);
-  const firstAfterData = generateMockBrainwaveData(100);
-  const secondBeforeData = generateMockBrainwaveData(100);
-  const secondAfterData = generateMockBrainwaveData(100);
+  const firstPlayerData = generateMockBrainwaveData(100);
+  const secondPlayerData = generateMockBrainwaveData(100);
   const now = Date.now();
-  const firstBeforeId = now;
-  const firstAfterId = now + 1;
-  const secondBeforeId = now + 2;
-  const secondAfterId = now + 3;
+  const firstPlayerId = now;
+  const secondPlayerId = now + 1;
 
   await page.evaluate(
-    ({ firstBeforeData, firstAfterData, secondBeforeData, secondAfterData, firstBeforeId, firstAfterId, secondBeforeId, secondAfterId, userId }) => {
+    ({ firstPlayerData, secondPlayerData, firstPlayerId, secondPlayerId, userId }) => {
       const files = [
         {
-          id: firstBeforeId,
-          fileName: 'first_before_test.csv',
-          alias: '第一人前測資料',
+          id: firstPlayerId,
+          fileName: 'first_player_test.csv',
+          alias: '第一人腦波資料',
           uploadedAt: new Date().toISOString(),
-          data: firstBeforeData,
+          data: firstPlayerData,
           userId,
         },
         {
-          id: firstAfterId,
-          fileName: 'first_after_test.csv',
-          alias: '第一人後測資料',
+          id: secondPlayerId,
+          fileName: 'second_player_test.csv',
+          alias: '第二人腦波資料',
           uploadedAt: new Date().toISOString(),
-          data: firstAfterData,
-          userId,
-        },
-        {
-          id: secondBeforeId,
-          fileName: 'second_before_test.csv',
-          alias: '第二人前測資料',
-          uploadedAt: new Date().toISOString(),
-          data: secondBeforeData,
-          userId,
-        },
-        {
-          id: secondAfterId,
-          fileName: 'second_after_test.csv',
-          alias: '第二人後測資料',
-          uploadedAt: new Date().toISOString(),
-          data: secondAfterData,
+          data: secondPlayerData,
           userId,
         },
       ];
       localStorage.setItem('uploadedFiles', JSON.stringify(files));
     },
-    { firstBeforeData, firstAfterData, secondBeforeData, secondAfterData, firstBeforeId, firstAfterId, secondBeforeId, secondAfterId, userId: testUser.id }
+    { firstPlayerData, secondPlayerData, firstPlayerId, secondPlayerId, userId: testUser.id }
   );
 
-  return { firstBeforeId, firstAfterId, secondBeforeId, secondAfterId };
+  return { firstPlayerId, secondPlayerId };
 }
 
 /**
- * Select 4 files for dual-person analysis
+ * Select 2 files for dual-person analysis
  */
 export async function selectDualFilesForAnalysis(
   page: Page,
-  firstBeforeId: number,
-  firstAfterId: number,
-  secondBeforeId: number,
-  secondAfterId: number
+  firstPlayerId: number,
+  secondPlayerId: number
 ): Promise<void> {
   // Scroll to file selection section
   await page.locator('text="選擇檔案"').scrollIntoViewIfNeeded();
@@ -142,16 +118,12 @@ export async function selectDualFilesForAnalysis(
 
   const selectCount = await fileSelects.count();
 
-  if (selectCount >= 4) {
-    await fileSelects.nth(0).selectOption({ value: firstBeforeId.toString() });
+  if (selectCount >= 2) {
+    await fileSelects.nth(0).selectOption({ value: firstPlayerId.toString() });
     await page.waitForTimeout(100);
-    await fileSelects.nth(1).selectOption({ value: firstAfterId.toString() });
-    await page.waitForTimeout(100);
-    await fileSelects.nth(2).selectOption({ value: secondBeforeId.toString() });
-    await page.waitForTimeout(100);
-    await fileSelects.nth(3).selectOption({ value: secondAfterId.toString() });
+    await fileSelects.nth(1).selectOption({ value: secondPlayerId.toString() });
   } else {
-    throw new Error(`Expected at least 4 file select elements, found ${selectCount}`);
+    throw new Error(`Expected at least 2 file select elements, found ${selectCount}`);
   }
 }
 
