@@ -19,7 +19,7 @@ const INSTRUMENTS = [
 const plugin: AnalysisPlugin = {
   id: 'dualmusic',
   group: '',
-  name: '雙人腦波音樂',
+  name: '琴瑟合',
   shortDescription: '將兩人腦波轉化為六聲部合奏樂譜',
   description: '琴瑟合雙人腦波影音編碼系統，將兩人的腦波數據轉化為獨特的合奏樂譜。透過分析雙方腦波特徵，編碼生成六聲部的心靈合奏音樂（每人高、中、低三聲部），呈現兩人情感交流與默契的音樂化表現。',
   requiredFiles: [
