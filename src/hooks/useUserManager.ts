@@ -24,9 +24,29 @@ export interface User {
 const USER_LIST_KEY = 'userList';
 const CURRENT_USER_KEY = 'currentUser';
 
+const DEFAULT_USER: User = {
+  id: 'default-user',
+  name: '預設使用者',
+  phone: '',
+  email: '',
+  role: UserRole.Basic,
+  company: {
+    name: '',
+    address: '',
+    id: '',
+    phone: '',
+    fax: '',
+  },
+};
+
 function loadUsers(): User[] {
   const stored = localStorage.getItem(USER_LIST_KEY);
-  return stored ? (JSON.parse(stored) as User[]) : [];
+  if (stored) {
+    const users = JSON.parse(stored) as User[];
+    return users.length > 0 ? users : [DEFAULT_USER];
+  }
+  // 第一次開啟，建立預設使用者
+  return [DEFAULT_USER];
 }
 
 function loadCurrentUser(initialUsers: User[]): User | null {

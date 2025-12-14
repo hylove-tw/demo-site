@@ -1,460 +1,104 @@
 // src/pages/AnalysisPage.tsx
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { useFileManager, UploadedFile } from "../hooks/useFileManager";
 import { getPlugins, AnalysisPlugin } from "../analysis/registry";
-import MultiSelectModal from "../components/MultiSelectModal";
-import { useUserContext } from "../context/UserContext";
-import {
-  useAnalysisManager,
-  AnalysisHistory,
-} from "../hooks/useAnalysisManager";
+import { useAnalysisManager } from "../hooks/useAnalysisManager";
 
 export enum Status {
   Success = "成功",
   Failure = "失敗",
 }
 
+interface PluginGroup {
+  name: string;
+  plugins: AnalysisPlugin[];
+}
+
 const AnalysisPage: React.FC = () => {
-  const { files } = useFileManager();
-  const { currentUser, users } = useUserContext();
-  const {
-    history,
-    addHistoryRecord,
-    removeHistoryRecord,
-    updateHistoryRecord,
-  } = useAnalysisManager();
+  const { history } = useAnalysisManager();
+  const plugins = getPlugins();
 
-  const [selectedAnalysis, setSelectedAnalysis] =
-    useState<AnalysisPlugin | null>(null);
-  const [selectedFileIds, setSelectedFileIds] = useState<(number | null)[]>([]);
-  const [customParams, setCustomParams] = useState<Record<string, any>>({});
-  const [description, setDescription] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterAnalysisIds, setFilterAnalysisIds] = useState<string[]>([]);
-  const [filterUserIds, setFilterUserIds] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 5;
-
-  useEffect(() => {
-    if (filterAnalysisIds.length === 0) {
-      setFilterAnalysisIds(getPlugins().map((p) => p.id));
+  // 依群組分類插件
+  const groupedPlugins = plugins.reduce<PluginGroup[]>((acc, plugin) => {
+    const groupName = plugin.group || '主要功能';
+    const existingGroup = acc.find((g) => g.name === groupName);
+    if (existingGroup) {
+      existingGroup.plugins.push(plugin);
+    } else {
+      acc.push({ name: groupName, plugins: [plugin] });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return acc;
   }, []);
 
-  useEffect(() => {
-    if (filterUserIds.length === 0 && users.length > 0) {
-      setFilterUserIds(users.map((u) => u.id));
-    }
-  }, [users]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterAnalysisIds, filterUserIds, history]);
-
-  // 當選擇的分析功能改變時，初始化檔案選擇欄位與自訂參數
-  useEffect(() => {
-    if (selectedAnalysis) {
-      setSelectedFileIds(
-        Array(selectedAnalysis.requiredFiles.length).fill(null),
-      );
-      if (selectedAnalysis.customFields) {
-        const defaults: Record<string, any> = {};
-        selectedAnalysis.customFields.forEach((field) => {
-          defaults[field.fieldName] = field.defaultValue;
-        });
-        setCustomParams(defaults);
-      } else {
-        setCustomParams({});
-      }
-      setDescription("");
-    } else {
-      setSelectedFileIds([]);
-      setCustomParams({});
-      setDescription("");
-    }
-  }, [selectedAnalysis]);
-
-  const handleAnalysisChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const analysisId = e.target.value;
-    const analysis = getPlugins().find((fn) => fn.id === analysisId) || null;
-    setSelectedAnalysis(analysis);
-  };
-
-  const handleFileSelection = (index: number, fileId: number) => {
-    const newSelections = [...selectedFileIds];
-    newSelections[index] = fileId;
-    setSelectedFileIds(newSelections);
-  };
-
-  const handleAnalyze = async () => {
-    setError(null);
-    if (!selectedAnalysis) {
-      alert("請先選擇分析功能");
-      return;
-    }
-    if (selectedFileIds.some((id) => id === null)) {
-      alert(
-        `請選擇所有檔案：需要 ${selectedAnalysis.requiredFiles.length} 個檔案`,
-      );
-      return;
-    }
-    // 根據所選檔案 id 取得檔案資料
-    const selectedFiles: UploadedFile[] = [];
-    for (const id of selectedFileIds as number[]) {
-      const file = files.find((f) => f.id === id);
-      if (!file) {
-        alert("選擇的檔案不存在，請重新選擇");
-        return;
-      }
-      selectedFiles.push(file);
-    }
-    // 合併所有檔案資料（以 concat 合併二維陣列）
-    let combinedData: any[][] = [];
-    selectedFiles.forEach((file) => {
-      combinedData = combinedData.concat(file.data);
-    });
-
-    setLoading(true);
-    try {
-      const result = await selectedAnalysis.execute(combinedData, customParams);
-      // 建立新的分析歷史紀錄（成功）
-      const newRecord: AnalysisHistory = {
-        id: Date.now(),
-        analysisId: selectedAnalysis.id,
-        analysisName: selectedAnalysis.name,
-        selectedFileIds: selectedFileIds as number[],
-        result,
-        timestamp: new Date().toISOString(),
-        userId: currentUser ? currentUser.id : "unknown",
-        status: Status.Success,
-        // 假設在 history 中也儲存使用者自訂欄位
-        customParams,
-        description,
-      };
-      addHistoryRecord(newRecord);
-      setDescription("");
-    } catch (err: any) {
-      setError(err.message || "分析失敗");
-      // 失敗也記錄下來
-      const newRecord: AnalysisHistory = {
-        id: Date.now(),
-        analysisId: selectedAnalysis.id,
-        analysisName: selectedAnalysis.name,
-        selectedFileIds: selectedFileIds as number[],
-        result: err.message || "未知錯誤",
-        timestamp: new Date().toISOString(),
-        userId: currentUser ? currentUser.id : "unknown",
-        status: Status.Failure,
-        customParams,
-        description,
-      };
-      addHistoryRecord(newRecord);
-      setDescription("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 產生檔案選擇欄位
-  const renderFileSelections = () => {
-    return selectedAnalysis?.requiredFiles.map((reqFile, index) => (
-      <div key={index} className="form-control mb-2">
-        <label className="label">
-          <span className="label-text">{reqFile.verbose_name}</span>
-        </label>
-        <select
-          className="select select-bordered"
-          value={selectedFileIds[index] || ""}
-          onChange={(e) => handleFileSelection(index, Number(e.target.value))}
-        >
-          <option value="">{`請選擇 ${reqFile.verbose_name}`}</option>
-          {files.map((file) => (
-            <option key={file.id} value={file.id}>
-              {file.alias || file.fileName}
-            </option>
-          ))}
-        </select>
-      </div>
-    ));
-  };
-
-  // 若選擇的分析功能有自訂欄位，則顯示其編輯元件
-  const renderCustomFields = () => {
-    if (selectedAnalysis && selectedAnalysis.editComponent) {
-      const EditComponent = selectedAnalysis.editComponent;
-      return (
-        <div className="mb-4">
-          <EditComponent
-            customParams={customParams}
-            onChange={setCustomParams}
-          />
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const filteredHistory = history.filter((record) => {
-    if (
-      filterAnalysisIds.length > 0 &&
-      !filterAnalysisIds.includes(record.analysisId)
-    ) {
-      return false;
-    }
-    if (filterUserIds.length > 0 && !filterUserIds.includes(record.userId)) {
-      return false;
-    }
-    if (!searchTerm) return true;
-    const userForRecord = users.find((u) => u.id === record.userId);
-    const fileNames = record.selectedFileIds
-      .map((id) => {
-        const f = files.find((fl) => fl.id === id);
-        return f?.alias || f?.fileName || "";
-      })
-      .join(" ");
-    const target =
-      `${record.analysisName} ${userForRecord?.name || ""} ${fileNames} ${record.description || ""}`.toLowerCase();
-    return target.includes(searchTerm.toLowerCase());
+  groupedPlugins.sort((a, b) => {
+    if (a.name === '主要功能') return -1;
+    if (b.name === '主要功能') return 1;
+    return a.name.localeCompare(b.name);
   });
 
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
-  const paginatedHistory = filteredHistory.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
-
-  const renderPagination = () => (
-    <div className="flex justify-center mt-4">
-      <div className="btn-group">
-        <button
-          className="btn"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-        >
-          上一頁
-        </button>
-        <button className="btn" disabled>
-          第 {currentPage} / {totalPages || 1} 頁
-        </button>
-        <button
-          className="btn"
-          disabled={currentPage === totalPages || totalPages === 0}
-          onClick={() =>
-            setCurrentPage((p) =>
-              Math.min(totalPages === 0 ? 1 : totalPages, p + 1),
-            )
-          }
-        >
-          下一頁
-        </button>
-      </div>
-    </div>
-  );
-
-  // 使用 DaisyUI 樣式顯示分析歷史
-  const renderHistoryTable = () => (
-    <div className="overflow-x-auto">
-      <table className="table w-full">
-        <thead>
-          <tr>
-            <th>分析時間</th>
-            <th>分析功能</th>
-            <th>使用者</th>
-            <th>描述</th>
-            <th>選擇檔案</th>
-            <th>結果</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedHistory.map((record) => {
-            const userForRecord = users.find((u) => u.id === record.userId);
-            return (
-              <tr key={record.id}>
-                <td>{new Date(record.timestamp).toLocaleString()}</td>
-                <td>{record.analysisName}</td>
-                <td>{userForRecord ? userForRecord.name : record.userId}</td>
-                <td>{record.description || ""}</td>
-                <td>
-                  {record.selectedFileIds.map((fileId, index) => {
-                    const file = files.find((f) => f.id === fileId);
-                    return (
-                      <span key={index} className="mr-2">
-                        <Link
-                          className="badge badge-outline badge-sm"
-                          to={`/files/${file?.id}`}
-                        >
-                          {file?.alias || file?.fileName}
-                        </Link>
-                      </span>
-                    );
-                  })}
-                </td>
-                <td>
-                  {record.status === Status.Success ? (
-                    <span className="badge badge-success">
-                      {Status.Success}
-                    </span>
-                  ) : (
-                    <span className="badge badge-error">{Status.Failure}</span>
-                  )}
-                </td>
-                <td>
-                  <div className="flex space-x-2">
-                    {record.status === Status.Success ? (
-                      <Link
-                        to={`/analysis/report/${record.id}`}
-                        className="btn btn-sm btn-primary"
-                      >
-                        檢視報告
-                      </Link>
-                    ) : (
-                      <button
-                        className="btn btn-sm btn-warning"
-                        onClick={() => handleAnalyze()}
-                      >
-                        重試
-                      </button>
-                    )}
-                    <button
-                      className="btn btn-sm btn-secondary"
-                      onClick={() => {
-                        const desc = prompt(
-                          "更新描述",
-                          record.description || "",
-                        );
-                        if (desc !== null) {
-                          updateHistoryRecord(record.id, {
-                            ...record,
-                            description: desc,
-                          });
-                        }
-                      }}
-                    >
-                      編輯
-                    </button>
-                    <button
-                      className="btn btn-sm btn-error"
-                      onClick={() => removeHistoryRecord(record.id)}
-                    >
-                      刪除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {renderPagination()}
-    </div>
-  );
+  const successCount = history.filter((r) => r.status === Status.Success).length;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">腦波分析</h1>
-      <div className="card bg-base-100 shadow-md mb-6 p-4">
-        <div className="form-control mb-4">
-          <label className="label">
-            <span className="label-text">選擇分析功能</span>
-          </label>
-          <select
-            className="select select-bordered"
-            value={selectedAnalysis?.id || ""}
-            onChange={handleAnalysisChange}
-          >
-            <option value="">請選擇分析功能</option>
-            {getPlugins().map((config) => (
-              <option key={config.id} value={config.id}>
-                {config.name} (需 {config.requiredFiles.length} 個檔案)
-              </option>
-            ))}
-          </select>
+    <div className="space-y-8">
+      {/* 頁面標題 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text">分析功能</h1>
+          <p className="text-text-muted mt-1">選擇分析功能開始腦波分析</p>
         </div>
-
-        {selectedAnalysis && (
-          <div>
-            <h2 className="text-xl font-semibold mb-2">
-              {selectedAnalysis.group
-                ? `${selectedAnalysis.group} - ${selectedAnalysis.name}`
-                : selectedAnalysis.name}
-            </h2>
-            <p className="mb-4">{selectedAnalysis.description}</p>
-            {/* 檔案選擇欄位 */}
-            {renderFileSelections()}
-            {/* 自訂欄位編輯介面 */}
-            {renderCustomFields()}
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text">分析描述</span>
-              </label>
-              <textarea
-                className="textarea textarea-bordered"
-                placeholder="輸入此分析的描述"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <button
-              className="btn btn-primary mt-4"
-              onClick={handleAnalyze}
-              disabled={loading}
-            >
-              {loading ? "分析中..." : "開始分析"}
-            </button>
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-          </div>
+        {history.length > 0 && (
+          <Link
+            to="/history"
+            className="btn btn-ghost gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            歷史紀錄
+            <span className="badge badge-primary badge-sm">
+              {successCount}
+            </span>
+          </Link>
         )}
       </div>
 
-      <h2 className="text-2xl font-bold mb-2">分析歷史紀錄</h2>
-      <div className="mb-4 flex flex-col md:flex-row md:items-end space-y-2 md:space-y-0 md:space-x-4">
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">篩選分析功能</span>
-          </label>
-          <MultiSelectModal
-            options={getPlugins().map((p) => ({ value: p.id, label: p.name }))}
-            selected={filterAnalysisIds}
-            onChange={setFilterAnalysisIds}
-            placeholder="全部"
-            title="篩選分析功能"
-          />
+      {/* 分析功能列表 */}
+      {groupedPlugins.map((group) => (
+        <div key={group.name}>
+          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wider mb-4">
+            {group.name}
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {group.plugins.map((plugin) => (
+              <Link
+                key={plugin.id}
+                to={`/analysis/${plugin.id}`}
+                className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="card-body flex-row gap-4">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="card-title text-base">
+                      {plugin.name}
+                    </h3>
+                    <p className="text-sm text-base-content/60 mt-1 line-clamp-2">
+                      {plugin.description}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-base-content/50">
+                      <span className="w-1.5 h-1.5 rounded-full bg-base-content/30"></span>
+                      <span>{plugin.requiredFiles.length} 個檔案</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">篩選使用者</span>
-          </label>
-          <MultiSelectModal
-            options={users.map((u) => ({ value: u.id, label: u.name }))}
-            selected={filterUserIds}
-            onChange={setFilterUserIds}
-            placeholder="全部"
-            title="篩選使用者"
-          />
-        </div>
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">搜尋</span>
-          </label>
-          <input
-            type="text"
-            className="input input-bordered"
-            placeholder="輸入關鍵字"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-      {filteredHistory.length === 0 ? (
-        <p>找不到符合的歷史紀錄</p>
-      ) : (
-        renderHistoryTable()
-      )}
+      ))}
     </div>
   );
 };

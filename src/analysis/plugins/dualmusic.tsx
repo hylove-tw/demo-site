@@ -1,7 +1,7 @@
 import React from 'react';
 import { registerPlugin, AnalysisPlugin } from '../registry';
-import { musicAnalysis } from '../../config/analysisMethods';
-import { renderBrainWaveMusicReport } from '../../config/analysisRenderers';
+import { dualMusicAnalysis } from '../../config/analysisMethods';
+import { renderDualMusicReport } from '../../config/analysisRenderers';
 
 // 可選樂器列表
 const INSTRUMENTS = [
@@ -17,23 +17,28 @@ const INSTRUMENTS = [
 ];
 
 const plugin: AnalysisPlugin = {
-  id: 'yuanshenyin',
+  id: 'dualmusic',
   group: '',
-  name: '元神音',
-  description: '單人腦波影音編碼及播放系統，專注於個人腦波數據的動態編碼與影音展示。',
+  name: '雙人腦波音樂',
+  description: '雙人腦波影音編碼系統，將兩人的腦波數據轉化為合奏樂譜。',
   requiredFiles: [
-    { verbose_name: '前測資料', name: 'beforeBrainData' },
-    { verbose_name: '後測資料', name: 'afterBrainData' },
+    { verbose_name: '第一人前測資料', name: 'first_before' },
+    { verbose_name: '第一人後測資料', name: 'first_after' },
+    { verbose_name: '第二人前測資料', name: 'second_before' },
+    { verbose_name: '第二人後測資料', name: 'second_after' },
   ],
-  execute: musicAnalysis,
-  renderReport: renderBrainWaveMusicReport,
+  execute: dualMusicAnalysis,
+  renderReport: renderDualMusicReport,
   customFields: [
     { label: '樂譜標題', fieldName: 'title', type: 'string', defaultValue: '未命名的樂譜' },
     { label: '速度 (BPM)', fieldName: 'bpm', type: 'number', defaultValue: 60 },
     { label: '拍號', fieldName: 'time_signature', type: 'string', defaultValue: '4/4' },
-    { label: '高音域樂器', fieldName: 'p1', type: 'string', defaultValue: 'piano' },
-    { label: '中音域樂器', fieldName: 'p2', type: 'string', defaultValue: 'piano' },
-    { label: '低音域樂器', fieldName: 'p3', type: 'string', defaultValue: 'piano' },
+    { label: '第一人樂器 P1', fieldName: 'first_p1', type: 'string', defaultValue: 'piano' },
+    { label: '第一人樂器 P2', fieldName: 'first_p2', type: 'string', defaultValue: 'piano' },
+    { label: '第一人樂器 P3', fieldName: 'first_p3', type: 'string', defaultValue: 'piano' },
+    { label: '第二人樂器 P1', fieldName: 'second_p1', type: 'string', defaultValue: 'piano' },
+    { label: '第二人樂器 P2', fieldName: 'second_p2', type: 'string', defaultValue: 'piano' },
+    { label: '第二人樂器 P3', fieldName: 'second_p3', type: 'string', defaultValue: 'piano' },
   ],
   editComponent: ({ customParams, onChange }) => {
     const handleChange = (field: string, value: string | number) => {
@@ -106,11 +111,24 @@ const plugin: AnalysisPlugin = {
 
         <div className="divider-minimal">樂器設定</div>
 
-        {/* 樂器選擇 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {renderInstrumentSelect('p1', '高音域樂器 (P1)')}
-          {renderInstrumentSelect('p2', '中音域樂器 (P2)')}
-          {renderInstrumentSelect('p3', '低音域樂器 (P3)')}
+        {/* 第一演奏者樂器 */}
+        <div>
+          <h4 className="text-sm font-medium text-primary mb-3">第一演奏者</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {renderInstrumentSelect('first_p1', '高音域樂器 (P1)')}
+            {renderInstrumentSelect('first_p2', '中音域樂器 (P2)')}
+            {renderInstrumentSelect('first_p3', '低音域樂器 (P3)')}
+          </div>
+        </div>
+
+        {/* 第二演奏者樂器 */}
+        <div>
+          <h4 className="text-sm font-medium text-secondary mb-3">第二演奏者</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {renderInstrumentSelect('second_p1', '高音域樂器 (P1)')}
+            {renderInstrumentSelect('second_p2', '中音域樂器 (P2)')}
+            {renderInstrumentSelect('second_p3', '低音域樂器 (P3)')}
+          </div>
         </div>
       </div>
     );

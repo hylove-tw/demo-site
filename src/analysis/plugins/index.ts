@@ -1,4 +1,5 @@
 import './yuanshenyin';
+import './dualmusic';
 import './hengyunlai';
 import './mindei_normal';
 import './mindei_movement';

@@ -43,7 +43,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = (
         resultContent,
     }
 ) => {
-    const finalLogoUrl = company.logoUrl ?? '/hylove-logo.jpg';
+    const finalLogoUrl = company.logoUrl ?? `${process.env.PUBLIC_URL}/hylove-logo.jpg`;
 
     return (
         <div className="card w-full bg-base-100 shadow-xl p-6">
