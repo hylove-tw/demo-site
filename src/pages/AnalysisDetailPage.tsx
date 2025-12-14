@@ -83,10 +83,9 @@ const AnalysisDetailPage: React.FC = () => {
       selectedFiles.push(file);
     }
 
-    let combinedData: any[][] = [];
-    selectedFiles.forEach((file) => {
-      combinedData = combinedData.concat(file.data);
-    });
+    // 保持每個檔案的資料獨立，不合併
+    // combinedData[0] = 第一個檔案的資料, combinedData[1] = 第二個檔案的資料, ...
+    const combinedData: any[][] = selectedFiles.map((file) => file.data);
 
     setLoading(true);
     try {
