@@ -29,7 +29,7 @@ const TutorialPage: React.FC = () => {
         </ul>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6">使用教學</h1>
+      <h1 className="text-2xl font-bold mb-6">使用教學</h1>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* 教學內容 */}

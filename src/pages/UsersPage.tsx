@@ -78,7 +78,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h1 className="text-3xl font-bold">受測者管理</h1>
+        <h1 className="text-2xl font-bold">受測者管理</h1>
         <button className="btn btn-primary mt-4 sm:mt-0" onClick={handleAddUser}>
           新增受測者
         </button>

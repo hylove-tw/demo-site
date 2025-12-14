@@ -291,7 +291,7 @@ const FileManagePage: React.FC = () => {
         </ul>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6">腦波檔案管理</h1>
+      <h1 className="text-2xl font-bold mb-6">腦波檔案管理</h1>
 
       {/* 上傳區域 */}
       <div className="card bg-base-100 shadow-md mb-6">
