@@ -9,11 +9,11 @@ import {
 import { useUserContext } from '../context/UserContext';
 import ReportLayout, { ReportLayoutProps } from '../components/ReportLayout';
 
-// 群組樣式
-const groupMeta: Record<string, { badgeClass: string }> = {
-  '主要功能': { badgeClass: 'badge-primary' },
-  '利養炁': { badgeClass: 'badge-secondary' },
-  '易 Motion': { badgeClass: 'badge-accent' },
+// 群組樣式與描述
+const groupMeta: Record<string, { badgeClass: string; description: string }> = {
+  '主要功能': { badgeClass: 'badge-primary', description: '核心分析系統' },
+  '利養炁': { badgeClass: 'badge-secondary', description: '正念修行系列' },
+  '易 Motion': { badgeClass: 'badge-accent', description: '情緒評比系列' },
 };
 
 const AnalysisReportPage: React.FC = () => {
@@ -106,14 +106,17 @@ const AnalysisReportPage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            {config?.group && (
+          {config?.group && (
+            <div className="flex items-center gap-2 mb-1">
               <span className={`badge ${groupMeta[config.group]?.badgeClass || 'badge-ghost'}`}>
                 {config.group}
               </span>
-            )}
-            <h1 className="text-2xl font-bold">{record.analysisName}</h1>
-          </div>
+              <span className="text-sm text-base-content/60">
+                {groupMeta[config.group]?.description || ''}
+              </span>
+            </div>
+          )}
+          <h1 className="text-2xl font-bold mb-2">{record.analysisName}</h1>
           <p className="text-base-content/60">分析報告</p>
         </div>
         <div className="flex gap-2 mt-4 sm:mt-0">

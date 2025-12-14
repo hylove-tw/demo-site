@@ -29,11 +29,11 @@ const AnalysisDetailPage: React.FC = () => {
   // 篩選出屬於當前分析功能的歷史紀錄
   const pluginHistory = history.filter((record) => record.analysisId === id);
 
-  // 群組樣式
-  const groupMeta: Record<string, { badgeClass: string }> = {
-    '主要功能': { badgeClass: 'badge-primary' },
-    '利養炁': { badgeClass: 'badge-secondary' },
-    '易 Motion': { badgeClass: 'badge-accent' },
+  // 群組樣式與描述
+  const groupMeta: Record<string, { badgeClass: string; description: string }> = {
+    '主要功能': { badgeClass: 'badge-primary', description: '核心分析系統' },
+    '利養炁': { badgeClass: 'badge-secondary', description: '正念修行系列' },
+    '易 Motion': { badgeClass: 'badge-accent', description: '情緒評比系列' },
   };
 
   useEffect(() => {
@@ -161,14 +161,17 @@ const AnalysisDetailPage: React.FC = () => {
       {/* 頁面標題 */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            {plugin.group && (
+          {plugin.group && (
+            <div className="flex items-center gap-2 mb-1">
               <span className={`badge ${groupMeta[plugin.group]?.badgeClass || 'badge-ghost'}`}>
                 {plugin.group}
               </span>
-            )}
-            <h1 className="text-2xl font-bold">{plugin.name}</h1>
-          </div>
+              <span className="text-sm text-base-content/60">
+                {groupMeta[plugin.group]?.description || ''}
+              </span>
+            </div>
+          )}
+          <h1 className="text-2xl font-bold mb-2">{plugin.name}</h1>
           <p className="text-base-content/70">{plugin.description}</p>
         </div>
         {pluginHistory.length > 0 && (
