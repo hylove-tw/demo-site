@@ -1,125 +1,125 @@
-# HyLove Demo Site v2.2
+# HyLove 腦波分析系統 v2.2
 
-HyLove 腦波分析系統 - 提供多種腦波資料分析功能的網頁應用程式。
+提供多種腦波資料分析功能的網頁應用程式。
 
-**Demo Site**: https://hylove-demo.good-nas.cc
+**Demo 網站**: https://hylove-demo.good-nas.cc
 
-## Features
+## 功能特色
 
-### Core Features
-- **Multi-User Support**: Create and manage multiple user profiles
-- **File Management**: Upload and organize brainwave data files (CSV format)
-- **File Groups**: Group related files for easier analysis workflow
-- **Analysis History**: Track all analysis results with filtering and search
+### 核心功能
+- **多使用者管理**：建立與管理多個使用者資料
+- **檔案管理**：上傳與整理腦波資料檔案（CSV 格式）
+- **資料群組**：將相關檔案分組，簡化分析流程
+- **歷史紀錄**：追蹤所有分析結果，支援篩選與搜尋
 
-### Analysis Plugins
-- **元神音** (Yuanshenyin): Brainwave music encoding and playback
-- **雙人腦波音樂** (Dual Music): Dual-person brainwave music generation
-- **亨運來** (Hengyunlai): H.R. evaluation system
-- **貞天賦** (Zhentianfu): Potential assessment system
-- **利養炁** (Liyangqi): Mindfulness practice analysis
-- **珍寶炁** (Zhenbaoqi): Crystal testing system
-- **情香意** (Qingxiangyi): Fragrance testing system
-- **易** (Yi): Emotion management and ORE testing
+### 分析功能
+- **元神音**：腦波影音編碼及播放系統
+- **雙人腦波音樂**：雙人腦波音樂譜生成
+- **亨運來**：H.R. 評估系統
+- **貞天賦**：潛能評估系統
+- **利養炁**：正念修行分析
+- **珍寶炁**：礦物結晶體測試系統
+- **情香意**：香氛測試系統
+- **易**：情緒管理與 ORE 評比測試
 
-### Report Features
-- Detailed analysis reports with charts and visualizations
-- **Print/PDF Export**: Print reports or save as PDF files
-- Auto-save to history for future reference
+### 報告功能
+- 詳細分析報告，含圖表與視覺化
+- **列印/匯出 PDF**：列印報告或儲存為 PDF 檔案
+- 自動儲存至歷史紀錄
 
-## Tech Stack
+## 技術堆疊
 
-- React 19 with TypeScript
+- React 19 + TypeScript
 - React Router v7
-- DaisyUI / TailwindCSS (custom earth-tone theme)
-- Highcharts for data visualization
-- OpenSheetMusicDisplay for music scores
-- Playwright for E2E testing
+- DaisyUI / TailwindCSS（大地色系主題）
+- Highcharts 資料視覺化
+- OpenSheetMusicDisplay 樂譜顯示
+- Playwright E2E 測試
 
-## Development
+## 開發指令
 
 ```bash
-# Install dependencies
+# 安裝相依套件
 npm install
 
-# Start development server
+# 啟動開發伺服器
 npm start
 
-# Run unit tests
+# 執行單元測試
 npm test
 
-# Run E2E tests
+# 執行 E2E 測試
 npm run test:e2e
 
-# Build for production
+# 建置正式版本
 npm run build
 ```
 
-## Deployment
+## 部署
 
-### Docker Build (Multi-platform)
+### Docker 建置（多平台）
 
 ```bash
-# Create a builder (for Apple Silicon)
+# 建立 builder（適用於 Apple Silicon）
 docker buildx create --use --name mybuilder
 
-# Login to Docker Hub
+# 登入 Docker Hub
 docker login
 
-# Build and push image
+# 建置並推送映像
 docker buildx build --platform linux/amd64,linux/arm64 \
   -t p988744/hylove-demo:2.2 \
   -t p988744/hylove-demo:latest . --push
 ```
 
-### Run with Docker Compose
+### 使用 Docker Compose 執行
 
 ```bash
-# Prepare nginx basic auth file (optional)
+# 建立 nginx 基本驗證檔案（選用）
 htpasswd -c ./nginx/.htpasswd admin
 export HTPASSWD_PATH=$(pwd)/nginx/.htpasswd
 
-# Run with docker-compose
+# 使用 docker-compose 啟動
 docker compose -f docker-compose-prod.yml up -d
 ```
 
-### GitHub Pages Deployment
+### GitHub Pages 部署
 
 ```bash
 npm run deploy
 ```
 
-## Configuration
+## 設定
 
-### Environment Variables
+### 環境變數
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REACT_APP_ANALYSIS_API_BASE` | Backend API base URL | `http://localhost:3000` |
+| 變數 | 說明 | 預設值 |
+|------|------|--------|
+| `REACT_APP_ANALYSIS_API_BASE` | 後端 API 基礎網址 | `http://localhost:3000` |
 
-### Cloudflare Tunnel Setup
+### Cloudflare Tunnel 設定
 
-Navigate to: `Network` > `Tunnels` > `Settings` > `Public Hostname`
+前往：`網路` > `Tunnels` > `設定` > `公用主機名稱`
 
-## Project Structure
+## 專案結構
 
 ```
 src/
-├── analysis/           # Plugin system
-│   ├── registry.ts     # Plugin registry
-│   └── plugins/        # Individual analysis plugins
-├── components/         # Reusable UI components
-├── config/             # Analysis methods and renderers
-├── context/            # React context providers
-├── hooks/              # Custom React hooks
-├── pages/              # Page components
-└── services/           # API services
+├── analysis/           # 外掛系統
+│   ├── registry.ts     # 外掛註冊
+│   └── plugins/        # 個別分析外掛
+├── components/         # 可重用 UI 元件
+├── config/             # 分析方法與渲染器
+├── context/            # React Context Provider
+├── hooks/              # 自訂 React Hooks
+├── pages/              # 頁面元件
+└── services/           # API 服務
 e2e/
-├── fixtures/           # Test data and utilities
-├── helpers/            # Shared test helpers
-└── *.spec.ts           # Test specifications
+├── fixtures/           # 測試資料與工具
+├── helpers/            # 共用測試輔助函式
+└── *.spec.ts           # 測試規格
 ```
 
-## License
+## 授權
 
-Private - All rights reserved.
+私有專案 - 保留所有權利。
