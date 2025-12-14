@@ -99,7 +99,7 @@ const AnalysisPage: React.FC = () => {
                       {plugin.name}
                     </h3>
                     <p className="text-sm text-base-content/60 mt-1 line-clamp-2">
-                      {plugin.description}
+                      {plugin.shortDescription || plugin.description}
                     </p>
                     <div className="flex items-center gap-1.5 mt-2 text-xs text-base-content/50">
                       <span className="w-1.5 h-1.5 rounded-full bg-base-content/30"></span>

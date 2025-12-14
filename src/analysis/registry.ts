@@ -16,7 +16,8 @@ export interface AnalysisPlugin {
   id: string;
   group?: string;
   name: string;
-  description: string;
+  shortDescription?: string; // 首頁卡片用的簡短說明
+  description: string; // 詳細頁面用的完整說明
   requiredFiles: AnalysisRequiredFile[];
   execute: (data: any[][], customParams?: Record<string, any>) => Promise<any>;
   renderReport: (result: any, customParams?: any) => React.ReactNode;

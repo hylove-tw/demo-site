@@ -20,7 +20,8 @@ const plugin: AnalysisPlugin = {
   id: 'yuanshenyin',
   group: '',
   name: '元神音',
-  description: '單人腦波影音編碼及播放系統，專注於個人腦波數據的動態編碼與影音展示。',
+  shortDescription: '將腦波數據轉換為專屬心靈音樂',
+  description: '腦波影音編碼及播放系統，將個人腦波數據轉換為獨特的音樂旋律，透過前測（正常睜眼）與後測（正念閉眼）的腦波特徵，編碼生成專屬的心靈音樂五線譜並播放。',
   requiredFiles: [
     { verbose_name: '前測資料', name: 'beforeBrainData' },
     { verbose_name: '後測資料', name: 'afterBrainData' },
