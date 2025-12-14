@@ -31,10 +31,17 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
     return acc;
   }, []);
 
+  // 群組描述與排序
+  const groupMeta: Record<string, { description: string; badgeClass: string; order: number }> = {
+    '主要功能': { description: '核心分析系統', badgeClass: 'badge-primary', order: 0 },
+    '利養炁': { description: '正念修行系列', badgeClass: 'badge-secondary', order: 1 },
+    '易 Motion': { description: '情緒評比系列', badgeClass: 'badge-accent', order: 2 },
+  };
+
   groupedPlugins.sort((a, b) => {
-    if (a.name === '主要功能') return -1;
-    if (b.name === '主要功能') return 1;
-    return a.name.localeCompare(b.name);
+    const orderA = groupMeta[a.name]?.order ?? 99;
+    const orderB = groupMeta[b.name]?.order ?? 99;
+    return orderA - orderB;
   });
 
   const handleSwitchUser = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -133,30 +140,35 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
             <div className="px-3 mb-3">
               <span className="text-xs font-medium text-text-muted uppercase tracking-wider">分析功能</span>
             </div>
-            {groupedPlugins.map((group) => (
-              <div key={group.name} className="mb-5">
-                <div className="px-3 mb-2">
-                  <span className="text-xs text-text-light">{group.name}</span>
+            {groupedPlugins.map((group) => {
+              const meta = groupMeta[group.name] || { description: '', badgeClass: 'badge-ghost', order: 99 };
+              return (
+                <div key={group.name} className="mb-5">
+                  {/* 群組標題 - 比照教學頁面設計 */}
+                  <div className="px-3 mb-2 flex items-center gap-2">
+                    <span className={`badge badge-sm ${meta.badgeClass}`}>{group.name}</span>
+                    <span className="text-[10px] text-text-light">{meta.description}</span>
+                  </div>
+                  <ul className="space-y-0.5">
+                    {group.plugins.map((plugin) => (
+                      <li key={plugin.id}>
+                        <Link
+                          to={`/analysis/${plugin.id}`}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                            isAnalysisActive(plugin.id)
+                              ? 'bg-bg-active text-text font-medium'
+                              : 'text-text-muted hover:text-text hover:bg-bg-hover'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAnalysisActive(plugin.id) ? 'bg-primary' : 'bg-text-light'}`}></span>
+                          <span className="truncate">{plugin.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="space-y-0.5">
-                  {group.plugins.map((plugin) => (
-                    <li key={plugin.id}>
-                      <Link
-                        to={`/analysis/${plugin.id}`}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                          isAnalysisActive(plugin.id)
-                            ? 'bg-bg-active text-text font-medium'
-                            : 'text-text-muted hover:text-text hover:bg-bg-hover'
-                        }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${isAnalysisActive(plugin.id) ? 'bg-primary' : 'bg-text-light'}`}></span>
-                        <span className="truncate">{plugin.name}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </nav>
 
@@ -239,31 +251,36 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
                 <div className="px-3 mb-3">
                   <span className="text-xs font-medium text-text-muted uppercase tracking-wider">分析功能</span>
                 </div>
-                {groupedPlugins.map((group) => (
-                  <div key={group.name} className="mb-5">
-                    <div className="px-3 mb-2">
-                      <span className="text-xs text-text-light">{group.name}</span>
+                {groupedPlugins.map((group) => {
+                  const meta = groupMeta[group.name] || { description: '', badgeClass: 'badge-ghost', order: 99 };
+                  return (
+                    <div key={group.name} className="mb-5">
+                      {/* 群組標題 - 比照教學頁面設計 */}
+                      <div className="px-3 mb-2 flex items-center gap-2">
+                        <span className={`badge badge-sm ${meta.badgeClass}`}>{group.name}</span>
+                        <span className="text-[10px] text-text-light">{meta.description}</span>
+                      </div>
+                      <ul className="space-y-0.5">
+                        {group.plugins.map((plugin) => (
+                          <li key={plugin.id}>
+                            <Link
+                              to={`/analysis/${plugin.id}`}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                                isAnalysisActive(plugin.id)
+                                  ? 'bg-bg-active text-text font-medium'
+                                  : 'text-text-muted hover:text-text hover:bg-bg-hover'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAnalysisActive(plugin.id) ? 'bg-primary' : 'bg-text-light'}`}></span>
+                              <span className="truncate">{plugin.name}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="space-y-0.5">
-                      {group.plugins.map((plugin) => (
-                        <li key={plugin.id}>
-                          <Link
-                            to={`/analysis/${plugin.id}`}
-                            onClick={() => setSidebarOpen(false)}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
-                              isAnalysisActive(plugin.id)
-                                ? 'bg-bg-active text-text font-medium'
-                                : 'text-text-muted hover:text-text hover:bg-bg-hover'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${isAnalysisActive(plugin.id) ? 'bg-primary' : 'bg-text-light'}`}></span>
-                            <span className="truncate">{plugin.name}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </nav>
           </aside>
