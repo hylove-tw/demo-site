@@ -73,23 +73,23 @@ const UsersPage: React.FC = () => {
           <li>
             <Link to="/">首頁</Link>
           </li>
-          <li>使用者管理</li>
+          <li>受測者管理</li>
         </ul>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h1 className="text-3xl font-bold">使用者管理</h1>
+        <h1 className="text-3xl font-bold">受測者管理</h1>
         <button className="btn btn-primary mt-4 sm:mt-0" onClick={handleAddUser}>
-          新增使用者
+          新增受測者
         </button>
       </div>
 
-      {/* 目前使用者資訊 */}
+      {/* 目前受測者資訊 */}
       {currentUser && (
         <div className="card bg-base-100 shadow-md mb-6">
           <div className="card-body">
             <div className="flex items-center justify-between">
-              <h2 className="card-title">目前使用者</h2>
+              <h2 className="card-title">目前受測者</h2>
               <span className="badge badge-primary">{currentUser.role}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
@@ -116,12 +116,12 @@ const UsersPage: React.FC = () => {
         </div>
       )}
 
-      {/* 使用者列表 */}
-      <h2 className="text-2xl font-bold mb-4">所有使用者</h2>
+      {/* 受測者列表 */}
+      <h2 className="text-2xl font-bold mb-4">所有受測者</h2>
       {users.length === 0 ? (
         <div className="text-center py-8 text-base-content/60">
-          <p>尚無使用者</p>
-          <p className="text-sm mt-2">請點擊上方按鈕新增使用者</p>
+          <p>尚無受測者</p>
+          <p className="text-sm mt-2">請點擊上方按鈕新增受測者</p>
         </div>
       ) : (
         <>
@@ -274,7 +274,7 @@ const UsersPage: React.FC = () => {
           <div className="modal-box">
             <h3 className="font-bold text-lg">確認刪除</h3>
             <p className="py-4">
-              確定要刪除使用者「<span className="font-semibold">{deleteConfirmUser.name}</span>」嗎？
+              確定要刪除受測者「<span className="font-semibold">{deleteConfirmUser.name}</span>」嗎？
               <br />
               <span className="text-sm text-base-content/60">此操作無法復原。</span>
             </p>

@@ -51,7 +51,7 @@ const UserForm: React.FC<UserFormProps> = ({initialInfo, onSave, onCancel}) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-xl font-semibold">{form.id ? '編輯使用者' : '新增使用者'}</h2>
+            <h2 className="text-xl font-semibold">{form.id ? '編輯受測者' : '新增受測者'}</h2>
 
             <div className="form-control form-control-minimal">
                 <label className="label label-minimal">

@@ -73,11 +73,11 @@ const ReportLayout: React.FC<ReportLayoutProps> = (
                 </div>
             </div>
 
-            {/* 使用者與測試資訊 */}
+            {/* 受測者與測試資訊 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-base-200 p-4 rounded">
                 <div>
                     <p>
-                        <strong>使用者ID：</strong> {user.id}
+                        <strong>受測者ID：</strong> {user.id}
                     </p>
                     <p>
                         <strong>姓名：</strong> {user.name}

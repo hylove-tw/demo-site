@@ -26,7 +26,7 @@ const CURRENT_USER_KEY = 'currentUser';
 
 const DEFAULT_USER: User = {
   id: 'default-user',
-  name: '預設使用者',
+  name: '預設受測者',
   phone: '',
   email: '',
   role: UserRole.Basic,

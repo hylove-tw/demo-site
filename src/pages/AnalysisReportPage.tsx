@@ -45,7 +45,7 @@ const AnalysisReportPage: React.FC = () => {
   const userForRecord = users.find((u) => u.id === record.userId);
   const userInfo = {
     id: userForRecord?.id || 'unknown',
-    name: userForRecord?.name || '未知使用者',
+    name: userForRecord?.name || '未知受測者',
     phone: userForRecord?.phone || '未設定',
     email: userForRecord?.email || '未設定',
   };

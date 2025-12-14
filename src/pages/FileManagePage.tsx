@@ -63,7 +63,7 @@ const FileManagePage: React.FC = () => {
       return;
     }
     if (!currentUser) {
-      alert('請先設定使用者');
+      alert('請先選擇受測者');
       return;
     }
     try {
@@ -119,7 +119,7 @@ const FileManagePage: React.FC = () => {
       return;
     }
     if (!currentUser) {
-      alert('請先設定使用者');
+      alert('請先選擇受測者');
       return;
     }
 
@@ -201,7 +201,7 @@ const FileManagePage: React.FC = () => {
       return;
     }
     if (!currentUser) {
-      alert('請先設定使用者');
+      alert('請先選擇受測者');
       return;
     }
 
@@ -338,9 +338,9 @@ const FileManagePage: React.FC = () => {
           {!currentUser && (
             <div className="alert alert-warning mt-4">
               <span>
-                請先選擇使用者。
+                請先選擇受測者。
                 <Link to="/users" className="link link-primary ml-1">
-                  前往使用者管理
+                  前往受測者管理
                 </Link>
               </span>
             </div>
@@ -381,7 +381,7 @@ const FileManagePage: React.FC = () => {
                     <th>檔案名稱</th>
                     <th>群組</th>
                     <th>上傳時間</th>
-                    <th>使用者</th>
+                    <th>受測者</th>
                     <th>操作</th>
                   </tr>
                 </thead>
@@ -517,7 +517,7 @@ const FileManagePage: React.FC = () => {
                       </div>
                       <div className="text-sm text-base-content/60 mt-2">
                         <p>建立時間：{new Date(group.createdAt).toLocaleString()}</p>
-                        <p>所屬使用者：{owner?.name || '未知'}</p>
+                        <p>所屬受測者：{owner?.name || '未知'}</p>
                       </div>
                       <div className="mt-3">
                         <p className="text-sm font-medium mb-1">包含檔案：</p>

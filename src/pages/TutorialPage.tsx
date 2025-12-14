@@ -7,7 +7,7 @@ const TutorialPage: React.FC = () => {
 
   const sections = [
     { id: 'getting-started', title: '開始使用' },
-    { id: 'user-management', title: '使用者管理' },
+    { id: 'user-management', title: '受測者管理' },
     { id: 'file-upload', title: '上傳腦波檔案' },
     { id: 'file-view', title: '檢視腦波資料' },
     { id: 'file-group', title: '腦波資料群組' },
@@ -50,16 +50,16 @@ const TutorialPage: React.FC = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>首次使用時，系統會自動建立一個「預設使用者」供您使用。</span>
+                    <span>首次使用時，系統會自動建立一個「預設受測者」供您使用。</span>
                   </div>
 
                   <h3 className="text-lg font-semibold mt-6">快速開始步驟</h3>
                   <ul className="steps steps-vertical">
                     <li className="step step-primary">
                       <div className="text-left ml-4">
-                        <p className="font-medium">確認使用者</p>
+                        <p className="font-medium">確認受測者</p>
                         <p className="text-sm text-base-content/60">
-                          系統右上角會顯示目前使用者，可前往「使用者管理」新增或切換
+                          系統右上角會顯示目前受測者，可前往「受測者管理」新增或切換
                         </p>
                       </div>
                     </li>
@@ -97,18 +97,18 @@ const TutorialPage: React.FC = () => {
           {activeSection === 'user-management' && (
             <section className="card bg-base-100 shadow-md">
               <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">使用者管理</h2>
+                <h2 className="card-title text-2xl mb-4">受測者管理</h2>
 
                 <div className="space-y-4">
                   <p>
-                    使用者管理功能讓您可以建立多個使用者帳號，方便管理不同客戶或受測者的資料。
+                    受測者管理功能讓您可以建立多個受測者資料，方便管理不同客戶或個案的腦波分析紀錄。
                   </p>
 
-                  <h3 className="text-lg font-semibold mt-6">新增使用者</h3>
+                  <h3 className="text-lg font-semibold mt-6">新增受測者</h3>
                   <ol className="list-decimal list-inside space-y-2 ml-4">
-                    <li>點擊左側選單的「使用者管理」</li>
-                    <li>點擊右上角「新增使用者」按鈕</li>
-                    <li>填寫使用者資訊：
+                    <li>點擊左側選單的「受測者管理」</li>
+                    <li>點擊右上角「新增受測者」按鈕</li>
+                    <li>填寫受測者資訊：
                       <ul className="list-disc list-inside ml-6 mt-2 text-base-content/70">
                         <li>姓名（必填）</li>
                         <li>電話（必填）</li>
@@ -119,17 +119,17 @@ const TutorialPage: React.FC = () => {
                     <li>點擊「儲存」完成建立</li>
                   </ol>
 
-                  <h3 className="text-lg font-semibold mt-6">切換使用者</h3>
+                  <h3 className="text-lg font-semibold mt-6">切換受測者</h3>
                   <p>
-                    在使用者列表中，點擊「切換」按鈕即可切換至該使用者。
-                    目前使用中的使用者會以綠色標籤標示。
+                    在受測者列表中，點擊「切換」按鈕即可切換至該受測者。
+                    目前選取的受測者會以綠色標籤標示。
                   </p>
 
                   <div className="alert alert-warning mt-4">
                     <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <span>刪除使用者時，該使用者的檔案和分析記錄不會被刪除。</span>
+                    <span>刪除受測者時，該受測者的檔案和分析記錄不會被刪除。</span>
                   </div>
                 </div>
               </div>
@@ -146,16 +146,17 @@ const TutorialPage: React.FC = () => {
                   <h3 className="text-lg font-semibold">支援的檔案格式</h3>
                   <div className="flex gap-2">
                     <span className="badge badge-primary badge-lg">CSV</span>
+                    <span className="badge badge-primary badge-lg">XLSX</span>
                   </div>
                   <p className="text-base-content/70">
-                    目前僅支援 CSV 格式的腦波資料檔案。
+                    支援 CSV 與 Excel (XLSX) 格式的腦波資料檔案。
                   </p>
 
                   <h3 className="text-lg font-semibold mt-6">上傳步驟</h3>
                   <ol className="list-decimal list-inside space-y-2 ml-4">
                     <li>點擊左側選單的「腦波檔案管理」</li>
                     <li>點擊「選擇檔案」按鈕</li>
-                    <li>可同時選擇多個 CSV 檔案</li>
+                    <li>可同時選擇多個 CSV 或 XLSX 檔案</li>
                     <li>確認已選擇的檔案數量</li>
                     <li>點擊「上傳檔案」按鈕</li>
                   </ol>
@@ -165,7 +166,7 @@ const TutorialPage: React.FC = () => {
                       <div className="input">腦波檔案管理</div>
                     </div>
                     <div className="px-4 py-8 bg-base-200 text-center">
-                      <p className="text-base-content/60">選擇 CSV 檔案後點擊上傳</p>
+                      <p className="text-base-content/60">選擇 CSV 或 XLSX 檔案後點擊上傳</p>
                       <p className="text-sm text-base-content/40 mt-2">支援多檔案同時上傳</p>
                     </div>
                   </div>
@@ -299,40 +300,125 @@ const TutorialPage: React.FC = () => {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">可用的分析功能</h3>
-                  <p>系統提供多種分析功能，包括：</p>
+                  <p>系統提供 15 種分析功能，分為四大類別：</p>
 
-                  <div className="grid gap-2 md:grid-cols-2 mt-4">
+                  {/* 主要功能 */}
+                  <h4 className="font-medium mt-4 mb-2">主要功能</h4>
+                  <div className="grid gap-2 md:grid-cols-2">
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要功能</span>
-                      <span>元神音</span>
+                      <span className="badge badge-primary">主要</span>
+                      <div>
+                        <p className="font-medium">元神音</p>
+                        <p className="text-xs text-base-content/60">腦波影音編碼，轉換為心靈音樂</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要功能</span>
-                      <span>亨運來</span>
+                      <span className="badge badge-primary">主要</span>
+                      <div>
+                        <p className="font-medium">亨運來</p>
+                        <p className="text-xs text-base-content/60">H.R 人力資源八大職能評估</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要功能</span>
-                      <span>貞天賦</span>
+                      <span className="badge badge-primary">主要</span>
+                      <div>
+                        <p className="font-medium">貞天賦</p>
+                        <p className="text-xs text-base-content/60">八項人格特質潛能分析</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要功能</span>
-                      <span>珍寶炁</span>
+                      <span className="badge badge-primary">主要</span>
+                      <div>
+                        <p className="font-medium">珍寶炁</p>
+                        <p className="text-xs text-base-content/60">礦物結晶體炁場測試（台灣專利）</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要功能</span>
-                      <span>情香意</span>
+                      <span className="badge badge-primary">主要</span>
+                      <div>
+                        <p className="font-medium">情香意</p>
+                        <p className="text-xs text-base-content/60">香氛炁場測試與芳療建議</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-primary">主要</span>
+                      <div>
+                        <p className="font-medium">琴瑟合</p>
+                        <p className="text-xs text-base-content/60">雙人腦波六聲部合奏音樂</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 利養炁 */}
+                  <h4 className="font-medium mt-4 mb-2">利養炁（正念修行系列）</h4>
+                  <div className="grid gap-2 md:grid-cols-3">
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-secondary">利養炁</span>
+                      <div>
+                        <p className="font-medium">正念修行</p>
+                        <p className="text-xs text-base-content/60">身心指數評估</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
                       <span className="badge badge-secondary">利養炁</span>
-                      <span>正念修行</span>
+                      <div>
+                        <p className="font-medium">練炁修行</p>
+                        <p className="text-xs text-base-content/60">能量運行分析</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
                       <span className="badge badge-secondary">利養炁</span>
-                      <span>練炁修行</span>
+                      <div>
+                        <p className="font-medium">練炁品階</p>
+                        <p className="text-xs text-base-content/60">修行境界評估</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 易 Motion */}
+                  <h4 className="font-medium mt-4 mb-2">易 Motion（情緒評比系列）</h4>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-accent">易</span>
+                      <div>
+                        <p className="font-medium">情緒管理系統</p>
+                        <p className="text-xs text-base-content/60">員工情緒追蹤與預測</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">評比測試</span>
-                      <span>寵物 / 飲品 / 香水...</span>
+                      <span className="badge badge-accent">易</span>
+                      <div>
+                        <p className="font-medium">寵物評比測試</p>
+                        <p className="text-xs text-base-content/60">視覺+觸覺情緒分析</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-accent">易</span>
+                      <div>
+                        <p className="font-medium">品茶/品酒/品咖啡</p>
+                        <p className="text-xs text-base-content/60">嗅覺+味覺情緒分析</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-accent">易</span>
+                      <div>
+                        <p className="font-medium">香水評比測試</p>
+                        <p className="text-xs text-base-content/60">嗅覺情緒分析</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-accent">易</span>
+                      <div>
+                        <p className="font-medium">音樂演奏/歌曲演唱</p>
+                        <p className="text-xs text-base-content/60">聽覺情緒分析</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
+                      <span className="badge badge-accent">易</span>
+                      <div>
+                        <p className="font-medium">短視頻廣告評比</p>
+                        <p className="text-xs text-base-content/60">視聽覺情緒分析</p>
+                      </div>
                     </div>
                   </div>
 
@@ -465,8 +551,8 @@ const TutorialPage: React.FC = () => {
                       <span className="text-sm">依分析功能類型篩選</span>
                     </div>
                     <div className="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
-                      <span className="badge badge-sm mt-0.5">使用者</span>
-                      <span className="text-sm">依使用者篩選紀錄</span>
+                      <span className="badge badge-sm mt-0.5">受測者</span>
+                      <span className="text-sm">依受測者篩選紀錄</span>
                     </div>
                   </div>
 
@@ -501,9 +587,9 @@ const TutorialPage: React.FC = () => {
                     <div className="collapse-content">
                       <p>請確認：</p>
                       <ul className="list-disc list-inside ml-4 mt-2">
-                        <li>檔案格式為 CSV</li>
+                        <li>檔案格式為 CSV 或 XLSX</li>
                         <li>檔案沒有損壞</li>
-                        <li>已選擇使用者</li>
+                        <li>已選擇受測者</li>
                       </ul>
                     </div>
                   </div>

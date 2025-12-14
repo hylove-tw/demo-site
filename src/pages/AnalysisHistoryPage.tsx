@@ -170,7 +170,7 @@ const AnalysisHistoryPage: React.FC = () => {
                 value={filterUserId}
                 onChange={(e) => setFilterUserId(e.target.value)}
               >
-                <option value="all">所有使用者</option>
+                <option value="all">所有受測者</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>{u.name}</option>
                 ))}

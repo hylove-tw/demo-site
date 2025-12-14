@@ -65,7 +65,7 @@ const AnalysisDetailPage: React.FC = () => {
       return;
     }
     if (!currentUser) {
-      alert('請先選擇使用者');
+      alert('請先選擇受測者');
       return;
     }
     if (selectedFileIds.some((fid) => fid === null)) {
@@ -178,9 +178,9 @@ const AnalysisDetailPage: React.FC = () => {
             ) : (
               <div className="alert alert-warning">
                 <span>
-                  請先選擇使用者。
+                  請先選擇受測者。
                   <Link to="/users" className="link link-primary ml-1">
-                    前往使用者管理
+                    前往受測者管理
                   </Link>
                 </span>
               </div>
@@ -302,7 +302,7 @@ const AnalysisDetailPage: React.FC = () => {
                             )}
                           </div>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mb-2">
-                            <span>{userForRecord?.name || '未知使用者'}</span>
+                            <span>{userForRecord?.name || '未知受測者'}</span>
                             <span>·</span>
                             <span>{new Date(record.timestamp).toLocaleString()}</span>
                           </div>

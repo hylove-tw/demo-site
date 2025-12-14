@@ -125,7 +125,7 @@ const FileDetailPage: React.FC = () => {
               <p className="font-medium">{new Date(file.uploadedAt).toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-base-content/60">所屬使用者</p>
+              <p className="text-base-content/60">所屬受測者</p>
               <p className="font-medium">{owner?.name || file.userId}</p>
             </div>
           </div>

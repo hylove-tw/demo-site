@@ -62,7 +62,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
       </svg>
     )},
-    { path: '/users', label: '使用者', icon: (
+    { path: '/users', label: '受測者', icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
       </svg>
@@ -92,7 +92,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
         <div className="px-4 py-3 border-b border-border-light">
           <div className="form-control">
             <label className="label label-minimal py-0 mb-1">
-              <span className="label-text text-[10px]">使用者</span>
+              <span className="label-text text-[10px]">受測者</span>
             </label>
             <select
               className="select select-underline w-full text-sm"
@@ -198,7 +198,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
             <div className="px-4 py-3 border-b border-border-light">
               <div className="form-control">
                 <label className="label label-minimal py-0 mb-1">
-                  <span className="label-text text-[10px]">使用者</span>
+                  <span className="label-text text-[10px]">受測者</span>
                 </label>
                 <select
                   className="select select-underline w-full text-sm"
