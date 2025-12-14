@@ -40,6 +40,19 @@ const AnalysisPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Demo 網站提示 */}
+      <div className="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <span className="font-medium">這是展示用 Demo 網站</span>
+          <span className="hidden sm:inline"> — </span>
+          <br className="sm:hidden" />
+          <span>所有資料僅儲存於您的瀏覽器中，不會上傳至伺服器。清除瀏覽器資料將會遺失所有內容。</span>
+        </div>
+      </div>
+
       {/* 頁面標題 */}
       <div className="flex items-center justify-between">
         <div>
