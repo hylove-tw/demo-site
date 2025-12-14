@@ -222,15 +222,25 @@ const BRAINWAVE_FIELDS = [
 ];
 
 // 將腦波資料陣列轉換為 API 需要的格式
-function transformBrainData(data: any[]): Record<string, number[]> {
+function transformBrainData(data: any): Record<string, number[]> {
   const result: Record<string, number[]> = {};
+
+  // 確保 data 是陣列
+  if (!Array.isArray(data)) {
+    console.error('transformBrainData: data is not an array', data);
+    // 回傳空陣列作為預設值
+    for (const field of BRAINWAVE_FIELDS) {
+      result[field] = [];
+    }
+    return result;
+  }
 
   // 取最多 30 筆資料
   const limitedData = data.slice(0, 30);
 
   for (const field of BRAINWAVE_FIELDS) {
     result[field] = limitedData.map(row => {
-      const value = row[field];
+      const value = row?.[field];
       return typeof value === 'number' ? value : parseFloat(value) || 0;
     });
   }
