@@ -7,6 +7,13 @@ import { useUserContext } from '../context/UserContext';
 import { useAnalysisManager } from '../hooks/useAnalysisManager';
 import { Status } from './AnalysisPage';
 
+// 群組樣式
+const groupMeta: Record<string, { badgeClass: string }> = {
+  '主要功能': { badgeClass: 'badge-primary' },
+  '利養炁': { badgeClass: 'badge-secondary' },
+  '易 Motion': { badgeClass: 'badge-accent' },
+};
+
 const AnalysisHistoryPage: React.FC = () => {
   const { files } = useFileManager();
   const { users } = useUserContext();
@@ -223,6 +230,8 @@ const AnalysisHistoryPage: React.FC = () => {
             <div className="divide-y divide-base-200">
               {paginatedHistory.map((record) => {
                 const userForRecord = users.find((u) => u.id === record.userId);
+                const plugin = plugins.find((p) => p.id === record.analysisId);
+                const group = plugin?.group || '主要功能';
                 return (
                   <div key={record.id} className="p-4 hover:bg-base-200/50 transition-colors">
                     <div className="flex items-start gap-3">
@@ -244,6 +253,9 @@ const AnalysisHistoryPage: React.FC = () => {
                       {/* 內容 */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`badge badge-sm ${groupMeta[group]?.badgeClass || 'badge-ghost'}`}>
+                            {group}
+                          </span>
                           <Link
                             to={`/analysis/${record.analysisId}`}
                             className="font-medium hover:text-primary transition-colors"

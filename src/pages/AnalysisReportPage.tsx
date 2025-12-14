@@ -9,6 +9,13 @@ import {
 import { useUserContext } from '../context/UserContext';
 import ReportLayout, { ReportLayoutProps } from '../components/ReportLayout';
 
+// 群組樣式
+const groupMeta: Record<string, { badgeClass: string }> = {
+  '主要功能': { badgeClass: 'badge-primary' },
+  '利養炁': { badgeClass: 'badge-secondary' },
+  '易 Motion': { badgeClass: 'badge-accent' },
+};
+
 const AnalysisReportPage: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const { history } = useAnalysisManager();
@@ -97,8 +104,18 @@ const AnalysisReportPage: React.FC = () => {
         </ul>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h1 className="text-3xl font-bold">{record.analysisName} - 分析報告</h1>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            {config?.group && (
+              <span className={`badge ${groupMeta[config.group]?.badgeClass || 'badge-ghost'}`}>
+                {config.group}
+              </span>
+            )}
+            <h1 className="text-2xl font-bold">{record.analysisName}</h1>
+          </div>
+          <p className="text-base-content/60">分析報告</p>
+        </div>
         <div className="flex gap-2 mt-4 sm:mt-0">
           <button
             onClick={() => window.print()}
