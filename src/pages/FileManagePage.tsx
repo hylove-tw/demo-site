@@ -511,7 +511,7 @@ const FileManagePage: React.FC = () => {
                     <div className="card-body">
                       <div className="flex items-start justify-between">
                         <h3 className="card-title text-lg">{group.name}</h3>
-                        <span className="badge badge-primary">
+                        <span className="badge badge-primary badge-sm">
                           {groupFiles.length} 個檔案
                         </span>
                       </div>
@@ -746,7 +746,7 @@ const FileManagePage: React.FC = () => {
                         </span>
                         {file.groupId &&
                           file.groupId !== selectedGroupToEdit.id && (
-                            <span className="badge badge-outline badge-xs">
+                            <span className="badge badge-outline badge-sm">
                               {groups.find((g) => g.id === file.groupId)?.name}
                             </span>
                           )}
@@ -822,7 +822,7 @@ const FileManagePage: React.FC = () => {
                           {file.alias || file.fileName}
                         </span>
                         {file.groupId && (
-                          <span className="badge badge-outline badge-xs">
+                          <span className="badge badge-outline badge-sm">
                             {groups.find((g) => g.id === file.groupId)?.name}
                           </span>
                         )}

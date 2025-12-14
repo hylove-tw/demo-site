@@ -90,7 +90,7 @@ const UsersPage: React.FC = () => {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <h2 className="card-title">目前受測者</h2>
-              <span className="badge badge-primary">{currentUser.role}</span>
+              <span className="badge badge-primary badge-sm">{currentUser.role}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
               <div>
@@ -164,7 +164,7 @@ const UsersPage: React.FC = () => {
                           </button>
                         )}
                         {currentUser?.id === user.id && (
-                          <span className="badge badge-success">使用中</span>
+                          <span className="badge badge-success badge-sm">使用中</span>
                         )}
                         <button
                           className="btn btn-sm btn-ghost"

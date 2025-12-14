@@ -89,7 +89,7 @@ const AnalysisPage: React.FC = () => {
           <div key={group.name}>
             {/* 群組標題 - 比照教學頁面設計 */}
             <div className="flex items-center gap-3 mb-4">
-              <span className={`badge ${meta.badgeClass}`}>{group.name}</span>
+              <span className={`badge badge-sm ${meta.badgeClass}`}>{group.name}</span>
               <span className="text-sm text-text-muted">{meta.description}</span>
             </div>
             <div className="grid gap-3 md:grid-cols-2">

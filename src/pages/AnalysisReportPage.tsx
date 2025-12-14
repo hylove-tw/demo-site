@@ -108,7 +108,7 @@ const AnalysisReportPage: React.FC = () => {
         <div>
           {config?.group && (
             <div className="flex items-center gap-2 mb-1">
-              <span className={`badge ${groupMeta[config.group]?.badgeClass || 'badge-ghost'}`}>
+              <span className={`badge badge-sm ${groupMeta[config.group]?.badgeClass || 'badge-ghost'}`}>
                 {config.group}
               </span>
               <span className="text-sm text-base-content/60">

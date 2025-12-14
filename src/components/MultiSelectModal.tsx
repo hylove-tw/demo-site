@@ -44,7 +44,7 @@ const MultiSelectModal: React.FC<MultiSelectModalProps> = ({
       {selectedOptions.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {selectedOptions.map((opt) => (
-            <span key={opt.value} className="badge gap-1">
+            <span key={opt.value} className="badge badge-sm gap-1">
               {opt.label}
               <button
                 type="button"

@@ -145,8 +145,8 @@ const TutorialPage: React.FC = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">支援的檔案格式</h3>
                   <div className="flex gap-2">
-                    <span className="badge badge-primary badge-lg">CSV</span>
-                    <span className="badge badge-primary badge-lg">XLSX</span>
+                    <span className="badge badge-primary badge-sm">CSV</span>
+                    <span className="badge badge-primary badge-sm">XLSX</span>
                   </div>
                   <p className="text-base-content/70">
                     支援 CSV 與 Excel (XLSX) 格式的腦波資料檔案。
@@ -306,42 +306,42 @@ const TutorialPage: React.FC = () => {
                   <h4 className="font-medium mt-4 mb-2">主要功能</h4>
                   <div className="grid gap-2 md:grid-cols-2">
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要</span>
+                      <span className="badge badge-primary badge-sm">主要</span>
                       <div>
                         <p className="font-medium">元神音</p>
                         <p className="text-xs text-base-content/60">腦波影音編碼，轉換為心靈音樂</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要</span>
+                      <span className="badge badge-primary badge-sm">主要</span>
                       <div>
                         <p className="font-medium">亨運來</p>
                         <p className="text-xs text-base-content/60">H.R 人力資源八大職能評估</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要</span>
+                      <span className="badge badge-primary badge-sm">主要</span>
                       <div>
                         <p className="font-medium">貞天賦</p>
                         <p className="text-xs text-base-content/60">八項人格特質潛能分析</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要</span>
+                      <span className="badge badge-primary badge-sm">主要</span>
                       <div>
                         <p className="font-medium">珍寶炁</p>
                         <p className="text-xs text-base-content/60">礦物結晶體炁場測試（台灣專利）</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要</span>
+                      <span className="badge badge-primary badge-sm">主要</span>
                       <div>
                         <p className="font-medium">情香意</p>
                         <p className="text-xs text-base-content/60">香氛炁場測試與芳療建議</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-primary">主要</span>
+                      <span className="badge badge-primary badge-sm">主要</span>
                       <div>
                         <p className="font-medium">琴瑟合</p>
                         <p className="text-xs text-base-content/60">雙人腦波六聲部合奏音樂</p>
@@ -353,21 +353,21 @@ const TutorialPage: React.FC = () => {
                   <h4 className="font-medium mt-4 mb-2">利養炁（正念修行系列）</h4>
                   <div className="grid gap-2 md:grid-cols-3">
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-secondary">利養炁</span>
+                      <span className="badge badge-secondary badge-sm">利養炁</span>
                       <div>
                         <p className="font-medium">正念修行</p>
                         <p className="text-xs text-base-content/60">身心指數評估</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-secondary">利養炁</span>
+                      <span className="badge badge-secondary badge-sm">利養炁</span>
                       <div>
                         <p className="font-medium">練炁修行</p>
                         <p className="text-xs text-base-content/60">能量運行分析</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-secondary">利養炁</span>
+                      <span className="badge badge-secondary badge-sm">利養炁</span>
                       <div>
                         <p className="font-medium">練炁品階</p>
                         <p className="text-xs text-base-content/60">修行境界評估</p>
@@ -379,42 +379,42 @@ const TutorialPage: React.FC = () => {
                   <h4 className="font-medium mt-4 mb-2">易 Motion（情緒評比系列）</h4>
                   <div className="grid gap-2 md:grid-cols-2">
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">易</span>
+                      <span className="badge badge-accent badge-sm">易</span>
                       <div>
                         <p className="font-medium">情緒管理系統</p>
                         <p className="text-xs text-base-content/60">員工情緒追蹤與預測</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">易</span>
+                      <span className="badge badge-accent badge-sm">易</span>
                       <div>
                         <p className="font-medium">寵物評比測試</p>
                         <p className="text-xs text-base-content/60">視覺+觸覺情緒分析</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">易</span>
+                      <span className="badge badge-accent badge-sm">易</span>
                       <div>
                         <p className="font-medium">品茶/品酒/品咖啡</p>
                         <p className="text-xs text-base-content/60">嗅覺+味覺情緒分析</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">易</span>
+                      <span className="badge badge-accent badge-sm">易</span>
                       <div>
                         <p className="font-medium">香水評比測試</p>
                         <p className="text-xs text-base-content/60">嗅覺情緒分析</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">易</span>
+                      <span className="badge badge-accent badge-sm">易</span>
                       <div>
                         <p className="font-medium">音樂演奏/歌曲演唱</p>
                         <p className="text-xs text-base-content/60">聽覺情緒分析</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-base-200 rounded">
-                      <span className="badge badge-accent">易</span>
+                      <span className="badge badge-accent badge-sm">易</span>
                       <div>
                         <p className="font-medium">短視頻廣告評比</p>
                         <p className="text-xs text-base-content/60">視聽覺情緒分析</p>
