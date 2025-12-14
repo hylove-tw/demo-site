@@ -3,7 +3,6 @@
 HyLove 腦波分析系統 - 提供多種腦波資料分析功能的網頁應用程式。
 
 **Demo Site**: https://hylove-demo.good-nas.cc
-**Credentials**: admin / lovehy2025
 
 ## Features
 
