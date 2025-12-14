@@ -92,20 +92,17 @@ const AnalysisPage: React.FC = () => {
               <span className={`badge ${meta.badgeClass}`}>{group.name}</span>
               <span className="text-sm text-text-muted">{meta.description}</span>
             </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {group.plugins.map((plugin) => (
                 <Link
                   key={plugin.id}
                   to={`/analysis/${plugin.id}`}
-                  className="flex items-center gap-3 p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors"
+                  className="block p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors"
                 >
-                  <span className={`badge ${meta.badgeClass}`}>{group.name}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{plugin.name}</p>
-                    <p className="text-xs text-base-content/60 truncate">
-                      {plugin.shortDescription || plugin.description}
-                    </p>
-                  </div>
+                  <p className="font-medium">{plugin.name}</p>
+                  <p className="text-sm text-base-content/60 mt-1">
+                    {plugin.shortDescription || plugin.description}
+                  </p>
                 </Link>
               ))}
             </div>
