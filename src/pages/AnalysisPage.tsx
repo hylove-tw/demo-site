@@ -31,10 +31,10 @@ const AnalysisPage: React.FC = () => {
   }, []);
 
   // 群組描述與排序
-  const groupMeta: Record<string, { description: string; badgeClass: string; iconBg: string; iconColor: string; order: number }> = {
-    '主要功能': { description: '核心分析系統', badgeClass: 'badge-primary', iconBg: 'bg-primary/10', iconColor: 'text-primary', order: 0 },
-    '利養炁': { description: '正念修行系列', badgeClass: 'badge-secondary', iconBg: 'bg-secondary/10', iconColor: 'text-secondary', order: 1 },
-    '易 Motion': { description: '情緒評比系列', badgeClass: 'badge-accent', iconBg: 'bg-accent/10', iconColor: 'text-accent', order: 2 },
+  const groupMeta: Record<string, { description: string; badgeClass: string; order: number }> = {
+    '主要功能': { description: '核心分析系統', badgeClass: 'badge-primary', order: 0 },
+    '利養炁': { description: '正念修行系列', badgeClass: 'badge-secondary', order: 1 },
+    '易 Motion': { description: '情緒評比系列', badgeClass: 'badge-accent', order: 2 },
   };
 
   groupedPlugins.sort((a, b) => {
@@ -84,7 +84,7 @@ const AnalysisPage: React.FC = () => {
 
       {/* 分析功能列表 */}
       {groupedPlugins.map((group) => {
-        const meta = groupMeta[group.name] || { description: '', badgeClass: 'badge-ghost', iconBg: 'bg-base-300', iconColor: 'text-base-content', order: 99 };
+        const meta = groupMeta[group.name] || { description: '', badgeClass: 'badge-ghost', order: 99 };
         return (
           <div key={group.name}>
             {/* 群組標題 - 比照教學頁面設計 */}
@@ -92,36 +92,19 @@ const AnalysisPage: React.FC = () => {
               <span className={`badge ${meta.badgeClass}`}>{group.name}</span>
               <span className="text-sm text-text-muted">{meta.description}</span>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {group.plugins.map((plugin) => (
                 <Link
                   key={plugin.id}
                   to={`/analysis/${plugin.id}`}
-                  className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow"
+                  className="flex items-center gap-3 p-3 bg-base-200 rounded-lg hover:bg-base-300 transition-colors"
                 >
-                  <div className="card-body flex-row gap-4">
-                    <div className={`w-10 h-10 rounded-full ${meta.iconBg} flex items-center justify-center flex-shrink-0`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${meta.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="card-title text-base">
-                          {plugin.name}
-                        </h3>
-                        <span className={`badge badge-sm ${meta.badgeClass} badge-outline`}>
-                          {group.name}
-                        </span>
-                      </div>
-                      <p className="text-sm text-base-content/60 mt-1 line-clamp-2">
-                        {plugin.shortDescription || plugin.description}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-2 text-xs text-base-content/50">
-                        <span className="w-1.5 h-1.5 rounded-full bg-base-content/30"></span>
-                        <span>{plugin.requiredFiles.length} 個檔案</span>
-                      </div>
-                    </div>
+                  <span className={`badge ${meta.badgeClass}`}>{group.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{plugin.name}</p>
+                    <p className="text-xs text-base-content/60 truncate">
+                      {plugin.shortDescription || plugin.description}
+                    </p>
                   </div>
                 </Link>
               ))}
