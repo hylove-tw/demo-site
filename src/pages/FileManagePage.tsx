@@ -378,8 +378,7 @@ const FileManagePage: React.FC = () => {
               <table className="table w-full">
                 <thead>
                   <tr>
-                    <th>別名</th>
-                    <th>原檔名</th>
+                    <th>檔案名稱</th>
                     <th>群組</th>
                     <th>上傳時間</th>
                     <th>使用者</th>
@@ -393,8 +392,15 @@ const FileManagePage: React.FC = () => {
                       : null;
                     return (
                       <tr key={file.id}>
-                        <td className="font-medium">{file.alias}</td>
-                        <td className="text-base-content/60">{file.fileName}</td>
+                        <td>
+                          <Link
+                            to={`/files/${file.id}`}
+                            className="hover:text-primary transition-colors"
+                          >
+                            <div className="font-medium">{file.alias}</div>
+                            <div className="text-xs text-base-content/50">{file.fileName}</div>
+                          </Link>
+                        </td>
                         <td>
                           {group ? (
                             <span className="badge badge-outline badge-sm">
