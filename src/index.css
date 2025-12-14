@@ -94,6 +94,24 @@
   --inc: 255 255 255;
 }
 
+/* ===== 全域排版 ===== */
+body {
+  line-height: 1.7;
+}
+
+p, li, span, .text-sm, .text-xs {
+  line-height: 1.7;
+}
+
+h1, h2, h3, h4, h5, h6, .card-title, .font-bold, .font-medium {
+  line-height: 1.4;
+}
+
+/* 卡片內容間距 */
+.card-body {
+  gap: 0.75rem;
+}
+
 /* ===== DaisyUI 按鈕樣式覆寫 ===== */
 
 /* 主按鈕 - 深墨綠 */
