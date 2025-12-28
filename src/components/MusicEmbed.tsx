@@ -8,6 +8,18 @@ interface MusicEmbedProps {
     height?: string;
 }
 
+const ZOOM_OPTIONS = [
+    { value: 0.3, label: '30%' },
+    { value: 0.4, label: '40%' },
+    { value: 0.5, label: '50%' },
+    { value: 0.6, label: '60%' },
+    { value: 0.7, label: '70%' },
+    { value: 0.8, label: '80%' },
+    { value: 1.0, label: '100%' },
+];
+
+const DEFAULT_ZOOM = 0.4;
+
 const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
@@ -19,6 +31,7 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [isAudioReady, setIsAudioReady] = useState(false);
+    const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
     // 初始化 OSMD
     useEffect(() => {
@@ -60,8 +73,11 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                     drawCredits: true,
                     drawPartNames: true,
                     followCursor: true,
-                    drawingParameters: 'default',
+                    drawingParameters: 'compact',
                 });
+
+                // 設定縮放比例
+                osmdRef.current.zoom = zoom;
 
                 // 載入 MusicXML
                 await osmdRef.current.load(musicXML);
@@ -104,7 +120,12 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
             // 清除容器內容，避免殘留的 DOM 節點
             container.innerHTML = '';
         };
-    }, [musicXML]);
+    }, [musicXML, zoom]);
+
+    // 縮放控制
+    const handleZoomChange = useCallback((newZoom: number) => {
+        setZoom(newZoom);
+    }, []);
 
     // 播放控制
     const handlePlay = useCallback(async () => {
@@ -288,6 +309,25 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                                 <path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" />
                             </svg>
                         </button>
+                    </div>
+
+                    <div className="divider divider-horizontal mx-1"></div>
+
+                    {/* 縮放控制 */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-text-muted">縮放:</span>
+                        <select
+                            value={zoom}
+                            onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                            disabled={isLoading}
+                            className="select select-bordered select-xs"
+                        >
+                            {ZOOM_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="divider divider-horizontal mx-1"></div>
