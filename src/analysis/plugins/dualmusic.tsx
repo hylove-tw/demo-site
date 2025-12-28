@@ -32,16 +32,24 @@ const plugin: AnalysisPlugin = {
     { label: '樂譜標題', fieldName: 'title', type: 'string', defaultValue: '未命名的樂譜' },
     { label: '速度 (BPM)', fieldName: 'bpm', type: 'number', defaultValue: 60 },
     { label: '拍號', fieldName: 'time_signature', type: 'string', defaultValue: '4/4' },
-    { label: '第一人樂器 P1', fieldName: 'first_p1', type: 'string', defaultValue: 'piano' },
+    { label: '第一人樂器 P1', fieldName: 'first_p1', type: 'string', defaultValue: 'flute' },
     { label: '第一人樂器 P2', fieldName: 'first_p2', type: 'string', defaultValue: 'piano' },
-    { label: '第一人樂器 P3', fieldName: 'first_p3', type: 'string', defaultValue: 'piano' },
-    { label: '第二人樂器 P1', fieldName: 'second_p1', type: 'string', defaultValue: 'piano' },
-    { label: '第二人樂器 P2', fieldName: 'second_p2', type: 'string', defaultValue: 'piano' },
-    { label: '第二人樂器 P3', fieldName: 'second_p3', type: 'string', defaultValue: 'piano' },
+    { label: '第一人樂器 P3', fieldName: 'first_p3', type: 'string', defaultValue: 'cello' },
+    { label: '第二人樂器 P1', fieldName: 'second_p1', type: 'string', defaultValue: 'violin' },
+    { label: '第二人樂器 P2', fieldName: 'second_p2', type: 'string', defaultValue: 'guitar' },
+    { label: '第二人樂器 P3', fieldName: 'second_p3', type: 'string', defaultValue: 'bass' },
   ],
   editComponent: ({ customParams, onChange }) => {
     const handleChange = (field: string, value: string | number) => {
       onChange({ ...customParams, [field]: value });
+    };
+
+    const getDefaultInstrument = (field: string) => {
+      const defaults: Record<string, string> = {
+        first_p1: 'flute', first_p2: 'piano', first_p3: 'cello',
+        second_p1: 'violin', second_p2: 'guitar', second_p3: 'bass'
+      };
+      return defaults[field] || 'piano';
     };
 
     const renderInstrumentSelect = (field: string, label: string) => (
@@ -51,7 +59,7 @@ const plugin: AnalysisPlugin = {
         </label>
         <select
           className="select select-underline w-full"
-          value={customParams[field] ?? 'piano'}
+          value={customParams[field] ?? getDefaultInstrument(field)}
           onChange={(e) => handleChange(field, e.target.value)}
         >
           {INSTRUMENTS.map((inst) => (

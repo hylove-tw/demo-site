@@ -32,13 +32,18 @@ const plugin: AnalysisPlugin = {
     { label: '樂譜標題', fieldName: 'title', type: 'string', defaultValue: '未命名的樂譜' },
     { label: '速度 (BPM)', fieldName: 'bpm', type: 'number', defaultValue: 60 },
     { label: '拍號', fieldName: 'time_signature', type: 'string', defaultValue: '4/4' },
-    { label: '高音域樂器', fieldName: 'p1', type: 'string', defaultValue: 'piano' },
+    { label: '高音域樂器', fieldName: 'p1', type: 'string', defaultValue: 'flute' },
     { label: '中音域樂器', fieldName: 'p2', type: 'string', defaultValue: 'piano' },
-    { label: '低音域樂器', fieldName: 'p3', type: 'string', defaultValue: 'piano' },
+    { label: '低音域樂器', fieldName: 'p3', type: 'string', defaultValue: 'cello' },
   ],
   editComponent: ({ customParams, onChange }) => {
     const handleChange = (field: string, value: string | number) => {
       onChange({ ...customParams, [field]: value });
+    };
+
+    const getDefaultInstrument = (field: string) => {
+      const defaults: Record<string, string> = { p1: 'flute', p2: 'piano', p3: 'cello' };
+      return defaults[field] || 'piano';
     };
 
     const renderInstrumentSelect = (field: string, label: string) => (
@@ -48,7 +53,7 @@ const plugin: AnalysisPlugin = {
         </label>
         <select
           className="select select-underline w-full"
-          value={customParams[field] ?? 'piano'}
+          value={customParams[field] ?? getDefaultInstrument(field)}
           onChange={(e) => handleChange(field, e.target.value)}
         >
           {INSTRUMENTS.map((inst) => (
