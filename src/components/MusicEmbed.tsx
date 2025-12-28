@@ -18,7 +18,7 @@ const ZOOM_OPTIONS = [
     { value: 1.0, label: '100%' },
 ];
 
-const DEFAULT_ZOOM = 0.4;
+const DEFAULT_ZOOM = 0.7;
 
 const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -76,11 +76,11 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                     drawingParameters: 'compact',
                 });
 
-                // 設定縮放比例
-                osmdRef.current.zoom = zoom;
-
                 // 載入 MusicXML
                 await osmdRef.current.load(musicXML);
+
+                // 設定縮放比例（必須在 load 之後、render 之前）
+                osmdRef.current.zoom = zoom;
 
                 // 渲染樂譜
                 osmdRef.current.render();
