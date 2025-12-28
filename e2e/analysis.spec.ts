@@ -150,7 +150,7 @@ test.describe('元神音 (yuanshenyin) Analysis', () => {
   });
 });
 
-test.describe('雙人腦波音樂 (dualmusic) Analysis', () => {
+test.describe('琴瑟合 (dualmusic) Analysis', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('');
     await clearTestData(page);
@@ -236,7 +236,7 @@ test.describe('雙人腦波音樂 (dualmusic) Analysis', () => {
   });
 
   test('should display analysis card on home page', async ({ page }) => {
-    await verifyAnalysisCardOnHomePage(page, '雙人腦波音樂');
+    await verifyAnalysisCardOnHomePage(page, '琴瑟合');
   });
 });
 

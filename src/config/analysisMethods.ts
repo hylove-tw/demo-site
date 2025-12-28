@@ -206,48 +206,6 @@ export async function perfumeAnalysis(data: any[][]): Promise<any> {
   };
 }
 
-// 腦波欄位名稱對應
-const BRAINWAVE_FIELDS = [
-  'Good Signal Quality(0-100)',
-  'Attention',
-  'Meditation',
-  'Delta',
-  'Theta',
-  'Low Alpha',
-  'High Alpha',
-  'Low Beta',
-  'High Beta',
-  'Low Gamma',
-  'High Gamma',
-];
-
-// 將腦波資料陣列轉換為 API 需要的格式
-function transformBrainData(data: any): Record<string, number[]> {
-  const result: Record<string, number[]> = {};
-
-  // 確保 data 是陣列
-  if (!Array.isArray(data)) {
-    console.error('transformBrainData: data is not an array', data);
-    // 回傳空陣列作為預設值
-    for (const field of BRAINWAVE_FIELDS) {
-      result[field] = [];
-    }
-    return result;
-  }
-
-  // 取最多 30 筆資料
-  const limitedData = data.slice(0, 30);
-
-  for (const field of BRAINWAVE_FIELDS) {
-    result[field] = limitedData.map(row => {
-      const value = row?.[field];
-      return typeof value === 'number' ? value : parseFloat(value) || 0;
-    });
-  }
-
-  return result;
-}
-
 // 雙人腦波音樂：生成雙人腦波音樂譜
 export async function dualMusicAnalysis(
   data: any[][],
@@ -263,7 +221,7 @@ export async function dualMusicAnalysis(
         p2: customParams?.first_p2 || 'piano',
         p3: customParams?.first_p3 || 'piano',
       },
-      ...transformBrainData(data[0]),
+      ...data[0],
     },
     second_player: {
       instrument: {
@@ -271,7 +229,7 @@ export async function dualMusicAnalysis(
         p2: customParams?.second_p2 || 'piano',
         p3: customParams?.second_p3 || 'piano',
       },
-      ...transformBrainData(data[1]),
+      ...data[1],
     },
   };
   return post('/api/v1/dualmusic', payload);

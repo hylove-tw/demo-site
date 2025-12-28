@@ -57,6 +57,12 @@ To add a new analysis plugin:
 - xlsx library for Excel file parsing
 - Jest + React Testing Library for tests
 
+## Backend API
+
+- **Base URL**: Configured via `REACT_APP_ANALYSIS_API_BASE` in `.env`
+- **API Documentation**: `{BASE_URL}/api-docs` (Swagger UI)
+- **OpenAPI Spec**: `{BASE_URL}/api-docs/v1/swagger.yaml`
+
 ## Deployment
 
 Uses Docker with multi-platform build (amd64/arm64). Nginx serves the built app with basic auth configured via `.htpasswd`.

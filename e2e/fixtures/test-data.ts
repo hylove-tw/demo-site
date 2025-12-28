@@ -76,7 +76,7 @@ export const analysisPlugins = [
   },
   {
     id: 'dualmusic',
-    name: '雙人腦波音樂',
+    name: '琴瑟合',
     group: '',
     hasCustomParams: true,
     customParams: {
@@ -90,7 +90,7 @@ export const analysisPlugins = [
       second_p2: 'violin',
       second_p3: 'violin',
     },
-    requiredFileCount: 4,
+    requiredFileCount: 2,
   },
   {
     id: 'hengyunlai',
