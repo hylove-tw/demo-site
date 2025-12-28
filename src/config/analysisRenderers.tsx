@@ -1,7 +1,8 @@
 import React from 'react';
-import MusicEmbed from "../components/MusicEmbed";
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import MusicReportEditor, { MusicReportParams } from '../components/MusicReportEditor';
+import DualMusicReportEditor, { DualMusicReportParams } from '../components/DualMusicReportEditor';
 
 export interface MusicReportCustomParams {
     title?: string;
@@ -12,216 +13,56 @@ export interface MusicReportCustomParams {
     p3?: string;
 }
 
-// 樂器名稱對照
-const instrumentLabels: Record<string, string> = {
-    piano: '鋼琴',
-    guitar: '吉他',
-    bass: '貝斯',
-    violin: '小提琴',
-    flute: '長笛',
-    saxophone: '薩克斯風',
-    cello: '大提琴',
-    'electric guitar': '電吉他',
-    vocals: '人聲',
-};
-
-const getInstrumentLabel = (key: string) => instrumentLabels[key] || key;
-
 /**
  * renderBrainWaveMusicReport:
- * 1. 根據 customParams 更新 musicXML 內容，
- * 2. 傳入更新後的 XML 給 MusicEmbed 顯示，
- * 3. 如果 customParams 未提供則使用預設值。
+ * 使用 MusicReportEditor 組件顯示可編輯的樂譜報告
  */
 export const renderBrainWaveMusicReport = (
     musicXML: string,
     customParams?: MusicReportCustomParams
 ): React.ReactNode => {
-    // 預設值
-    const title = customParams?.title || "未命名的樂譜";
-    const bpm = customParams?.bpm || 60;
-
-    // 使用 DOMParser 解析原始 musicXML
-    const parser = new DOMParser();
-    const serializer = new XMLSerializer();
-    const xmlDoc = parser.parseFromString(musicXML, "text/xml");
-
-    // 更新樂譜標題
-    const titleElems = xmlDoc.getElementsByTagName("movement-title");
-    if (titleElems.length > 0) {
-        titleElems[0].textContent = title;
-    }
-
-    // 更新 BPM：修改 <per-minute> 與 <sound> 的 tempo 屬性
-    if (bpm > 0) {
-        const perMinuteElems = xmlDoc.getElementsByTagName("per-minute");
-        if (perMinuteElems.length > 0) {
-            perMinuteElems[0].textContent = bpm.toString();
-        }
-        const soundElems = xmlDoc.getElementsByTagName("sound");
-        if (soundElems.length > 0) {
-            soundElems[0].setAttribute("tempo", bpm.toString());
-        }
-    }
-
-    // 產生更新後的 XML 字串
-    const newXml = serializer.serializeToString(xmlDoc);
+    const initialParams: MusicReportParams = {
+        title: customParams?.title || '未命名的樂譜',
+        bpm: customParams?.bpm || 60,
+        time_signature: customParams?.time_signature || '4/4',
+        p1: customParams?.p1 || 'piano',
+        p2: customParams?.p2 || 'piano',
+        p3: customParams?.p3 || 'piano',
+    };
 
     return (
-        <div className="p-4">
-            {/* 設定資訊摘要 */}
-            <div className="mb-6 p-4 bg-base-200 rounded-lg">
-                <h3 className="font-semibold mb-3">樂譜設定</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                        <span className="text-base-content/60">標題：</span>
-                        <span className="font-medium">{title}</span>
-                    </div>
-                    <div>
-                        <span className="text-base-content/60">速度：</span>
-                        <span className="font-medium">{bpm} BPM</span>
-                    </div>
-                    <div>
-                        <span className="text-base-content/60">拍號：</span>
-                        <span className="font-medium">{customParams?.time_signature || '4/4'}</span>
-                    </div>
-                </div>
-                <div className="divider my-3"></div>
-                <div className="text-sm">
-                    <span className="text-base-content/60">樂器：</span>
-                    <span className="font-medium ml-2">
-                        {getInstrumentLabel(customParams?.p1 || 'piano')} / {getInstrumentLabel(customParams?.p2 || 'piano')} / {getInstrumentLabel(customParams?.p3 || 'piano')}
-                    </span>
-                </div>
-            </div>
-
-            <MusicEmbed musicXML={newXml} height="500px"/>
-            <div className="mt-4 p-3 bg-base-200 rounded-lg text-sm text-text-secondary">
-                <p>
-                    <strong>提示：</strong>如需完整的播放體驗，建議下載{' '}
-                    <a
-                        href="https://musescore.org/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link link-primary"
-                    >
-                        MuseScore
-                    </a>
-                    {' '}等樂譜軟體，匯入上方下載的 MusicXML 檔案，即可獲得更佳的樂譜編輯與播放功能。
-                </p>
-            </div>
-        </div>
+        <MusicReportEditor
+            musicXML={musicXML}
+            initialParams={initialParams}
+        />
     );
 };
 
 /**
  * renderDualMusicReport:
- * 雙人腦波音樂報告渲染器，使用 MusicEmbed 顯示雙人合奏樂譜
+ * 使用 DualMusicReportEditor 組件顯示可編輯的雙人樂譜報告
  */
 export const renderDualMusicReport = (
     musicXML: string,
     customParams?: Record<string, any>
 ): React.ReactNode => {
-    // 預設值
-    const title = customParams?.title || "未命名的樂譜";
-    const bpm = customParams?.bpm || 60;
-
-    // 使用 DOMParser 解析原始 musicXML
-    const parser = new DOMParser();
-    const serializer = new XMLSerializer();
-    const xmlDoc = parser.parseFromString(musicXML, "text/xml");
-
-    // 更新樂譜標題
-    const titleElems = xmlDoc.getElementsByTagName("movement-title");
-    if (titleElems.length > 0) {
-        titleElems[0].textContent = title;
-    }
-
-    // 更新 BPM
-    if (bpm > 0) {
-        const perMinuteElems = xmlDoc.getElementsByTagName("per-minute");
-        if (perMinuteElems.length > 0) {
-            perMinuteElems[0].textContent = bpm.toString();
-        }
-        const soundElems = xmlDoc.getElementsByTagName("sound");
-        if (soundElems.length > 0) {
-            soundElems[0].setAttribute("tempo", bpm.toString());
-        }
-    }
-
-    // 產生更新後的 XML 字串
-    const newXml = serializer.serializeToString(xmlDoc);
-
-    // 樂器名稱對照
-    const instrumentLabels: Record<string, string> = {
-        piano: '鋼琴',
-        guitar: '吉他',
-        bass: '貝斯',
-        violin: '小提琴',
-        flute: '長笛',
-        saxophone: '薩克斯風',
-        cello: '大提琴',
-        'electric guitar': '電吉他',
-        vocals: '人聲',
+    const initialParams: DualMusicReportParams = {
+        title: customParams?.title || '未命名的樂譜',
+        bpm: customParams?.bpm || 60,
+        time_signature: customParams?.time_signature || '4/4',
+        first_p1: customParams?.first_p1 || 'piano',
+        first_p2: customParams?.first_p2 || 'piano',
+        first_p3: customParams?.first_p3 || 'piano',
+        second_p1: customParams?.second_p1 || 'piano',
+        second_p2: customParams?.second_p2 || 'piano',
+        second_p3: customParams?.second_p3 || 'piano',
     };
 
-    const getInstrumentLabel = (key: string) => instrumentLabels[key] || key;
-
     return (
-        <div className="p-4">
-            {/* 設定資訊摘要 */}
-            <div className="mb-6 p-4 bg-base-200 rounded-lg">
-                <h3 className="font-semibold mb-3">樂譜設定</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                        <span className="text-base-content/60">標題：</span>
-                        <span className="font-medium">{title}</span>
-                    </div>
-                    <div>
-                        <span className="text-base-content/60">速度：</span>
-                        <span className="font-medium">{bpm} BPM</span>
-                    </div>
-                    <div>
-                        <span className="text-base-content/60">拍號：</span>
-                        <span className="font-medium">{customParams?.time_signature || '4/4'}</span>
-                    </div>
-                </div>
-                <div className="divider my-3"></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span className="font-medium text-primary">第一演奏者：</span>
-                        <span className="ml-2">
-                            {getInstrumentLabel(customParams?.first_p1 || 'piano')} / {getInstrumentLabel(customParams?.first_p2 || 'piano')} / {getInstrumentLabel(customParams?.first_p3 || 'piano')}
-                        </span>
-                    </div>
-                    <div>
-                        <span className="font-medium text-secondary">第二演奏者：</span>
-                        <span className="ml-2">
-                            {getInstrumentLabel(customParams?.second_p1 || 'piano')} / {getInstrumentLabel(customParams?.second_p2 || 'piano')} / {getInstrumentLabel(customParams?.second_p3 || 'piano')}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* 樂譜顯示 */}
-            <MusicEmbed musicXML={newXml} height="600px"/>
-
-            {/* 提示資訊 */}
-            <div className="mt-4 p-3 bg-base-200 rounded-lg text-sm text-text-secondary">
-                <p>
-                    <strong>提示：</strong>如需完整的播放體驗，建議下載{' '}
-                    <a
-                        href="https://musescore.org/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link link-primary"
-                    >
-                        MuseScore
-                    </a>
-                    {' '}等樂譜軟體，匯入上方下載的 MusicXML 檔案，即可獲得更佳的樂譜編輯與播放功能。
-                </p>
-            </div>
-        </div>
+        <DualMusicReportEditor
+            musicXML={musicXML}
+            initialParams={initialParams}
+        />
     );
 };
 

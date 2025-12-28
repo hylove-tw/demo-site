@@ -33,15 +33,17 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
     const [isAudioReady, setIsAudioReady] = useState(false);
     const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
-    // 初始化 OSMD
+    // 追蹤上一次的 musicXML，用於判斷是否需要重新載入
+    const prevMusicXMLRef = useRef<string | null>(null);
+
+    // 載入並渲染 OSMD
     useEffect(() => {
         const container = containerRef.current;
         if (!container || !musicXML) return;
 
-        const initOSMD = async () => {
+        const loadAndRender = async () => {
             setIsLoading(true);
             setError(null);
-            setIsAudioReady(false);
 
             try {
                 // 解析 musicXML 取得標題
@@ -55,45 +57,57 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                     'music';
                 setTitle(currentTitle);
 
-                // 清除之前的內容
-                container.innerHTML = '';
+                // 判斷是否需要重新建立 OSMD 實例
+                const needNewInstance = !osmdRef.current || prevMusicXMLRef.current === null;
 
-                // 停止之前的播放
-                if (audioPlayerRef.current) {
-                    audioPlayerRef.current.stop();
-                    audioPlayerRef.current = null;
+                if (needNewInstance) {
+                    // 清除之前的內容
+                    container.innerHTML = '';
+
+                    // 停止之前的播放
+                    if (audioPlayerRef.current) {
+                        audioPlayerRef.current.stop();
+                        audioPlayerRef.current = null;
+                    }
+                    setIsAudioReady(false);
+
+                    // 建立新的 OSMD 實例
+                    osmdRef.current = new OSMD(container, {
+                        autoResize: true,
+                        drawTitle: true,
+                        drawSubtitle: true,
+                        drawComposer: true,
+                        drawCredits: true,
+                        drawPartNames: true,
+                        followCursor: true,
+                        drawingParameters: 'compact',
+                    });
+                } else {
+                    // 重用現有實例，停止播放
+                    if (audioPlayerRef.current) {
+                        audioPlayerRef.current.stop();
+                    }
+                    setIsAudioReady(false);
                 }
 
-                // 初始化 OSMD
-                osmdRef.current = new OSMD(container, {
-                    autoResize: true,
-                    drawTitle: true,
-                    drawSubtitle: true,
-                    drawComposer: true,
-                    drawCredits: true,
-                    drawPartNames: true,
-                    followCursor: true,
-                    drawingParameters: 'compact',
-                });
+                // 載入 MusicXML (此時 osmdRef.current 一定存在)
+                const osmd = osmdRef.current!;
+                await osmd.load(musicXML);
+                prevMusicXMLRef.current = musicXML;
 
-                // 載入 MusicXML
-                await osmdRef.current.load(musicXML);
-
-                // 設定縮放比例（必須在 load 之後、render 之前）
-                osmdRef.current.zoom = zoom;
+                // 設定縮放比例
+                osmd.zoom = zoom;
 
                 // 渲染樂譜
-                osmdRef.current.render();
+                osmd.render();
 
                 // 初始化音頻播放器
                 try {
                     audioPlayerRef.current = new AudioPlayer();
-                    // Type assertion needed due to version mismatch between osmd-audio-player's bundled OSMD
                     await audioPlayerRef.current.loadScore(osmdRef.current as any);
                     setIsAudioReady(true);
                 } catch (audioErr) {
                     console.warn('Audio player initialization failed:', audioErr);
-                    // 音頻初始化失敗不影響樂譜顯示
                 }
 
                 setIsLoading(false);
@@ -104,9 +118,9 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
             }
         };
 
-        initOSMD();
+        loadAndRender();
 
-        // Cleanup
+        // Cleanup only on unmount
         return () => {
             if (audioPlayerRef.current) {
                 try {
@@ -117,10 +131,18 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 audioPlayerRef.current = null;
             }
             osmdRef.current = null;
-            // 清除容器內容，避免殘留的 DOM 節點
-            container.innerHTML = '';
+            prevMusicXMLRef.current = null;
         };
-    }, [musicXML, zoom]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [musicXML]);
+
+    // 單獨處理縮放變更（不重新載入 XML）
+    useEffect(() => {
+        if (osmdRef.current && prevMusicXMLRef.current) {
+            osmdRef.current.zoom = zoom;
+            osmdRef.current.render();
+        }
+    }, [zoom]);
 
     // 縮放控制
     const handleZoomChange = useCallback((newZoom: number) => {
