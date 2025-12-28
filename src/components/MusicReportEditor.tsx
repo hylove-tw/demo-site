@@ -160,7 +160,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
             </label>
             <select
                 className="select select-bordered select-sm w-full"
-                value={editParams[field] ?? 'piano'}
+                value={editParams[field] ?? (field === 'p1' ? 'flute' : field === 'p2' ? 'piano' : 'cello')}
                 onChange={(e) => handleParamChange(field, e.target.value)}
             >
                 {INSTRUMENTS.map((inst) => (
@@ -277,7 +277,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                         <div className="text-sm">
                             <span className="text-base-content/60">樂器：</span>
                             <span className="font-medium ml-2">
-                                {getInstrumentLabel(appliedParams.p1 || 'piano')} / {getInstrumentLabel(appliedParams.p2 || 'piano')} / {getInstrumentLabel(appliedParams.p3 || 'piano')}
+                                {getInstrumentLabel(appliedParams.p1 || 'flute')} / {getInstrumentLabel(appliedParams.p2 || 'piano')} / {getInstrumentLabel(appliedParams.p3 || 'cello')}
                             </span>
                         </div>
                     </>

@@ -20,6 +20,20 @@ const getInstrumentLabel = (key: string) => {
     return inst?.label || key;
 };
 
+// 預設樂器設定
+const DEFAULT_INSTRUMENTS: Record<string, string> = {
+    first_p1: 'flute',      // 第一演奏者：長笛（高音）
+    first_p2: 'piano',      // 第一演奏者：鋼琴（中音）
+    first_p3: 'cello',      // 第一演奏者：大提琴（低音）
+    second_p1: 'violin',    // 第二演奏者：小提琴（高音）
+    second_p2: 'guitar',    // 第二演奏者：吉他（中音）
+    second_p3: 'bass',      // 第二演奏者：貝斯（低音）
+};
+
+const getDefaultInstrument = (field: string): string => {
+    return DEFAULT_INSTRUMENTS[field] || 'piano';
+};
+
 const getInstrumentMidiProgram = (key: string): number => {
     const inst = INSTRUMENTS.find(i => i.value === key);
     return inst?.midiProgram || 1; // 預設鋼琴
@@ -167,7 +181,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
             </label>
             <select
                 className="select select-bordered select-sm w-full"
-                value={(editParams[field] as string) ?? 'piano'}
+                value={(editParams[field] as string) ?? getDefaultInstrument(field)}
                 onChange={(e) => handleParamChange(field, e.target.value)}
             >
                 {INSTRUMENTS.map((inst) => (
@@ -298,13 +312,13 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                             <div>
                                 <span className="font-medium text-primary">第一演奏者：</span>
                                 <span className="ml-2">
-                                    {getInstrumentLabel(appliedParams.first_p1 || 'piano')} / {getInstrumentLabel(appliedParams.first_p2 || 'piano')} / {getInstrumentLabel(appliedParams.first_p3 || 'piano')}
+                                    {getInstrumentLabel(appliedParams.first_p1 || 'flute')} / {getInstrumentLabel(appliedParams.first_p2 || 'piano')} / {getInstrumentLabel(appliedParams.first_p3 || 'cello')}
                                 </span>
                             </div>
                             <div>
                                 <span className="font-medium text-secondary">第二演奏者：</span>
                                 <span className="ml-2">
-                                    {getInstrumentLabel(appliedParams.second_p1 || 'piano')} / {getInstrumentLabel(appliedParams.second_p2 || 'piano')} / {getInstrumentLabel(appliedParams.second_p3 || 'piano')}
+                                    {getInstrumentLabel(appliedParams.second_p1 || 'violin')} / {getInstrumentLabel(appliedParams.second_p2 || 'guitar')} / {getInstrumentLabel(appliedParams.second_p3 || 'bass')}
                                 </span>
                             </div>
                         </div>
