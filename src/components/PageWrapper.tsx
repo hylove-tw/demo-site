@@ -162,6 +162,11 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
                         >
                           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAnalysisActive(plugin.id) ? 'bg-primary' : 'bg-text-light'}`}></span>
                           <span className="truncate">{plugin.name}</span>
+                          {plugin.badge && (
+                            <span className={`badge badge-xs ${plugin.badge.color} ml-1 flex-shrink-0`}>
+                              {plugin.badge.text}
+                            </span>
+                          )}
                         </Link>
                       </li>
                     ))}
@@ -274,6 +279,11 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
                             >
                               <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAnalysisActive(plugin.id) ? 'bg-primary' : 'bg-text-light'}`}></span>
                               <span className="truncate">{plugin.name}</span>
+                              {plugin.badge && (
+                                <span className={`badge badge-xs ${plugin.badge.color} ml-1 flex-shrink-0`}>
+                                  {plugin.badge.text}
+                                </span>
+                              )}
                             </Link>
                           </li>
                         ))}

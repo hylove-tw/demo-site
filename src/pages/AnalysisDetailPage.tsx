@@ -171,7 +171,14 @@ const AnalysisDetailPage: React.FC = () => {
               </span>
             </div>
           )}
-          <h1 className="text-2xl font-bold mb-2">{plugin.name}</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {plugin.name}
+            {plugin.badge && (
+              <span className={`badge badge-sm ${plugin.badge.color} ml-2 align-middle`}>
+                {plugin.badge.text}
+              </span>
+            )}
+          </h1>
           <p className="text-base-content/70">{plugin.description}</p>
         </div>
         <button

@@ -16,6 +16,7 @@ export interface AnalysisPlugin {
   id: string;
   group?: string;
   name: string;
+  badge?: { text: string; color: string }; // 標籤（如 Beta、New 等）
   shortDescription?: string; // 首頁卡片用的簡短說明
   description: string; // 詳細頁面用的完整說明
   requiredFiles: AnalysisRequiredFile[];

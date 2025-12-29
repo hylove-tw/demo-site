@@ -31,6 +31,24 @@ export async function musicAnalysis(
   return post('/api/v1/music', payload);
 }
 
+// 元神音 v2：腦波影音編碼及播放系統（新版 API）
+export async function musicAnalysisV2(
+  data: any[][],
+  customParams?: Record<string, any>
+): Promise<any> {
+  const payload = {
+    title: customParams?.title || '未命名的樂譜',
+    bpm: customParams?.bpm || 60,
+    time_signature: customParams?.time_signature || '4/4',
+    p1: customParams?.p1 || 'piano',
+    p2: customParams?.p2 || 'piano',
+    p3: customParams?.p3 || 'piano',
+    beforeBrainData: data[0],
+    afterBrainData: data[1],
+  };
+  return post('/api/v2/music', payload);
+}
+
 // 亨運來：H.R 評估系統
 export async function hrAnalysis(data: any[][]): Promise<any> {
   const payload: BrainDataPayload = {

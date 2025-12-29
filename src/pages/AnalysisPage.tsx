@@ -99,7 +99,14 @@ const AnalysisPage: React.FC = () => {
                   to={`/analysis/${plugin.id}`}
                   className="block p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors"
                 >
-                  <p className="font-medium">{plugin.name}</p>
+                  <p className="font-medium">
+                    {plugin.name}
+                    {plugin.badge && (
+                      <span className={`badge badge-sm ${plugin.badge.color} ml-2`}>
+                        {plugin.badge.text}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-sm text-base-content/60 mt-1">
                     {plugin.shortDescription || plugin.description}
                   </p>
