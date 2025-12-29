@@ -272,7 +272,8 @@ export class WebAudioFontPlayer {
   private masterGain: GainNode | null = null;
   private animationFrameId: number | null = null;
   private nextEventIndex = 0;  // 下一個要排程的事件索引
-  private readonly SCHEDULE_AHEAD_TIME = 3;  // 提前排程時間（秒）
+  private readonly SCHEDULE_AHEAD_TIME = 5;  // 提前排程時間（秒）
+  private scheduleIntervalId: number | null = null;
 
   async loadScore(musicXML: string, volume: number = 80): Promise<void> {
     // 解析 MusicXML
@@ -453,54 +454,24 @@ export class WebAudioFontPlayer {
       }
     }
 
-    // 開始持續排程
+    // 立即排程第一批
     this.scheduleNextBatch();
+
+    // 使用 setInterval 持續排程
+    this.scheduleIntervalId = window.setInterval(() => {
+      this.scheduleNextBatch();
+    }, 300);
   }
 
   // 分批排程音符（只排程接下來幾秒的音符）
   private scheduleNextBatch(): void {
-    if (!this.isPlaying || !this.audioContext || !this.player) return;
+    if (!this.isPlaying || !this.audioContext || !this.player) {
+      this.stopScheduling();
+      return;
+    }
 
     const currentPlayTime = this.getCurrentTime();
     const scheduleUntil = currentPlayTime + this.SCHEDULE_AHEAD_TIME;
-
-    // 清理已播放完的音符
-    this.cleanupPlayedNotes();
-
-    // 排程接下來的音符
-    while (this.nextEventIndex < this.events.length) {
-      const event = this.events[this.nextEventIndex];
-
-      // 如果音符超出排程範圍，停止排程
-      if (event.time > scheduleUntil) {
-        break;
-      }
-
-      // 跳過已經過去的音符
-      if (event.time < currentPlayTime - 0.1) {
-        this.nextEventIndex++;
-        continue;
-      }
-
-      const startTime = this.audioContext.currentTime + (event.time - currentPlayTime);
-      const preset = this.getPresetForEvent(event);
-
-      if (preset && startTime > this.audioContext.currentTime) {
-        const note = this.player.queueWaveTable(
-          this.audioContext,
-          this.masterGain,
-          preset,
-          startTime,
-          event.midi,
-          Math.min(event.duration, 2), // 限制最大持續時間
-          event.velocity
-        );
-        if (note) {
-          this.scheduledNotes.push({ note, endTime: event.time + event.duration });
-        }
-      }
-      this.nextEventIndex++;
-    }
 
     // 檢查是否播放結束
     if (currentPlayTime >= this.duration) {
@@ -508,25 +479,68 @@ export class WebAudioFontPlayer {
       return;
     }
 
-    // 繼續排程（每 500ms 檢查一次）
-    this.animationFrameId = window.setTimeout(() => {
-      this.scheduleNextBatch();
-    }, 500) as unknown as number;
+    // 排程接下來的音符
+    while (this.nextEventIndex < this.events.length) {
+      const event = this.events[this.nextEventIndex];
+
+      // 如果音符超出排程範圍，等待下次排程
+      if (event.time > scheduleUntil) {
+        break;
+      }
+
+      // 計算音符開始時間
+      const noteStartTime = this.audioContext.currentTime + (event.time - currentPlayTime);
+
+      // 跳過已經過去的音符
+      if (noteStartTime < this.audioContext.currentTime - 0.05) {
+        this.nextEventIndex++;
+        continue;
+      }
+
+      const preset = this.getPresetForEvent(event);
+
+      if (preset) {
+        const actualStartTime = Math.max(noteStartTime, this.audioContext.currentTime);
+        const note = this.player.queueWaveTable(
+          this.audioContext,
+          this.masterGain,
+          preset,
+          actualStartTime,
+          event.midi,
+          event.duration,
+          event.velocity
+        );
+        if (note) {
+          this.scheduledNotes.push(note);
+        }
+      }
+      this.nextEventIndex++;
+    }
+
+    // 定期清理（每 10 次排程清理一次）
+    if (this.nextEventIndex % 50 === 0) {
+      this.cleanupOldNotes();
+    }
   }
 
-  // 清理已播放完的音符以釋放記憶體
-  private cleanupPlayedNotes(): void {
-    const currentPlayTime = this.getCurrentTime();
-    this.scheduledNotes = this.scheduledNotes.filter(item => {
-      if (item.endTime && item.endTime < currentPlayTime - 1) {
-        // 嘗試取消已結束的音符
-        if (item.note && item.note.cancel) {
-          try { item.note.cancel(); } catch (e) { /* ignore */ }
+  private stopScheduling(): void {
+    if (this.scheduleIntervalId) {
+      clearInterval(this.scheduleIntervalId);
+      this.scheduleIntervalId = null;
+    }
+  }
+
+  // 清理舊音符
+  private cleanupOldNotes(): void {
+    // 只保留最近的 100 個音符記錄
+    if (this.scheduledNotes.length > 100) {
+      const toRemove = this.scheduledNotes.splice(0, this.scheduledNotes.length - 100);
+      for (const note of toRemove) {
+        if (note && note.cancel) {
+          try { note.cancel(); } catch (e) { /* ignore */ }
         }
-        return false;
       }
-      return true;
-    });
+    }
   }
 
   pause(): void {
@@ -536,11 +550,8 @@ export class WebAudioFontPlayer {
     this.isPlaying = false;
     this.isPaused = true;
 
-    // 取消排程計時器
-    if (this.animationFrameId) {
-      clearTimeout(this.animationFrameId);
-      this.animationFrameId = null;
-    }
+    // 停止排程
+    this.stopScheduling();
 
     // 取消所有調度的音符
     this.cancelAllNotes();
@@ -554,11 +565,8 @@ export class WebAudioFontPlayer {
     this.pauseTime = 0;
     this.nextEventIndex = 0;
 
-    // 取消排程計時器
-    if (this.animationFrameId) {
-      clearTimeout(this.animationFrameId);
-      this.animationFrameId = null;
-    }
+    // 停止排程
+    this.stopScheduling();
 
     this.cancelAllNotes();
   }
