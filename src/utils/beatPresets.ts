@@ -380,3 +380,85 @@ export function getPresetsForTimeSignature(timeSignature: string): BeatPreset[] 
     preset => preset.id === 'none' || preset.timeSignature === timeSignature
   );
 }
+
+/**
+ * DrumLooper 用的節奏事件格式
+ */
+export interface DrumLooperHit {
+  beat: number;      // 在小節中的拍子位置 (0-3 for 4/4)
+  midi: number;      // MIDI 音符
+  velocity: number;  // 0-1
+}
+
+/**
+ * DrumLooper 用的節奏模式格式
+ */
+export interface DrumLooperPattern {
+  pattern: DrumLooperHit[];
+  bpm: number;
+  beatsPerMeasure: number;
+}
+
+/**
+ * 將 BeatPreset 轉換為 DrumLooper 可用的格式
+ * @param preset 節奏預設
+ * @param bpm 每分鐘拍數
+ */
+export function convertPresetToDrumLooperPattern(
+  preset: BeatPreset,
+  bpm: number
+): DrumLooperPattern | null {
+  if (preset.id === 'none') {
+    return null;
+  }
+
+  const hits: DrumLooperHit[] = [];
+  const subdivisions = preset.subdivisions;
+  const beatsPerMeasure = parseInt(preset.timeSignature.split('/')[0]) || 4;
+
+  // MIDI 音符對照表
+  const midiMap: { [key: string]: number } = {
+    kick: 36,
+    snare: 38,
+    hihat: 42,
+    ride: 51,
+    clap: 39,
+    conga: 63,
+  };
+
+  // 力度對照表 (0-3 轉換為 0-1)
+  const velocityMap: { [key: number]: number } = {
+    0: 0,
+    1: 0.4,
+    2: 0.7,
+    3: 0.9,
+  };
+
+  // 遍歷每種樂器的模式
+  for (const [instrument, pattern] of Object.entries(preset.pattern)) {
+    const midi = midiMap[instrument];
+    if (!midi || !pattern) continue;
+
+    pattern.forEach((strength, index) => {
+      if (strength > 0) {
+        // 計算這個位置對應的拍子
+        // index 是在 subdivisions*beatsPerMeasure 個位置中的索引
+        const beat = index / subdivisions;
+        hits.push({
+          beat,
+          midi,
+          velocity: velocityMap[strength] || 0.7,
+        });
+      }
+    });
+  }
+
+  // 按時間排序
+  hits.sort((a, b) => a.beat - b.beat);
+
+  return {
+    pattern: hits,
+    bpm,
+    beatsPerMeasure,
+  };
+}

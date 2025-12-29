@@ -1,7 +1,7 @@
 // src/components/MusicReportEditor.tsx
 import React, { useState, useCallback, useMemo } from 'react';
 import MusicEmbed from './MusicEmbed';
-import { BEAT_PRESETS, getPresetsForTimeSignature, injectDrumPartToMusicXML } from '../utils/beatPresets';
+import { BEAT_PRESETS, getPresetsForTimeSignature, injectDrumPartToMusicXML, convertPresetToDrumLooperPattern } from '../utils/beatPresets';
 
 // 可選樂器列表與 MIDI program number 對照 (General MIDI)
 const INSTRUMENTS = [
@@ -149,7 +149,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     // 計算處理後的 MusicXML
     const processedXML = useMemo(() => {
         let xml = applyParamsToMusicXML(musicXML, appliedParams);
-        // 注入節奏聲部
+        // 注入節奏聲部（僅用於顯示樂譜，播放由 DrumLooper 處理）
         if (appliedParams.beat && appliedParams.beat !== 'none') {
             const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
             if (beatPreset) {
@@ -159,6 +159,18 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         }
         return xml;
     }, [musicXML, appliedParams]);
+
+    // 計算 DrumLooper 用的節奏模式（循環播放，更省記憶體）
+    const drumPattern = useMemo(() => {
+        if (!appliedParams.beat || appliedParams.beat === 'none') {
+            return undefined;
+        }
+        const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
+        if (!beatPreset) return undefined;
+
+        const bpm = appliedParams.bpm || 60;
+        return convertPresetToDrumLooperPattern(beatPreset, bpm);
+    }, [appliedParams.beat, appliedParams.bpm]);
 
     // 根據拍號過濾可用的節奏預設
     const availableBeatPresets = useMemo(() => {
@@ -423,7 +435,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
             </div>
 
             {/* 樂譜顯示 */}
-            <MusicEmbed musicXML={processedXML} height="500px" />
+            <MusicEmbed musicXML={processedXML} height="500px" drumPattern={drumPattern || undefined} />
 
             {/* 提示資訊 */}
             <div className="mt-4 p-3 bg-base-200 rounded-lg text-sm text-text-secondary">
