@@ -2,10 +2,19 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { OpenSheetMusicDisplay as OSMD } from 'opensheetmusicdisplay';
 import { WebAudioFontPlayer } from '../utils/webAudioFontPlayer';
+import { DrumLooper } from '../utils/drumLooper';
+
+// 節奏模式介面
+interface DrumPattern {
+    pattern: Array<{ beat: number; midi: number; velocity: number }>;
+    bpm: number;
+    beatsPerMeasure?: number;
+}
 
 interface MusicEmbedProps {
     musicXML: string;
     height?: string;
+    drumPattern?: DrumPattern;  // 可選的循環節奏模式
 }
 
 const ZOOM_OPTIONS = [
@@ -20,10 +29,11 @@ const ZOOM_OPTIONS = [
 
 const DEFAULT_ZOOM = 0.7;
 
-const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) => {
+const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px', drumPattern }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const audioPlayerRef = useRef<WebAudioFontPlayer | null>(null);
+    const drumLooperRef = useRef<DrumLooper | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -105,10 +115,25 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 // 渲染樂譜
                 osmd.render();
 
-                // 初始化 WebAudioFont 播放器（支援所有樂器和打擊樂）
+                // 初始化音樂播放器
                 try {
+                    // 如果有提供節奏模式，使用 DrumLooper 播放節奏（更省記憶體）
+                    const useDrumLooper = !!drumPattern;
+
                     audioPlayerRef.current = new WebAudioFontPlayer();
-                    await audioPlayerRef.current.loadScore(musicXML);
+                    // 如果使用 DrumLooper，則跳過 MusicXML 中的打擊樂
+                    await audioPlayerRef.current.loadScore(musicXML, 80, useDrumLooper);
+
+                    if (useDrumLooper && drumPattern) {
+                        drumLooperRef.current = new DrumLooper();
+                        await drumLooperRef.current.init(80);
+                        await drumLooperRef.current.setPattern(
+                            drumPattern.pattern,
+                            drumPattern.bpm,
+                            drumPattern.beatsPerMeasure || 4
+                        );
+                    }
+
                     setIsAudioReady(true);
                 } catch (audioErr) {
                     console.warn('Audio player initialization failed:', audioErr);
@@ -134,6 +159,14 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 }
                 audioPlayerRef.current = null;
             }
+            if (drumLooperRef.current) {
+                try {
+                    drumLooperRef.current.dispose();
+                } catch (e) {
+                    // Ignore cleanup errors
+                }
+                drumLooperRef.current = null;
+            }
             osmdRef.current = null;
             prevMusicXMLRef.current = null;
         };
@@ -153,18 +186,26 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         setZoom(newZoom);
     }, []);
 
-    // 播放控制
+    // 播放控制（同時控制旋律和節奏）
     const handlePlay = useCallback(async () => {
         if (!audioPlayerRef.current || !isAudioReady) return;
 
         try {
             audioPlayerRef.current.play();
+            // 同時播放節奏循環
+            if (drumLooperRef.current) {
+                drumLooperRef.current.play();
+            }
             setIsPlaying(true);
             setIsPaused(false);
 
             // 監控播放結束
             const checkEnd = setInterval(() => {
                 if (audioPlayerRef.current && !audioPlayerRef.current.getIsPlaying()) {
+                    // 停止節奏循環
+                    if (drumLooperRef.current) {
+                        drumLooperRef.current.stop();
+                    }
                     setIsPlaying(false);
                     setIsPaused(false);
                     clearInterval(checkEnd);
@@ -178,6 +219,9 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
     const handlePause = useCallback(() => {
         if (!audioPlayerRef.current) return;
         audioPlayerRef.current.pause();
+        if (drumLooperRef.current) {
+            drumLooperRef.current.pause();
+        }
         setIsPlaying(false);
         setIsPaused(true);
     }, []);
@@ -185,6 +229,9 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
     const handleStop = useCallback(() => {
         if (!audioPlayerRef.current) return;
         audioPlayerRef.current.stop();
+        if (drumLooperRef.current) {
+            drumLooperRef.current.stop();
+        }
         setIsPlaying(false);
         setIsPaused(false);
     }, []);

@@ -275,10 +275,16 @@ export class WebAudioFontPlayer {
   private readonly SCHEDULE_AHEAD_TIME = 5;  // 提前排程時間（秒）
   private scheduleIntervalId: number | null = null;
 
-  async loadScore(musicXML: string, volume: number = 80): Promise<void> {
+  async loadScore(musicXML: string, volume: number = 80, skipDrums: boolean = false): Promise<void> {
     // 解析 MusicXML
     const parsed = parseMusicXML(musicXML);
-    this.events = parsed.events;
+
+    // 如果跳過打擊樂，過濾掉打擊樂事件
+    if (skipDrums) {
+      this.events = parsed.events.filter(e => e.channel !== 9);
+    } else {
+      this.events = parsed.events;
+    }
     this.duration = parsed.duration;
 
     if (this.events.length === 0) {
@@ -314,8 +320,8 @@ export class WebAudioFontPlayer {
       instrumentsToLoad.push(this.loadInstrument(program, url));
     }
 
-    // 載入打擊樂（每個音符獨立載入）
-    if (parsed.hasDrums) {
+    // 載入打擊樂（每個音符獨立載入）- 除非跳過
+    if (parsed.hasDrums && !skipDrums) {
       for (const drumNote of Array.from(parsed.usedDrumNotes)) {
         instrumentsToLoad.push(this.loadDrumNote(drumNote));
       }
