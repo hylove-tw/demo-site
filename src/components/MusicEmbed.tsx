@@ -105,7 +105,7 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 // 渲染樂譜
                 osmd.render();
 
-                // 初始化音頻播放器
+                // 初始化音樂播放器
                 try {
                     audioPlayerRef.current = new AudioPlayer();
                     await audioPlayerRef.current.loadScore(osmdRef.current as any);
@@ -197,7 +197,7 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         URL.revokeObjectURL(url);
     }, [musicXML, title]);
 
-    // 下載 MP3 檔案（錄製播放音頻）
+    // 下載 MP3 檔案（錄製播放音樂）
     const downloadMP3 = useCallback(async () => {
         if (!audioPlayerRef.current || !isAudioReady || isRecording) return;
 
@@ -207,15 +207,15 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
             const audioContext: AudioContext = audioPlayer.ac || audioPlayer.audioContext;
 
             if (!audioContext) {
-                alert('無法存取音頻上下文');
+                alert('無法存取音樂上下文');
                 return;
             }
 
             // 建立 MediaStreamDestination 用於錄製
             const dest = audioContext.createMediaStreamDestination();
 
-            // 連接音頻輸出到錄製目標
-            // 注意：這會將所有音頻都導向錄製
+            // 連接音樂輸出到錄製目標
+            // 注意：這會將所有音樂都導向錄製
             if (audioContext.destination) {
                 // 嘗試取得 gain node 或直接連接
                 const gainNode = audioPlayer.gainNode || audioPlayer.masterGain;
@@ -284,7 +284,7 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                     // 檢查是否播放結束
                     if (player.state === 'STOPPED' || player.state === 'PAUSED' || currentTime >= duration) {
                         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-                            // 等待一小段時間確保所有音頻都被錄製
+                            // 等待一小段時間確保所有音樂都被錄製
                             setTimeout(() => {
                                 if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
                                     mediaRecorderRef.current.stop();
@@ -533,7 +533,7 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
 
                     {/* 狀態提示 */}
                     <span className="text-xs text-text-muted ml-auto">
-                        {isLoading ? '載入中...' : !isAudioReady ? '(音頻載入中...)' : ''}
+                        {isLoading ? '載入中...' : !isAudioReady ? '(音樂載入中...)' : ''}
                     </span>
                 </div>
 
