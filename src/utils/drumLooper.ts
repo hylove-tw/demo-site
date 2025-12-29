@@ -27,9 +27,6 @@ export class DrumLooper {
   private beatsPerMeasure = 4;
   private isPlaying = false;
   private loopIntervalId: number | null = null;
-  private nextNoteIndex = 0;
-  private currentBeat = 0;
-  private lastBeatTime = 0;
   private loadedDrums: Map<number, any> = new Map();
 
   async init(volume: number = 80): Promise<void> {
@@ -151,61 +148,63 @@ export class DrumLooper {
     }
 
     this.isPlaying = true;
-    this.currentBeat = 0;
-    this.nextNoteIndex = 0;
-    this.lastBeatTime = this.audioContext.currentTime;
-
-    // 計算每拍的時間（秒）
-    const beatDuration = 60 / this.bpm;
+    this.loopStartTime = this.audioContext.currentTime;
+    this.lastScheduledLoop = -1;
 
     // 使用高頻率的 interval 來精確觸發音符
     this.loopIntervalId = window.setInterval(() => {
-      this.scheduleNotes(beatDuration);
-    }, 25); // 每 25ms 檢查一次
+      this.scheduleNotes();
+    }, 20); // 每 20ms 檢查一次
+
+    // 立即排程第一批
+    this.scheduleNotes();
   }
 
-  private scheduleNotes(beatDuration: number): void {
+  private loopStartTime = 0;
+  private lastScheduledLoop = -1;
+
+  private scheduleNotes(): void {
     if (!this.isPlaying || !this.audioContext || !this.player) return;
 
     const now = this.audioContext.currentTime;
-    const scheduleAhead = 0.1; // 提前 100ms 排程
+    const scheduleAhead = 0.3; // 提前 300ms 排程（確保無縫銜接）
+    const beatDuration = 60 / this.bpm;
+    const measureDuration = beatDuration * this.beatsPerMeasure;
 
-    // 計算當前播放位置（拍）
-    const elapsed = now - this.lastBeatTime;
-    const currentBeatPosition = this.currentBeat + (elapsed / beatDuration);
+    // 計算需要排程到的時間點
+    const scheduleUntil = now + scheduleAhead;
 
-    // 排程接下來的音符
-    while (this.nextNoteIndex < this.pattern.length) {
-      const hit = this.pattern[this.nextNoteIndex];
-      const hitTime = this.lastBeatTime + (hit.beat - this.currentBeat) * beatDuration;
+    // 計算當前和未來需要排程的循環
+    const currentLoop = Math.floor((now - this.loopStartTime) / measureDuration);
+    const futureLoop = Math.floor((scheduleUntil - this.loopStartTime) / measureDuration);
 
-      // 如果這個音符在排程範圍內
-      if (hitTime <= now + scheduleAhead) {
-        const preset = this.loadedDrums.get(hit.midi);
-        if (preset) {
-          const actualTime = Math.max(hitTime, now);
-          this.player.queueWaveTable(
-            this.audioContext,
-            this.masterGain,
-            preset,
-            actualTime,
-            hit.midi,
-            0.3, // 短持續時間
-            hit.velocity
-          );
+    // 排程所有需要的循環
+    for (let loop = Math.max(0, this.lastScheduledLoop + 1); loop <= futureLoop; loop++) {
+      const loopStartTime = this.loopStartTime + loop * measureDuration;
+
+      // 排程這個循環中的所有音符
+      for (const hit of this.pattern) {
+        const hitTime = loopStartTime + hit.beat * beatDuration;
+
+        // 只排程在時間範圍內的音符
+        if (hitTime >= now - 0.05 && hitTime <= scheduleUntil) {
+          const preset = this.loadedDrums.get(hit.midi);
+          if (preset) {
+            const actualTime = Math.max(hitTime, now);
+            this.player.queueWaveTable(
+              this.audioContext,
+              this.masterGain,
+              preset,
+              actualTime,
+              hit.midi,
+              0.25,
+              hit.velocity
+            );
+          }
         }
-        this.nextNoteIndex++;
-      } else {
-        break;
       }
-    }
 
-    // 檢查是否需要循環
-    if (currentBeatPosition >= this.beatsPerMeasure) {
-      // 重置到開頭
-      this.currentBeat = 0;
-      this.nextNoteIndex = 0;
-      this.lastBeatTime = now;
+      this.lastScheduledLoop = loop;
     }
   }
 
@@ -219,8 +218,7 @@ export class DrumLooper {
 
   stop(): void {
     this.pause();
-    this.currentBeat = 0;
-    this.nextNoteIndex = 0;
+    this.lastScheduledLoop = -1;
   }
 
   setVolume(volume: number): void {
