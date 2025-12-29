@@ -1,6 +1,7 @@
 // src/components/DualMusicReportEditor.tsx
 import React, { useState, useCallback, useMemo } from 'react';
 import MusicEmbed from './MusicEmbed';
+import { BEAT_PRESETS, getPresetsForTimeSignature, injectDrumPartToMusicXML } from '../utils/beatPresets';
 
 // 可選樂器列表與 MIDI program number 對照 (General MIDI)
 const INSTRUMENTS = [
@@ -49,6 +50,7 @@ export interface DualMusicReportParams {
     second_p1?: string;
     second_p2?: string;
     second_p3?: string;
+    beat?: string; // 節奏預設 ID
 }
 
 interface DualMusicReportEditorProps {
@@ -147,8 +149,28 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
 
     // 計算處理後的 MusicXML
     const processedXML = useMemo(() => {
-        return applyParamsToMusicXML(musicXML, appliedParams);
+        let xml = applyParamsToMusicXML(musicXML, appliedParams);
+        // 注入節奏聲部
+        if (appliedParams.beat && appliedParams.beat !== 'none') {
+            const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
+            if (beatPreset) {
+                xml = injectDrumPartToMusicXML(xml, beatPreset);
+            }
+        }
+        return xml;
     }, [musicXML, appliedParams]);
+
+    // 根據拍號過濾可用的節奏預設
+    const availableBeatPresets = useMemo(() => {
+        return getPresetsForTimeSignature(editParams.time_signature || '4/4');
+    }, [editParams.time_signature]);
+
+    // 取得節奏預設名稱
+    const getBeatPresetName = (beatId: string | undefined) => {
+        if (!beatId || beatId === 'none') return '無';
+        const preset = BEAT_PRESETS.find(b => b.id === beatId);
+        return preset ? preset.name : '無';
+    };
 
     // 處理參數變更
     const handleParamChange = useCallback((field: keyof DualMusicReportParams, value: string | number) => {
@@ -280,6 +302,33 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                             </div>
                         </div>
 
+                        <div className="divider my-2 text-xs text-base-content/50">節奏設定</div>
+
+                        {/* 節奏預設 */}
+                        <div className="form-control">
+                            <label className="label py-1">
+                                <span className="label-text text-xs">節奏風格</span>
+                            </label>
+                            <select
+                                className="select select-bordered select-sm w-full md:w-1/3"
+                                value={editParams.beat ?? 'none'}
+                                onChange={(e) => handleParamChange('beat', e.target.value)}
+                            >
+                                {availableBeatPresets.map((preset) => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {preset.name} {preset.id !== 'none' && `(${preset.nameEn})`}
+                                    </option>
+                                ))}
+                            </select>
+                            {editParams.beat && editParams.beat !== 'none' && (
+                                <label className="label py-1">
+                                    <span className="label-text-alt text-base-content/50">
+                                        {BEAT_PRESETS.find(b => b.id === editParams.beat)?.description}
+                                    </span>
+                                </label>
+                            )}
+                        </div>
+
                         {/* 按鈕 */}
                         <div className="flex justify-end gap-2 mt-4">
                             <button onClick={handleCancel} className="btn btn-ghost btn-sm">
@@ -321,6 +370,12 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                                     {getInstrumentLabel(appliedParams.second_p1 || 'violin')} / {getInstrumentLabel(appliedParams.second_p2 || 'guitar')} / {getInstrumentLabel(appliedParams.second_p3 || 'bass')}
                                 </span>
                             </div>
+                        </div>
+                        <div className="mt-3 text-sm">
+                            <span className="text-base-content/60">節奏：</span>
+                            <span className="font-medium ml-2">
+                                {getBeatPresetName(appliedParams.beat)}
+                            </span>
                         </div>
                     </>
                 )}
