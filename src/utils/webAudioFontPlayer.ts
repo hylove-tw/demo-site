@@ -47,8 +47,24 @@ const GM_INSTRUMENT_URLS: { [key: number]: string } = {
   75: '0750_JCLive_sf2_file', // Pan Flute
 };
 
-// 打擊樂預設
-const DRUM_KIT_URL = '12835_0_JCLive_sf2_file';
+// 打擊樂音符對應的預設（每個音符需要獨立載入）
+const DRUM_PRESETS: { [key: number]: { file: string; variable: string } } = {
+  35: { file: '12835_0_JCLive_sf2_file', variable: '_drum_35_0_JCLive_sf2_file' }, // Acoustic Bass Drum
+  36: { file: '12836_0_JCLive_sf2_file', variable: '_drum_36_0_JCLive_sf2_file' }, // Bass Drum 1
+  38: { file: '12838_0_JCLive_sf2_file', variable: '_drum_38_0_JCLive_sf2_file' }, // Acoustic Snare
+  40: { file: '12840_0_JCLive_sf2_file', variable: '_drum_40_0_JCLive_sf2_file' }, // Electric Snare
+  42: { file: '12842_0_JCLive_sf2_file', variable: '_drum_42_0_JCLive_sf2_file' }, // Closed Hi-hat
+  44: { file: '12844_0_JCLive_sf2_file', variable: '_drum_44_0_JCLive_sf2_file' }, // Pedal Hi-hat
+  46: { file: '12846_0_JCLive_sf2_file', variable: '_drum_46_0_JCLive_sf2_file' }, // Open Hi-hat
+  49: { file: '12849_0_JCLive_sf2_file', variable: '_drum_49_0_JCLive_sf2_file' }, // Crash Cymbal 1
+  51: { file: '12851_0_JCLive_sf2_file', variable: '_drum_51_0_JCLive_sf2_file' }, // Ride Cymbal 1
+  45: { file: '12845_0_JCLive_sf2_file', variable: '_drum_45_0_JCLive_sf2_file' }, // Low Tom
+  47: { file: '12847_0_JCLive_sf2_file', variable: '_drum_47_0_JCLive_sf2_file' }, // Low-Mid Tom
+  48: { file: '12848_0_JCLive_sf2_file', variable: '_drum_48_0_JCLive_sf2_file' }, // Hi-Mid Tom
+  50: { file: '12850_0_JCLive_sf2_file', variable: '_drum_50_0_JCLive_sf2_file' }, // High Tom
+  39: { file: '12839_0_JCLive_sf2_file', variable: '_drum_39_0_JCLive_sf2_file' }, // Hand Clap
+  37: { file: '12837_0_JCLive_sf2_file', variable: '_drum_37_0_JCLive_sf2_file' }, // Side Stick
+};
 
 // 解析 MusicXML 並提取所有音符事件
 function parseMusicXML(musicXML: string): {
@@ -56,6 +72,7 @@ function parseMusicXML(musicXML: string): {
   bpm: number;
   duration: number;
   usedPrograms: Set<number>;
+  usedDrumNotes: Set<number>;
   hasDrums: boolean;
 } {
   const parser = new DOMParser();
@@ -74,6 +91,7 @@ function parseMusicXML(musicXML: string): {
 
   const events: NoteEvent[] = [];
   const usedPrograms = new Set<number>();
+  const usedDrumNotes = new Set<number>();
   let hasDrums = false;
   const parts = xmlDoc.getElementsByTagName('part');
   let maxTime = 0;
@@ -163,6 +181,9 @@ function parseMusicXML(musicXML: string): {
                 else if (displayStep === 'B' && displayOctave === 4) midiPitch = 47; // Mid Tom
                 else if (displayStep === 'D' && displayOctave === 5) midiPitch = 45; // Low Tom
                 else midiPitch = 38; // 預設小鼓
+
+                // 記錄使用的打擊樂音符
+                usedDrumNotes.add(midiPitch);
               }
             } else {
               // 旋律樂器 - 使用 pitch 元素
@@ -233,7 +254,7 @@ function parseMusicXML(musicXML: string): {
   // 排序事件
   events.sort((a, b) => a.time - b.time);
 
-  return { events, bpm, duration: maxTime, usedPrograms, hasDrums };
+  return { events, bpm, duration: maxTime, usedPrograms, usedDrumNotes, hasDrums };
 }
 
 // WebAudioFont 播放器類別
@@ -290,9 +311,11 @@ export class WebAudioFontPlayer {
       instrumentsToLoad.push(this.loadInstrument(program, url));
     }
 
-    // 載入打擊樂
+    // 載入打擊樂（每個音符獨立載入）
     if (parsed.hasDrums) {
-      instrumentsToLoad.push(this.loadDrumKit());
+      for (const drumNote of Array.from(parsed.usedDrumNotes)) {
+        instrumentsToLoad.push(this.loadDrumNote(drumNote));
+      }
     }
 
     await Promise.all(instrumentsToLoad);
@@ -346,33 +369,46 @@ export class WebAudioFontPlayer {
     });
   }
 
-  private async loadDrumKit(): Promise<void> {
-    const key = 'drums';
+  private async loadDrumNote(midiNote: number): Promise<void> {
+    const key = `drum_${midiNote}`;
     if (this.loadedInstruments.has(key)) {
       return;
     }
 
+    // 取得對應的預設資訊
+    const preset = DRUM_PRESETS[midiNote];
+    if (!preset) {
+      // 使用預設小鼓 (38) 作為後備
+      const fallbackPreset = DRUM_PRESETS[38];
+      if (fallbackPreset && this.loadedInstruments.has('drum_38')) {
+        this.loadedInstruments.set(key, this.loadedInstruments.get('drum_38'));
+      }
+      return;
+    }
+
     return new Promise((resolve) => {
-      const varName = `_drum_${DRUM_KIT_URL}`;
+      const varName = preset.variable;
 
       if ((window as any)[varName]) {
-        this.loadedInstruments.set(key, (window as any)[varName]);
+        const drumData = (window as any)[varName];
+        this.player.adjustPreset(this.audioContext, drumData);
+        this.loadedInstruments.set(key, drumData);
         resolve();
         return;
       }
 
       const script = document.createElement('script');
-      script.src = `https://surikov.github.io/webaudiofontdata/sound/${DRUM_KIT_URL}.js`;
+      script.src = `https://surikov.github.io/webaudiofontdata/sound/${preset.file}.js`;
       script.onload = () => {
-        const drumPreset = (window as any)[varName];
-        if (drumPreset) {
-          this.player.adjustPreset(this.audioContext, drumPreset);
-          this.loadedInstruments.set(key, drumPreset);
+        const drumData = (window as any)[varName];
+        if (drumData) {
+          this.player.adjustPreset(this.audioContext, drumData);
+          this.loadedInstruments.set(key, drumData);
         }
         resolve();
       };
       script.onerror = () => {
-        console.warn('Failed to load drum kit');
+        console.warn(`Failed to load drum note ${midiNote}`);
         resolve();
       };
       document.head.appendChild(script);
@@ -381,7 +417,9 @@ export class WebAudioFontPlayer {
 
   private getPresetForEvent(event: NoteEvent): any {
     if (event.channel === 9) {
-      return this.loadedInstruments.get('drums');
+      // 打擊樂 - 取得對應音符的預設
+      return this.loadedInstruments.get(`drum_${event.midi}`) ||
+             this.loadedInstruments.get('drum_38'); // 後備小鼓
     }
     return this.loadedInstruments.get(`instrument_${event.program}`) ||
            this.loadedInstruments.get('instrument_0');
