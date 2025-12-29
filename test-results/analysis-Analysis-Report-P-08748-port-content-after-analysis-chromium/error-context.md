@@ -1,0 +1,170 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "H Hylove" [ref=e6] [cursor=pointer]:
+      - /url: /demo-site
+      - generic [ref=e8]: H
+      - generic [ref=e9]: Hylove
+    - generic [ref=e11]:
+      - generic [ref=e13]: 受測者
+      - combobox [ref=e14]:
+        - option "預設受測者" [selected]
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "首頁" [ref=e18] [cursor=pointer]:
+            - /url: /demo-site
+            - img [ref=e19]
+            - generic [ref=e21]: 首頁
+        - listitem [ref=e22]:
+          - link "歷史紀錄" [ref=e23] [cursor=pointer]:
+            - /url: /demo-site/history
+            - img [ref=e24]
+            - generic [ref=e26]: 歷史紀錄
+        - listitem [ref=e27]:
+          - link "檔案" [ref=e28] [cursor=pointer]:
+            - /url: /demo-site/files
+            - img [ref=e29]
+            - generic [ref=e31]: 檔案
+        - listitem [ref=e32]:
+          - link "受測者" [ref=e33] [cursor=pointer]:
+            - /url: /demo-site/users
+            - img [ref=e34]
+            - generic [ref=e36]: 受測者
+        - listitem [ref=e37]:
+          - link "教學" [ref=e38] [cursor=pointer]:
+            - /url: /demo-site/tutorial
+            - img [ref=e39]
+            - generic [ref=e41]: 教學
+      - generic [ref=e42]:
+        - generic [ref=e43]: 分析功能
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: 主要功能
+            - generic [ref=e47]: 核心分析系統
+          - list [ref=e48]:
+            - listitem [ref=e49]:
+              - link "元神音" [ref=e50] [cursor=pointer]:
+                - /url: /demo-site/analysis/yuanshenyin
+                - generic [ref=e52]: 元神音
+            - listitem [ref=e53]:
+              - link "琴瑟合" [ref=e54] [cursor=pointer]:
+                - /url: /demo-site/analysis/dualmusic
+                - generic [ref=e56]: 琴瑟合
+            - listitem [ref=e57]:
+              - link "亨運來" [ref=e58] [cursor=pointer]:
+                - /url: /demo-site/analysis/hengyunlai
+                - generic [ref=e60]: 亨運來
+            - listitem [ref=e61]:
+              - link "貞天賦" [ref=e62] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhentianfu
+                - generic [ref=e64]: 貞天賦
+            - listitem [ref=e65]:
+              - link "珍寶炁" [ref=e66] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhenbaoqi
+                - generic [ref=e68]: 珍寶炁
+            - listitem [ref=e69]:
+              - link "情香意" [ref=e70] [cursor=pointer]:
+                - /url: /demo-site/analysis/qingxiangyi
+                - generic [ref=e72]: 情香意
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: 利養炁
+            - generic [ref=e76]: 正念修行系列
+          - list [ref=e77]:
+            - listitem [ref=e78]:
+              - link "正念修行" [ref=e79] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_normal
+                - generic [ref=e81]: 正念修行
+            - listitem [ref=e82]:
+              - link "練炁修行" [ref=e83] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_movement
+                - generic [ref=e85]: 練炁修行
+            - listitem [ref=e86]:
+              - link "練炁品階" [ref=e87] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_level
+                - generic [ref=e89]: 練炁品階
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: 易 Motion
+            - generic [ref=e93]: 情緒評比系列
+          - list [ref=e94]:
+            - listitem [ref=e95]:
+              - link "情緒管理系統" [ref=e96] [cursor=pointer]:
+                - /url: /demo-site/analysis/emotion_management
+                - generic [ref=e98]: 情緒管理系統
+            - listitem [ref=e99]:
+              - link "寵物評比測試" [ref=e100] [cursor=pointer]:
+                - /url: /demo-site/analysis/pet_test
+                - generic [ref=e102]: 寵物評比測試
+            - listitem [ref=e103]:
+              - link "品茶/品酒/品咖啡評比測試" [ref=e104] [cursor=pointer]:
+                - /url: /demo-site/analysis/beverage_test
+                - generic [ref=e106]: 品茶/品酒/品咖啡評比測試
+            - listitem [ref=e107]:
+              - link "香水評比測試" [ref=e108] [cursor=pointer]:
+                - /url: /demo-site/analysis/perfume_test
+                - generic [ref=e110]: 香水評比測試
+            - listitem [ref=e111]:
+              - link "音樂演奏/歌曲演唱評比測試" [ref=e112] [cursor=pointer]:
+                - /url: /demo-site/analysis/music_test
+                - generic [ref=e114]: 音樂演奏/歌曲演唱評比測試
+            - listitem [ref=e115]:
+              - link "短視頻廣告評比測試" [ref=e116] [cursor=pointer]:
+                - /url: /demo-site/analysis/video_test
+                - generic [ref=e118]: 短視頻廣告評比測試
+    - generic [ref=e120]: © 2025 Hylove
+  - main [ref=e122]:
+    - generic [ref=e124]:
+      - list [ref=e126]:
+        - listitem [ref=e127]:
+          - link "首頁" [ref=e128] [cursor=pointer]:
+            - /url: /demo-site
+        - listitem [ref=e129]: 主要功能
+        - listitem [ref=e130]: 亨運來
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - generic [ref=e134]: 主要功能
+            - generic [ref=e135]: 核心分析系統
+          - heading "亨運來" [level=1] [ref=e136]
+          - paragraph [ref=e137]: H.R (Human Resource) 評估系統，透過腦波分析評估個人的人力資源潛能，結合易經八卦理論對應領導統御、創新發展、研發整合、人事行政、業務拓展、公關行銷、生產管理、任務執行八大職能面向，提供職涯發展與工作適配度參考。
+        - button "歷史紀錄 0" [ref=e138] [cursor=pointer]:
+          - img [ref=e139]
+          - text: 歷史紀錄
+          - generic [ref=e141]: "0"
+      - generic [ref=e143]:
+        - heading "分析設定" [level=2] [ref=e144]
+        - generic [ref=e145]:
+          - heading "選擇檔案" [level=3] [ref=e146]
+          - generic [ref=e147]:
+            - generic [ref=e148]:
+              - button "個別選擇" [ref=e149] [cursor=pointer]
+              - button "群組選擇" [ref=e150] [cursor=pointer]
+              - button "上傳腦波資料群組" [ref=e151] [cursor=pointer]
+            - generic [ref=e152]:
+              - generic [ref=e153]:
+                - generic [ref=e155]: 前測資料
+                - combobox [ref=e156]:
+                  - option "請選擇 前測資料"
+                  - option "前測資料" [selected]
+                  - option "後測資料"
+              - generic [ref=e157]:
+                - generic [ref=e159]: 後測資料
+                - combobox [ref=e160]:
+                  - option "請選擇 後測資料"
+                  - option "前測資料"
+                  - option "後測資料" [selected]
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - generic [ref=e163]: 分析描述
+            - generic [ref=e164]: 選填
+          - textbox "輸入此次分析的描述或備註" [ref=e165]
+        - generic [ref=e167]: 資料不完整，請重新送出!
+        - generic [ref=e168]:
+          - link "取消" [ref=e169] [cursor=pointer]:
+            - /url: /demo-site
+          - button "開始分析" [ref=e170] [cursor=pointer]
+```

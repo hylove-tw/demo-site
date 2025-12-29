@@ -1,0 +1,177 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "H Hylove" [ref=e6] [cursor=pointer]:
+      - /url: /demo-site
+      - generic [ref=e8]: H
+      - generic [ref=e9]: Hylove
+    - generic [ref=e11]:
+      - generic [ref=e13]: 受測者
+      - combobox [ref=e14]:
+        - option "預設受測者" [selected]
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "首頁" [ref=e18] [cursor=pointer]:
+            - /url: /demo-site
+            - img [ref=e19]
+            - generic [ref=e21]: 首頁
+        - listitem [ref=e22]:
+          - link "歷史紀錄" [ref=e23] [cursor=pointer]:
+            - /url: /demo-site/history
+            - img [ref=e24]
+            - generic [ref=e26]: 歷史紀錄
+        - listitem [ref=e27]:
+          - link "檔案" [ref=e28] [cursor=pointer]:
+            - /url: /demo-site/files
+            - img [ref=e29]
+            - generic [ref=e31]: 檔案
+        - listitem [ref=e32]:
+          - link "受測者" [ref=e33] [cursor=pointer]:
+            - /url: /demo-site/users
+            - img [ref=e34]
+            - generic [ref=e36]: 受測者
+        - listitem [ref=e37]:
+          - link "教學" [ref=e38] [cursor=pointer]:
+            - /url: /demo-site/tutorial
+            - img [ref=e39]
+            - generic [ref=e41]: 教學
+      - generic [ref=e42]:
+        - generic [ref=e43]: 分析功能
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: 主要功能
+            - generic [ref=e47]: 核心分析系統
+          - list [ref=e48]:
+            - listitem [ref=e49]:
+              - link "元神音" [ref=e50] [cursor=pointer]:
+                - /url: /demo-site/analysis/yuanshenyin
+                - generic [ref=e52]: 元神音
+            - listitem [ref=e53]:
+              - link "琴瑟合" [ref=e54] [cursor=pointer]:
+                - /url: /demo-site/analysis/dualmusic
+                - generic [ref=e56]: 琴瑟合
+            - listitem [ref=e57]:
+              - link "亨運來" [ref=e58] [cursor=pointer]:
+                - /url: /demo-site/analysis/hengyunlai
+                - generic [ref=e60]: 亨運來
+            - listitem [ref=e61]:
+              - link "貞天賦" [ref=e62] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhentianfu
+                - generic [ref=e64]: 貞天賦
+            - listitem [ref=e65]:
+              - link "珍寶炁" [ref=e66] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhenbaoqi
+                - generic [ref=e68]: 珍寶炁
+            - listitem [ref=e69]:
+              - link "情香意" [ref=e70] [cursor=pointer]:
+                - /url: /demo-site/analysis/qingxiangyi
+                - generic [ref=e72]: 情香意
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: 利養炁
+            - generic [ref=e76]: 正念修行系列
+          - list [ref=e77]:
+            - listitem [ref=e78]:
+              - link "正念修行" [ref=e79] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_normal
+                - generic [ref=e81]: 正念修行
+            - listitem [ref=e82]:
+              - link "練炁修行" [ref=e83] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_movement
+                - generic [ref=e85]: 練炁修行
+            - listitem [ref=e86]:
+              - link "練炁品階" [ref=e87] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_level
+                - generic [ref=e89]: 練炁品階
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: 易 Motion
+            - generic [ref=e93]: 情緒評比系列
+          - list [ref=e94]:
+            - listitem [ref=e95]:
+              - link "情緒管理系統" [ref=e96] [cursor=pointer]:
+                - /url: /demo-site/analysis/emotion_management
+                - generic [ref=e98]: 情緒管理系統
+            - listitem [ref=e99]:
+              - link "寵物評比測試" [ref=e100] [cursor=pointer]:
+                - /url: /demo-site/analysis/pet_test
+                - generic [ref=e102]: 寵物評比測試
+            - listitem [ref=e103]:
+              - link "品茶/品酒/品咖啡評比測試" [ref=e104] [cursor=pointer]:
+                - /url: /demo-site/analysis/beverage_test
+                - generic [ref=e106]: 品茶/品酒/品咖啡評比測試
+            - listitem [ref=e107]:
+              - link "香水評比測試" [ref=e108] [cursor=pointer]:
+                - /url: /demo-site/analysis/perfume_test
+                - generic [ref=e110]: 香水評比測試
+            - listitem [ref=e111]:
+              - link "音樂演奏/歌曲演唱評比測試" [ref=e112] [cursor=pointer]:
+                - /url: /demo-site/analysis/music_test
+                - generic [ref=e114]: 音樂演奏/歌曲演唱評比測試
+            - listitem [ref=e115]:
+              - link "短視頻廣告評比測試" [ref=e116] [cursor=pointer]:
+                - /url: /demo-site/analysis/video_test
+                - generic [ref=e118]: 短視頻廣告評比測試
+    - generic [ref=e120]: © 2025 Hylove
+  - main [ref=e122]:
+    - generic [ref=e124]:
+      - list [ref=e126]:
+        - listitem [ref=e127]:
+          - link "首頁" [ref=e128] [cursor=pointer]:
+            - /url: /demo-site
+        - listitem [ref=e129]: 使用教學
+      - heading "使用教學" [level=1] [ref=e130]
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - generic [ref=e134]:
+            - heading "開始使用" [level=2] [ref=e135]
+            - generic [ref=e136]:
+              - paragraph [ref=e137]: 歡迎使用 HyLove 腦波分析系統！本系統可幫助您上傳腦波資料檔案， 並透過多種分析功能產生專業報告。
+              - generic [ref=e138]:
+                - img [ref=e139]
+                - generic [ref=e141]: 首次使用時，系統會自動建立一個「預設受測者」供您使用。
+              - heading "快速開始步驟" [level=3] [ref=e142]
+              - list [ref=e143]:
+                - listitem [ref=e144]:
+                  - generic [ref=e145]:
+                    - paragraph [ref=e146]: 確認受測者
+                    - paragraph [ref=e147]: 系統右上角會顯示目前受測者，可前往「受測者管理」新增或切換
+                - listitem [ref=e148]:
+                  - generic [ref=e149]:
+                    - paragraph [ref=e150]: 上傳腦波檔案
+                    - paragraph [ref=e151]: 前往「腦波檔案管理」上傳 CSV 格式的腦波資料
+                - listitem [ref=e152]:
+                  - generic [ref=e153]:
+                    - paragraph [ref=e154]: 選擇分析功能
+                    - paragraph [ref=e155]: 從首頁選擇要使用的分析功能
+                - listitem [ref=e156]:
+                  - generic [ref=e157]:
+                    - paragraph [ref=e158]: 執行分析並查看報告
+                    - paragraph [ref=e159]: 選擇前測/後測資料，點擊「開始分析」
+          - generic [ref=e160]:
+            - button "上一章" [disabled]
+            - button "下一章" [ref=e161] [cursor=pointer]
+        - list [ref=e164]:
+          - listitem [ref=e165]: 目錄
+          - listitem [ref=e166]:
+            - button "開始使用" [ref=e167]
+          - listitem [ref=e168]:
+            - button "受測者管理" [ref=e169]
+          - listitem [ref=e170]:
+            - button "上傳腦波檔案" [ref=e171]
+          - listitem [ref=e172]:
+            - button "檢視腦波資料" [ref=e173]
+          - listitem [ref=e174]:
+            - button "腦波資料群組" [ref=e175]
+          - listitem [ref=e176]:
+            - button "執行分析" [ref=e177]
+          - listitem [ref=e178]:
+            - button "查看報告" [ref=e179]
+          - listitem [ref=e180]:
+            - button "歷史紀錄" [ref=e181]
+          - listitem [ref=e182]:
+            - button "常見問題" [ref=e183]
+```

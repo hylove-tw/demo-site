@@ -1,7 +1,8 @@
 // src/components/MusicEmbed.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { OpenSheetMusicDisplay as OSMD } from 'opensheetmusicdisplay';
-import { MusicAudioPlayer } from '../utils/musicAudioGenerator';
+import AudioPlayer from 'osmd-audio-player';
+import { DrumPlayer } from '../utils/musicAudioGenerator';
 
 interface MusicEmbedProps {
     musicXML: string;
@@ -23,7 +24,8 @@ const DEFAULT_ZOOM = 0.7;
 const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
-    const audioPlayerRef = useRef<MusicAudioPlayer | null>(null);
+    const audioPlayerRef = useRef<AudioPlayer | null>(null);
+    const drumPlayerRef = useRef<DrumPlayer | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -105,14 +107,16 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 // 渲染樂譜
                 osmd.render();
 
-                // 初始化音樂播放器（使用 Tone.js）
+                // 初始化音樂播放器（osmd-audio-player 播放旋律，DrumPlayer 播放鼓聲）
                 try {
-                    audioPlayerRef.current = new MusicAudioPlayer();
-                    await audioPlayerRef.current.loadScore(musicXML);
-                    audioPlayerRef.current.onEnd(() => {
-                        setIsPlaying(false);
-                        setIsPaused(false);
-                    });
+                    // 主播放器（旋律樂器）
+                    audioPlayerRef.current = new AudioPlayer();
+                    await audioPlayerRef.current.loadScore(osmdRef.current as any);
+
+                    // 鼓聲播放器（Tone.js）
+                    drumPlayerRef.current = new DrumPlayer();
+                    await drumPlayerRef.current.loadScore(musicXML);
+
                     setIsAudioReady(true);
                 } catch (audioErr) {
                     console.warn('Audio player initialization failed:', audioErr);
@@ -132,11 +136,19 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         return () => {
             if (audioPlayerRef.current) {
                 try {
-                    audioPlayerRef.current.dispose();
+                    audioPlayerRef.current.stop();
                 } catch (e) {
                     // Ignore cleanup errors
                 }
                 audioPlayerRef.current = null;
+            }
+            if (drumPlayerRef.current) {
+                try {
+                    drumPlayerRef.current.dispose();
+                } catch (e) {
+                    // Ignore cleanup errors
+                }
+                drumPlayerRef.current = null;
             }
             osmdRef.current = null;
             prevMusicXMLRef.current = null;
@@ -157,26 +169,30 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         setZoom(newZoom);
     }, []);
 
-    // 播放控制
+    // 播放控制（同時控制旋律和鼓聲）
     const handlePlay = useCallback(async () => {
         if (!audioPlayerRef.current || !isAudioReady) return;
 
         try {
-            if (isPaused) {
-                audioPlayerRef.current.play();
-            } else {
-                audioPlayerRef.current.play();
+            // 播放旋律
+            audioPlayerRef.current.play();
+            // 播放鼓聲
+            if (drumPlayerRef.current) {
+                drumPlayerRef.current.play();
             }
             setIsPlaying(true);
             setIsPaused(false);
         } catch (err) {
             console.error('Play error:', err);
         }
-    }, [isAudioReady, isPaused]);
+    }, [isAudioReady]);
 
     const handlePause = useCallback(() => {
         if (!audioPlayerRef.current) return;
         audioPlayerRef.current.pause();
+        if (drumPlayerRef.current) {
+            drumPlayerRef.current.pause();
+        }
         setIsPlaying(false);
         setIsPaused(true);
     }, []);
@@ -184,6 +200,9 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
     const handleStop = useCallback(() => {
         if (!audioPlayerRef.current) return;
         audioPlayerRef.current.stop();
+        if (drumPlayerRef.current) {
+            drumPlayerRef.current.stop();
+        }
         setIsPlaying(false);
         setIsPaused(false);
     }, []);
@@ -201,14 +220,14 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         URL.revokeObjectURL(url);
     }, [musicXML, title]);
 
-    // 下載音樂檔案（使用 Tone.js 錄製）
+    // 下載音樂檔案（錄製播放）
     const downloadMP3 = useCallback(async () => {
         if (!audioPlayerRef.current || !isAudioReady || isRecording) return;
 
         try {
-            // 動態載入 Tone.js 以取得 context
-            const Tone = await import('tone');
-            const audioContext = Tone.getContext().rawContext as AudioContext;
+            // 取得 osmd-audio-player 的 AudioContext
+            const audioPlayer = audioPlayerRef.current as any;
+            const audioContext: AudioContext = audioPlayer.ac;
 
             if (!audioContext) {
                 alert('無法存取音樂上下文');
@@ -218,8 +237,11 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
             // 建立 MediaStreamDestination 用於錄製
             const dest = audioContext.createMediaStreamDestination();
 
-            // 連接 Tone.js 主輸出到錄製目標
-            Tone.getDestination().connect(dest);
+            // 連接主輸出到錄製目標
+            const gainNode = audioPlayer.gainNode || audioPlayer.masterGain;
+            if (gainNode) {
+                gainNode.connect(dest);
+            }
 
             // 設定 MediaRecorder
             const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -252,10 +274,14 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 setRecordingProgress(0);
 
                 // 斷開錄製連接
-                try {
-                    Tone.getDestination().disconnect(dest);
-                } catch (e) {
-                    // 忽略斷開錯誤
+                const audioPlayer = audioPlayerRef.current as any;
+                const gainNode = audioPlayer?.gainNode || audioPlayer?.masterGain;
+                if (gainNode) {
+                    try {
+                        gainNode.disconnect(dest);
+                    } catch (e) {
+                        // 忽略斷開錯誤
+                    }
                 }
             };
 
@@ -265,19 +291,21 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
 
             // 停止當前播放並重新開始
             audioPlayerRef.current.stop();
+            if (drumPlayerRef.current) {
+                drumPlayerRef.current.stop();
+            }
 
-            // 取得音樂時長
-            const duration = audioPlayerRef.current.getDuration();
-
-            // 監聽播放結束
+            // 監聽播放結束（使用 osmd-audio-player 的 state）
             const checkPlaybackEnd = setInterval(() => {
-                const player = audioPlayerRef.current;
+                const player = audioPlayerRef.current as any;
                 if (player) {
-                    const currentTime = player.getCurrentTime();
-                    setRecordingProgress(Math.min((currentTime / duration) * 100, 100));
+                    // 使用 iterationSteps 計算進度
+                    const currentStep = player.currentIterationStep || 0;
+                    const totalSteps = player.iterationSteps || 1;
+                    setRecordingProgress(Math.min((currentStep / totalSteps) * 100, 100));
 
                     // 檢查是否播放結束
-                    if (!player.getIsPlaying() || currentTime >= duration) {
+                    if (player.state === 'STOPPED' || player.state === 'PAUSED') {
                         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
                             setTimeout(() => {
                                 if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -290,8 +318,11 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 }
             }, 200);
 
-            // 開始播放
+            // 開始播放（旋律和鼓聲）
             audioPlayerRef.current.play();
+            if (drumPlayerRef.current) {
+                drumPlayerRef.current.play();
+            }
             setIsPlaying(true);
             setIsPaused(false);
 

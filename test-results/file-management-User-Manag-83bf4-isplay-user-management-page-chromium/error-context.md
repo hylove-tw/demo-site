@@ -1,0 +1,169 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "H Hylove" [ref=e6] [cursor=pointer]:
+      - /url: /demo-site
+      - generic [ref=e8]: H
+      - generic [ref=e9]: Hylove
+    - generic [ref=e11]:
+      - generic [ref=e13]: 受測者
+      - combobox [ref=e14]:
+        - option "預設受測者" [selected]
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "首頁" [ref=e18] [cursor=pointer]:
+            - /url: /demo-site
+            - img [ref=e19]
+            - generic [ref=e21]: 首頁
+        - listitem [ref=e22]:
+          - link "歷史紀錄" [ref=e23] [cursor=pointer]:
+            - /url: /demo-site/history
+            - img [ref=e24]
+            - generic [ref=e26]: 歷史紀錄
+        - listitem [ref=e27]:
+          - link "檔案" [ref=e28] [cursor=pointer]:
+            - /url: /demo-site/files
+            - img [ref=e29]
+            - generic [ref=e31]: 檔案
+        - listitem [ref=e32]:
+          - link "受測者" [ref=e33] [cursor=pointer]:
+            - /url: /demo-site/users
+            - img [ref=e34]
+            - generic [ref=e36]: 受測者
+        - listitem [ref=e37]:
+          - link "教學" [ref=e38] [cursor=pointer]:
+            - /url: /demo-site/tutorial
+            - img [ref=e39]
+            - generic [ref=e41]: 教學
+      - generic [ref=e42]:
+        - generic [ref=e43]: 分析功能
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: 主要功能
+            - generic [ref=e47]: 核心分析系統
+          - list [ref=e48]:
+            - listitem [ref=e49]:
+              - link "元神音" [ref=e50] [cursor=pointer]:
+                - /url: /demo-site/analysis/yuanshenyin
+                - generic [ref=e52]: 元神音
+            - listitem [ref=e53]:
+              - link "琴瑟合" [ref=e54] [cursor=pointer]:
+                - /url: /demo-site/analysis/dualmusic
+                - generic [ref=e56]: 琴瑟合
+            - listitem [ref=e57]:
+              - link "亨運來" [ref=e58] [cursor=pointer]:
+                - /url: /demo-site/analysis/hengyunlai
+                - generic [ref=e60]: 亨運來
+            - listitem [ref=e61]:
+              - link "貞天賦" [ref=e62] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhentianfu
+                - generic [ref=e64]: 貞天賦
+            - listitem [ref=e65]:
+              - link "珍寶炁" [ref=e66] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhenbaoqi
+                - generic [ref=e68]: 珍寶炁
+            - listitem [ref=e69]:
+              - link "情香意" [ref=e70] [cursor=pointer]:
+                - /url: /demo-site/analysis/qingxiangyi
+                - generic [ref=e72]: 情香意
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: 利養炁
+            - generic [ref=e76]: 正念修行系列
+          - list [ref=e77]:
+            - listitem [ref=e78]:
+              - link "正念修行" [ref=e79] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_normal
+                - generic [ref=e81]: 正念修行
+            - listitem [ref=e82]:
+              - link "練炁修行" [ref=e83] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_movement
+                - generic [ref=e85]: 練炁修行
+            - listitem [ref=e86]:
+              - link "練炁品階" [ref=e87] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_level
+                - generic [ref=e89]: 練炁品階
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: 易 Motion
+            - generic [ref=e93]: 情緒評比系列
+          - list [ref=e94]:
+            - listitem [ref=e95]:
+              - link "情緒管理系統" [ref=e96] [cursor=pointer]:
+                - /url: /demo-site/analysis/emotion_management
+                - generic [ref=e98]: 情緒管理系統
+            - listitem [ref=e99]:
+              - link "寵物評比測試" [ref=e100] [cursor=pointer]:
+                - /url: /demo-site/analysis/pet_test
+                - generic [ref=e102]: 寵物評比測試
+            - listitem [ref=e103]:
+              - link "品茶/品酒/品咖啡評比測試" [ref=e104] [cursor=pointer]:
+                - /url: /demo-site/analysis/beverage_test
+                - generic [ref=e106]: 品茶/品酒/品咖啡評比測試
+            - listitem [ref=e107]:
+              - link "香水評比測試" [ref=e108] [cursor=pointer]:
+                - /url: /demo-site/analysis/perfume_test
+                - generic [ref=e110]: 香水評比測試
+            - listitem [ref=e111]:
+              - link "音樂演奏/歌曲演唱評比測試" [ref=e112] [cursor=pointer]:
+                - /url: /demo-site/analysis/music_test
+                - generic [ref=e114]: 音樂演奏/歌曲演唱評比測試
+            - listitem [ref=e115]:
+              - link "短視頻廣告評比測試" [ref=e116] [cursor=pointer]:
+                - /url: /demo-site/analysis/video_test
+                - generic [ref=e118]: 短視頻廣告評比測試
+    - generic [ref=e120]: © 2025 Hylove
+  - main [ref=e122]:
+    - generic [ref=e124]:
+      - list [ref=e126]:
+        - listitem [ref=e127]:
+          - link "首頁" [ref=e128] [cursor=pointer]:
+            - /url: /demo-site
+        - listitem [ref=e129]: 受測者管理
+      - generic [ref=e130]:
+        - heading "受測者管理" [level=1] [ref=e131]
+        - button "新增受測者" [ref=e132] [cursor=pointer]
+      - generic [ref=e134]:
+        - generic [ref=e135]:
+          - heading "目前受測者" [level=2] [ref=e136]
+          - generic [ref=e137]: 一般使用者
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: 姓名
+            - paragraph [ref=e141]: 預設受測者
+          - generic [ref=e142]:
+            - paragraph [ref=e143]: 電話
+            - paragraph [ref=e144]: 未設定
+          - generic [ref=e145]:
+            - paragraph [ref=e146]: Email
+            - paragraph [ref=e147]: 未設定
+          - generic [ref=e148]:
+            - paragraph [ref=e149]: 公司
+            - paragraph [ref=e150]: 未設定
+      - heading "所有受測者" [level=2] [ref=e151]
+      - table [ref=e153]:
+        - rowgroup [ref=e154]:
+          - row "身分 姓名 電話 Email 公司 操作" [ref=e155]:
+            - columnheader "身分" [ref=e156]
+            - columnheader "姓名" [ref=e157]
+            - columnheader "電話" [ref=e158]
+            - columnheader "Email" [ref=e159]
+            - columnheader "公司" [ref=e160]
+            - columnheader "操作" [ref=e161]
+        - rowgroup [ref=e162]:
+          - row "一般使用者 預設受測者 - - - 使用中 編輯 刪除" [ref=e163]:
+            - cell "一般使用者" [ref=e164]:
+              - generic [ref=e165]: 一般使用者
+            - cell "預設受測者" [ref=e166]
+            - cell "-" [ref=e167]
+            - cell "-" [ref=e168]
+            - cell "-" [ref=e169]
+            - cell "使用中 編輯 刪除" [ref=e170]:
+              - generic [ref=e171]:
+                - generic [ref=e172]: 使用中
+                - button "編輯" [ref=e173] [cursor=pointer]
+                - button "刪除" [ref=e174] [cursor=pointer]
+```

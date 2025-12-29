@@ -1,0 +1,202 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "H Hylove" [ref=e6] [cursor=pointer]:
+      - /url: /demo-site
+      - generic [ref=e8]: H
+      - generic [ref=e9]: Hylove
+    - generic [ref=e11]:
+      - generic [ref=e13]: 受測者
+      - combobox [ref=e14]:
+        - option "預設受測者" [selected]
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "首頁" [ref=e18] [cursor=pointer]:
+            - /url: /demo-site
+            - img [ref=e19]
+            - generic [ref=e21]: 首頁
+        - listitem [ref=e22]:
+          - link "歷史紀錄" [ref=e23] [cursor=pointer]:
+            - /url: /demo-site/history
+            - img [ref=e24]
+            - generic [ref=e26]: 歷史紀錄
+        - listitem [ref=e27]:
+          - link "檔案" [ref=e28] [cursor=pointer]:
+            - /url: /demo-site/files
+            - img [ref=e29]
+            - generic [ref=e31]: 檔案
+        - listitem [ref=e32]:
+          - link "受測者" [ref=e33] [cursor=pointer]:
+            - /url: /demo-site/users
+            - img [ref=e34]
+            - generic [ref=e36]: 受測者
+        - listitem [ref=e37]:
+          - link "教學" [ref=e38] [cursor=pointer]:
+            - /url: /demo-site/tutorial
+            - img [ref=e39]
+            - generic [ref=e41]: 教學
+      - generic [ref=e42]:
+        - generic [ref=e43]: 分析功能
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: 主要功能
+            - generic [ref=e47]: 核心分析系統
+          - list [ref=e48]:
+            - listitem [ref=e49]:
+              - link "元神音" [ref=e50] [cursor=pointer]:
+                - /url: /demo-site/analysis/yuanshenyin
+                - generic [ref=e52]: 元神音
+            - listitem [ref=e53]:
+              - link "琴瑟合" [ref=e54] [cursor=pointer]:
+                - /url: /demo-site/analysis/dualmusic
+                - generic [ref=e56]: 琴瑟合
+            - listitem [ref=e57]:
+              - link "亨運來" [ref=e58] [cursor=pointer]:
+                - /url: /demo-site/analysis/hengyunlai
+                - generic [ref=e60]: 亨運來
+            - listitem [ref=e61]:
+              - link "貞天賦" [ref=e62] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhentianfu
+                - generic [ref=e64]: 貞天賦
+            - listitem [ref=e65]:
+              - link "珍寶炁" [ref=e66] [cursor=pointer]:
+                - /url: /demo-site/analysis/zhenbaoqi
+                - generic [ref=e68]: 珍寶炁
+            - listitem [ref=e69]:
+              - link "情香意" [ref=e70] [cursor=pointer]:
+                - /url: /demo-site/analysis/qingxiangyi
+                - generic [ref=e72]: 情香意
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]: 利養炁
+            - generic [ref=e76]: 正念修行系列
+          - list [ref=e77]:
+            - listitem [ref=e78]:
+              - link "正念修行" [ref=e79] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_normal
+                - generic [ref=e81]: 正念修行
+            - listitem [ref=e82]:
+              - link "練炁修行" [ref=e83] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_movement
+                - generic [ref=e85]: 練炁修行
+            - listitem [ref=e86]:
+              - link "練炁品階" [ref=e87] [cursor=pointer]:
+                - /url: /demo-site/analysis/mindei_level
+                - generic [ref=e89]: 練炁品階
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: 易 Motion
+            - generic [ref=e93]: 情緒評比系列
+          - list [ref=e94]:
+            - listitem [ref=e95]:
+              - link "情緒管理系統" [ref=e96] [cursor=pointer]:
+                - /url: /demo-site/analysis/emotion_management
+                - generic [ref=e98]: 情緒管理系統
+            - listitem [ref=e99]:
+              - link "寵物評比測試" [ref=e100] [cursor=pointer]:
+                - /url: /demo-site/analysis/pet_test
+                - generic [ref=e102]: 寵物評比測試
+            - listitem [ref=e103]:
+              - link "品茶/品酒/品咖啡評比測試" [ref=e104] [cursor=pointer]:
+                - /url: /demo-site/analysis/beverage_test
+                - generic [ref=e106]: 品茶/品酒/品咖啡評比測試
+            - listitem [ref=e107]:
+              - link "香水評比測試" [ref=e108] [cursor=pointer]:
+                - /url: /demo-site/analysis/perfume_test
+                - generic [ref=e110]: 香水評比測試
+            - listitem [ref=e111]:
+              - link "音樂演奏/歌曲演唱評比測試" [ref=e112] [cursor=pointer]:
+                - /url: /demo-site/analysis/music_test
+                - generic [ref=e114]: 音樂演奏/歌曲演唱評比測試
+            - listitem [ref=e115]:
+              - link "短視頻廣告評比測試" [ref=e116] [cursor=pointer]:
+                - /url: /demo-site/analysis/video_test
+                - generic [ref=e118]: 短視頻廣告評比測試
+    - generic [ref=e120]: © 2025 Hylove
+  - main [ref=e122]:
+    - generic [ref=e124]:
+      - generic [ref=e125]:
+        - img [ref=e126]
+        - generic [ref=e128]: 這是展示用 Demo 網站 — 所有資料僅儲存於您的瀏覽器中，不會上傳至伺服器。清除瀏覽器資料將會遺失所有內容。
+      - generic [ref=e130]:
+        - heading "分析功能" [level=1] [ref=e131]
+        - paragraph [ref=e132]: 選擇分析功能開始腦波分析
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - generic [ref=e135]: 主要功能
+          - generic [ref=e136]: 核心分析系統
+        - generic [ref=e137]:
+          - link "元神音 腦波影音編碼系統，將個人腦波轉換為獨特的心靈音樂五線譜" [ref=e138] [cursor=pointer]:
+            - /url: /demo-site/analysis/yuanshenyin
+            - paragraph [ref=e139]: 元神音
+            - paragraph [ref=e140]: 腦波影音編碼系統，將個人腦波轉換為獨特的心靈音樂五線譜
+          - link "琴瑟合 雙人腦波影音編碼，將兩人腦波轉化為六聲部心靈合奏音樂" [ref=e141] [cursor=pointer]:
+            - /url: /demo-site/analysis/dualmusic
+            - paragraph [ref=e142]: 琴瑟合
+            - paragraph [ref=e143]: 雙人腦波影音編碼，將兩人腦波轉化為六聲部心靈合奏音樂
+          - link "亨運來 H.R 人力資源評估，結合易經八卦理論分析八大職能潛能" [ref=e144] [cursor=pointer]:
+            - /url: /demo-site/analysis/hengyunlai
+            - paragraph [ref=e145]: 亨運來
+            - paragraph [ref=e146]: H.R 人力資源評估，結合易經八卦理論分析八大職能潛能
+          - link "貞天賦 潛能評估系統，分析自然科學、創新藝術等八項天賦人格特質" [ref=e147] [cursor=pointer]:
+            - /url: /demo-site/analysis/zhentianfu
+            - paragraph [ref=e148]: 貞天賦
+            - paragraph [ref=e149]: 潛能評估系統，分析自然科學、創新藝術等八項天賦人格特質
+          - link "珍寶炁 珍寶炁場礦物結晶體測試（台灣專利），推薦最合適的水晶寶石" [ref=e150] [cursor=pointer]:
+            - /url: /demo-site/analysis/zhenbaoqi
+            - paragraph [ref=e151]: 珍寶炁
+            - paragraph [ref=e152]: 珍寶炁場礦物結晶體測試（台灣專利），推薦最合適的水晶寶石
+          - link "情香意 情香意炁場香氛測試，透過腦波分析推薦個人化芳香療癒產品" [ref=e153] [cursor=pointer]:
+            - /url: /demo-site/analysis/qingxiangyi
+            - paragraph [ref=e154]: 情香意
+            - paragraph [ref=e155]: 情香意炁場香氛測試，透過腦波分析推薦個人化芳香療癒產品
+      - generic [ref=e156]:
+        - generic [ref=e157]:
+          - generic [ref=e158]: 利養炁
+          - generic [ref=e159]: 正念修行系列
+        - generic [ref=e160]:
+          - link "正念修行 正念修行與身心指數系統，前後測各一分鐘評估身心平衡" [ref=e161] [cursor=pointer]:
+            - /url: /demo-site/analysis/mindei_normal
+            - paragraph [ref=e162]: 正念修行
+            - paragraph [ref=e163]: 正念修行與身心指數系統，前後測各一分鐘評估身心平衡
+          - link "練炁修行 練炁修行模式，分析運行練炁時的能量狀態與身心協調" [ref=e164] [cursor=pointer]:
+            - /url: /demo-site/analysis/mindei_movement
+            - paragraph [ref=e165]: 練炁修行
+            - paragraph [ref=e166]: 練炁修行模式，分析運行練炁時的能量狀態與身心協調
+          - link "練炁品階 練炁品階評估，對比正念基準與練炁狀態判定修行境界" [ref=e167] [cursor=pointer]:
+            - /url: /demo-site/analysis/mindei_level
+            - paragraph [ref=e168]: 練炁品階
+            - paragraph [ref=e169]: 練炁品階評估，對比正念基準與練炁狀態判定修行境界
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - generic [ref=e172]: 易 Motion
+          - generic [ref=e173]: 情緒評比系列
+        - generic [ref=e174]:
+          - link "情緒管理系統 員工情緒管理，定期量測腦波情緒紀錄並預測憂鬱傾向" [ref=e175] [cursor=pointer]:
+            - /url: /demo-site/analysis/emotion_management
+            - paragraph [ref=e176]: 情緒管理系統
+            - paragraph [ref=e177]: 員工情緒管理，定期量測腦波情緒紀錄並預測憂鬱傾向
+          - link "寵物評比測試 寵物評比，透過視覺與觸覺階段的腦波情緒分析選擇最佳寵物" [ref=e178] [cursor=pointer]:
+            - /url: /demo-site/analysis/pet_test
+            - paragraph [ref=e179]: 寵物評比測試
+            - paragraph [ref=e180]: 寵物評比，透過視覺與觸覺階段的腦波情緒分析選擇最佳寵物
+          - link "品茶/品酒/品咖啡評比測試 飲品評比，透過嗅覺與味覺的腦波情緒分析選擇最佳飲品" [ref=e181] [cursor=pointer]:
+            - /url: /demo-site/analysis/beverage_test
+            - paragraph [ref=e182]: 品茶/品酒/品咖啡評比測試
+            - paragraph [ref=e183]: 飲品評比，透過嗅覺與味覺的腦波情緒分析選擇最佳飲品
+          - link "香水評比測試 香水評比，透過嗅覺的腦波情緒分析選擇最適合的香水產品" [ref=e184] [cursor=pointer]:
+            - /url: /demo-site/analysis/perfume_test
+            - paragraph [ref=e185]: 香水評比測試
+            - paragraph [ref=e186]: 香水評比，透過嗅覺的腦波情緒分析選擇最適合的香水產品
+          - link "音樂演奏/歌曲演唱評比測試 音樂評比，透過聽覺的腦波情緒分析評比不同音樂作品" [ref=e187] [cursor=pointer]:
+            - /url: /demo-site/analysis/music_test
+            - paragraph [ref=e188]: 音樂演奏/歌曲演唱評比測試
+            - paragraph [ref=e189]: 音樂評比，透過聽覺的腦波情緒分析評比不同音樂作品
+          - link "短視頻廣告評比測試 視頻廣告評比，透過視聽覺的腦波情緒分析評估廣告效果" [ref=e190] [cursor=pointer]:
+            - /url: /demo-site/analysis/video_test
+            - paragraph [ref=e191]: 短視頻廣告評比測試
+            - paragraph [ref=e192]: 視頻廣告評比，透過視聽覺的腦波情緒分析評估廣告效果
+```
