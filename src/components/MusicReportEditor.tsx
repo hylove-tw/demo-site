@@ -33,6 +33,10 @@ export interface MusicReportParams {
     p1?: string;
     p2?: string;
     p3?: string;
+    p1_volume?: number; // 0-100
+    p2_volume?: number;
+    p3_volume?: number;
+    drum_volume?: number;
     beat?: string; // 節奏預設 ID
 }
 
@@ -81,14 +85,17 @@ function applyParamsToMusicXML(musicXML: string, params: MusicReportParams): str
         }
     }
 
-    // 更新樂器 MIDI program (影響播放音色)
+    // 更新樂器 MIDI program (影響播放音色) 和音量
     const instrumentParams = [params.p1, params.p2, params.p3];
+    const volumeParams = [params.p1_volume ?? 80, params.p2_volume ?? 80, params.p3_volume ?? 80];
     const scoreParts = xmlDoc.getElementsByTagName('score-part');
 
     for (let i = 0; i < scoreParts.length && i < instrumentParams.length; i++) {
         const instrument = instrumentParams[i];
+        const volume = volumeParams[i];
+        const scorePart = scoreParts[i];
+
         if (instrument) {
-            const scorePart = scoreParts[i];
             const midiPrograms = scorePart.getElementsByTagName('midi-program');
             if (midiPrograms.length > 0) {
                 midiPrograms[0].textContent = getInstrumentMidiProgram(instrument).toString();
@@ -108,6 +115,19 @@ function applyParamsToMusicXML(musicXML: string, params: MusicReportParams): str
             if (instrumentNames.length > 0) {
                 instrumentNames[0].textContent = getInstrumentLabel(instrument);
             }
+        }
+
+        // 更新音量（midi-volume 0-127 對應 0-100）
+        const midiVolume = Math.round((volume / 100) * 127);
+        const midiInstruments = scorePart.getElementsByTagName('midi-instrument');
+        if (midiInstruments.length > 0) {
+            const midiInstrument = midiInstruments[0];
+            let volumeElem = midiInstrument.getElementsByTagName('volume')[0];
+            if (!volumeElem) {
+                volumeElem = xmlDoc.createElement('volume');
+                midiInstrument.appendChild(volumeElem);
+            }
+            volumeElem.textContent = midiVolume.toString();
         }
     }
 
@@ -133,7 +153,8 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         if (appliedParams.beat && appliedParams.beat !== 'none') {
             const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
             if (beatPreset) {
-                xml = injectDrumPartToMusicXML(xml, beatPreset);
+                const drumVolume = appliedParams.drum_volume ?? 80;
+                xml = injectDrumPartToMusicXML(xml, beatPreset, drumVolume);
             }
         }
         return xml;
@@ -266,6 +287,66 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                             {renderInstrumentSelect('p1', '高音域樂器 (P1)')}
                             {renderInstrumentSelect('p2', '中音域樂器 (P2)')}
                             {renderInstrumentSelect('p3', '低音域樂器 (P3)')}
+                        </div>
+
+                        {/* 音量設定 */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs">P1 音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.p1_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.p1_volume ?? 80}
+                                    onChange={(e) => handleParamChange('p1_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-primary"
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs">P2 音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.p2_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.p2_volume ?? 80}
+                                    onChange={(e) => handleParamChange('p2_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-primary"
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs">P3 音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.p3_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.p3_volume ?? 80}
+                                    onChange={(e) => handleParamChange('p3_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-primary"
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs">鼓聲音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.drum_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.drum_volume ?? 80}
+                                    onChange={(e) => handleParamChange('drum_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-secondary"
+                                />
+                            </div>
                         </div>
 
                         <div className="divider my-2 text-xs text-base-content/50">節奏設定</div>

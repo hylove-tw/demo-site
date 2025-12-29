@@ -168,8 +168,11 @@ const DRUM_MIDI_MAP: Record<string, { midi: number; step: string; octave: number
 
 /**
  * 生成打擊樂聲部的 MusicXML score-part 定義
+ * @param partId 聲部 ID
+ * @param volume 音量 0-100，預設 80
  */
-export function generateDrumScorePart(partId: string = 'P-Drums'): string {
+export function generateDrumScorePart(partId: string = 'P-Drums', volume: number = 80): string {
+  const midiVolume = Math.round((volume / 100) * 127);
   return `
     <score-part id="${partId}">
       <part-name>Drums</part-name>
@@ -180,6 +183,7 @@ export function generateDrumScorePart(partId: string = 'P-Drums'): string {
       <midi-instrument id="${partId}-I1">
         <midi-channel>10</midi-channel>
         <midi-program>1</midi-program>
+        <volume>${midiVolume}</volume>
       </midi-instrument>
     </score-part>`;
 }
@@ -288,10 +292,14 @@ export function generateDrumPart(
 
 /**
  * 將打擊樂聲部注入到現有的 MusicXML 中
+ * @param musicXML 原始 MusicXML
+ * @param preset 節奏預設
+ * @param volume 音量 0-100，預設 80
  */
 export function injectDrumPartToMusicXML(
   musicXML: string,
-  preset: BeatPreset
+  preset: BeatPreset,
+  volume: number = 80
 ): string {
   if (preset.id === 'none') {
     return musicXML;
@@ -342,7 +350,7 @@ export function injectDrumPartToMusicXML(
   // 在 part-list 中添加打擊樂聲部定義
   const partList = xmlDoc.getElementsByTagName('part-list')[0];
   if (partList) {
-    const drumScorePartXML = generateDrumScorePart(drumPartId);
+    const drumScorePartXML = generateDrumScorePart(drumPartId, volume);
     const tempDoc = parser.parseFromString(`<temp>${drumScorePartXML}</temp>`, 'text/xml');
     const drumScorePart = tempDoc.getElementsByTagName('score-part')[0];
     if (drumScorePart) {

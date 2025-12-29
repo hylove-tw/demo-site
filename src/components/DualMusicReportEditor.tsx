@@ -50,6 +50,9 @@ export interface DualMusicReportParams {
     second_p1?: string;
     second_p2?: string;
     second_p3?: string;
+    first_volume?: number;  // 第一演奏者總音量 0-100
+    second_volume?: number; // 第二演奏者總音量 0-100
+    drum_volume?: number;   // 鼓聲音量 0-100
     beat?: string; // 節奏預設 ID
 }
 
@@ -98,18 +101,24 @@ function applyParamsToMusicXML(musicXML: string, params: DualMusicReportParams):
         }
     }
 
-    // 更新樂器 MIDI program (影響播放音色)
+    // 更新樂器 MIDI program (影響播放音色) 和音量
     // 雙人音樂有 6 個聲部：第一人 P1, P2, P3，第二人 P1, P2, P3
     const instrumentParams = [
         params.first_p1, params.first_p2, params.first_p3,
         params.second_p1, params.second_p2, params.second_p3
     ];
+    // 前三個聲部使用第一演奏者音量，後三個使用第二演奏者音量
+    const firstVolume = params.first_volume ?? 80;
+    const secondVolume = params.second_volume ?? 80;
+    const volumeParams = [firstVolume, firstVolume, firstVolume, secondVolume, secondVolume, secondVolume];
     const scoreParts = xmlDoc.getElementsByTagName('score-part');
 
     for (let i = 0; i < scoreParts.length && i < instrumentParams.length; i++) {
         const instrument = instrumentParams[i];
+        const volume = volumeParams[i];
+        const scorePart = scoreParts[i];
+
         if (instrument) {
-            const scorePart = scoreParts[i];
             const midiPrograms = scorePart.getElementsByTagName('midi-program');
             if (midiPrograms.length > 0) {
                 midiPrograms[0].textContent = getInstrumentMidiProgram(instrument).toString();
@@ -129,6 +138,19 @@ function applyParamsToMusicXML(musicXML: string, params: DualMusicReportParams):
             if (instrumentNames.length > 0) {
                 instrumentNames[0].textContent = getInstrumentLabel(instrument);
             }
+        }
+
+        // 更新音量（midi-volume 0-127 對應 0-100）
+        const midiVolume = Math.round((volume / 100) * 127);
+        const midiInstruments = scorePart.getElementsByTagName('midi-instrument');
+        if (midiInstruments.length > 0) {
+            const midiInstrument = midiInstruments[0];
+            let volumeElem = midiInstrument.getElementsByTagName('volume')[0];
+            if (!volumeElem) {
+                volumeElem = xmlDoc.createElement('volume');
+                midiInstrument.appendChild(volumeElem);
+            }
+            volumeElem.textContent = midiVolume.toString();
         }
     }
 
@@ -154,7 +176,8 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         if (appliedParams.beat && appliedParams.beat !== 'none') {
             const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
             if (beatPreset) {
-                xml = injectDrumPartToMusicXML(xml, beatPreset);
+                const drumVolume = appliedParams.drum_volume ?? 80;
+                xml = injectDrumPartToMusicXML(xml, beatPreset, drumVolume);
             }
         }
         return xml;
@@ -299,6 +322,52 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                                 {renderInstrumentSelect('second_p1', '高音域樂器 (P1)')}
                                 {renderInstrumentSelect('second_p2', '中音域樂器 (P2)')}
                                 {renderInstrumentSelect('second_p3', '低音域樂器 (P3)')}
+                            </div>
+                        </div>
+
+                        {/* 音量設定 */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs text-primary">第一演奏者音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.first_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.first_volume ?? 80}
+                                    onChange={(e) => handleParamChange('first_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-primary"
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs text-secondary">第二演奏者音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.second_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.second_volume ?? 80}
+                                    onChange={(e) => handleParamChange('second_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-secondary"
+                                />
+                            </div>
+                            <div className="form-control">
+                                <label className="label py-0">
+                                    <span className="label-text text-xs">鼓聲音量</span>
+                                    <span className="label-text-alt text-xs">{editParams.drum_volume ?? 80}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={100}
+                                    value={editParams.drum_volume ?? 80}
+                                    onChange={(e) => handleParamChange('drum_volume', parseInt(e.target.value))}
+                                    className="range range-xs range-accent"
+                                />
                             </div>
                         </div>
 

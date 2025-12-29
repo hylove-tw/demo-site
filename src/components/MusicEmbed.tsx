@@ -32,6 +32,10 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
     const [isPaused, setIsPaused] = useState(false);
     const [isAudioReady, setIsAudioReady] = useState(false);
     const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingProgress, setRecordingProgress] = useState(0);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const recordedChunksRef = useRef<Blob[]>([]);
 
     // 追蹤上一次的 musicXML，用於判斷是否需要重新載入
     const prevMusicXMLRef = useRef<string | null>(null);
@@ -192,6 +196,129 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, [musicXML, title]);
+
+    // 下載 MP3 檔案（錄製播放音頻）
+    const downloadMP3 = useCallback(async () => {
+        if (!audioPlayerRef.current || !isAudioReady || isRecording) return;
+
+        try {
+            // 取得 AudioContext（osmd-audio-player 內部使用）
+            const audioPlayer = audioPlayerRef.current as any;
+            const audioContext: AudioContext = audioPlayer.ac || audioPlayer.audioContext;
+
+            if (!audioContext) {
+                alert('無法存取音頻上下文');
+                return;
+            }
+
+            // 建立 MediaStreamDestination 用於錄製
+            const dest = audioContext.createMediaStreamDestination();
+
+            // 連接音頻輸出到錄製目標
+            // 注意：這會將所有音頻都導向錄製
+            if (audioContext.destination) {
+                // 嘗試取得 gain node 或直接連接
+                const gainNode = audioPlayer.gainNode || audioPlayer.masterGain;
+                if (gainNode) {
+                    gainNode.connect(dest);
+                }
+            }
+
+            // 設定 MediaRecorder
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                ? 'audio/webm;codecs=opus'
+                : 'audio/webm';
+
+            mediaRecorderRef.current = new MediaRecorder(dest.stream, { mimeType });
+            recordedChunksRef.current = [];
+
+            mediaRecorderRef.current.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorderRef.current.onstop = () => {
+                // 建立下載
+                const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // 使用 .webm 副檔名（因為瀏覽器原生不支援 MP3 編碼）
+                a.download = `${title}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 清理
+                setIsRecording(false);
+                setRecordingProgress(0);
+
+                // 斷開錄製連接
+                const gainNode = audioPlayer.gainNode || audioPlayer.masterGain;
+                if (gainNode) {
+                    try {
+                        gainNode.disconnect(dest);
+                    } catch (e) {
+                        // 忽略斷開錯誤
+                    }
+                }
+            };
+
+            // 開始錄製
+            setIsRecording(true);
+            mediaRecorderRef.current.start(100); // 每 100ms 收集一次數據
+
+            // 停止當前播放並重新開始
+            audioPlayerRef.current.stop();
+
+            // 監聽播放結束
+            const checkPlaybackEnd = setInterval(() => {
+                const player = audioPlayerRef.current as any;
+                if (player) {
+                    const currentTime = player.currentTime || 0;
+                    const duration = player.duration || 1;
+                    setRecordingProgress(Math.min((currentTime / duration) * 100, 100));
+
+                    // 檢查是否播放結束
+                    if (player.state === 'STOPPED' || player.state === 'PAUSED' || currentTime >= duration) {
+                        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                            // 等待一小段時間確保所有音頻都被錄製
+                            setTimeout(() => {
+                                if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                                    mediaRecorderRef.current.stop();
+                                }
+                            }, 500);
+                            clearInterval(checkPlaybackEnd);
+                        }
+                    }
+                }
+            }, 200);
+
+            // 開始播放
+            audioPlayerRef.current.play();
+            setIsPlaying(true);
+            setIsPaused(false);
+
+        } catch (err) {
+            console.error('錄製錯誤:', err);
+            alert('錄製失敗：' + (err instanceof Error ? err.message : '未知錯誤'));
+            setIsRecording(false);
+        }
+    }, [isAudioReady, isRecording, title]);
+
+    // 停止錄製
+    const stopRecording = useCallback(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
+        }
+        if (audioPlayerRef.current) {
+            audioPlayerRef.current.stop();
+        }
+        setIsPlaying(false);
+        setIsPaused(false);
+    }, []);
 
     // 列印樂譜 - 開啟新視窗只印樂譜
     const printScore = useCallback(() => {
@@ -360,13 +487,37 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                             onClick={downloadMusicXML}
                             disabled={isLoading}
                             className="btn btn-outline btn-sm"
-                            title="下載 MusicXML"
+                            title="下載 MusicXML（可匯入 MuseScore）"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
-                            下載
+                            XML
                         </button>
+                        {isRecording ? (
+                            <button
+                                onClick={stopRecording}
+                                className="btn btn-error btn-sm"
+                                title="停止錄製"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                    <path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" />
+                                </svg>
+                                {recordingProgress > 0 ? `${Math.round(recordingProgress)}%` : '停止'}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={downloadMP3}
+                                disabled={isLoading || !isAudioReady}
+                                className="btn btn-outline btn-sm"
+                                title="錄製並下載音頻"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+                                </svg>
+                                音頻
+                            </button>
+                        )}
                         <button
                             onClick={printScore}
                             disabled={isLoading}
