@@ -1,7 +1,7 @@
 // src/components/MusicEmbed.tsx
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { OpenSheetMusicDisplay as OSMD } from 'opensheetmusicdisplay';
-import AudioPlayer from 'osmd-audio-player';
+import { MusicAudioPlayer } from '../utils/musicAudioGenerator';
 
 interface MusicEmbedProps {
     musicXML: string;
@@ -23,7 +23,7 @@ const DEFAULT_ZOOM = 0.7;
 const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
-    const audioPlayerRef = useRef<AudioPlayer | null>(null);
+    const audioPlayerRef = useRef<MusicAudioPlayer | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -105,10 +105,14 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 // 渲染樂譜
                 osmd.render();
 
-                // 初始化音樂播放器
+                // 初始化音樂播放器（使用 Tone.js）
                 try {
-                    audioPlayerRef.current = new AudioPlayer();
-                    await audioPlayerRef.current.loadScore(osmdRef.current as any);
+                    audioPlayerRef.current = new MusicAudioPlayer();
+                    await audioPlayerRef.current.loadScore(musicXML);
+                    audioPlayerRef.current.onEnd(() => {
+                        setIsPlaying(false);
+                        setIsPaused(false);
+                    });
                     setIsAudioReady(true);
                 } catch (audioErr) {
                     console.warn('Audio player initialization failed:', audioErr);
@@ -128,7 +132,7 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         return () => {
             if (audioPlayerRef.current) {
                 try {
-                    audioPlayerRef.current.stop();
+                    audioPlayerRef.current.dispose();
                 } catch (e) {
                     // Ignore cleanup errors
                 }
@@ -197,14 +201,14 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
         URL.revokeObjectURL(url);
     }, [musicXML, title]);
 
-    // 下載 MP3 檔案（錄製播放音樂）
+    // 下載音樂檔案（使用 Tone.js 錄製）
     const downloadMP3 = useCallback(async () => {
         if (!audioPlayerRef.current || !isAudioReady || isRecording) return;
 
         try {
-            // 取得 AudioContext（osmd-audio-player 內部使用）
-            const audioPlayer = audioPlayerRef.current as any;
-            const audioContext: AudioContext = audioPlayer.ac || audioPlayer.audioContext;
+            // 動態載入 Tone.js 以取得 context
+            const Tone = await import('tone');
+            const audioContext = Tone.getContext().rawContext as AudioContext;
 
             if (!audioContext) {
                 alert('無法存取音樂上下文');
@@ -214,15 +218,8 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
             // 建立 MediaStreamDestination 用於錄製
             const dest = audioContext.createMediaStreamDestination();
 
-            // 連接音樂輸出到錄製目標
-            // 注意：這會將所有音樂都導向錄製
-            if (audioContext.destination) {
-                // 嘗試取得 gain node 或直接連接
-                const gainNode = audioPlayer.gainNode || audioPlayer.masterGain;
-                if (gainNode) {
-                    gainNode.connect(dest);
-                }
-            }
+            // 連接 Tone.js 主輸出到錄製目標
+            Tone.getDestination().connect(dest);
 
             // 設定 MediaRecorder
             const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -244,7 +241,6 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                // 使用 .webm 副檔名（因為瀏覽器原生不支援 MP3 編碼）
                 a.download = `${title}.webm`;
                 document.body.appendChild(a);
                 a.click();
@@ -256,35 +252,33 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({ musicXML, height = '500px' }) =
                 setRecordingProgress(0);
 
                 // 斷開錄製連接
-                const gainNode = audioPlayer.gainNode || audioPlayer.masterGain;
-                if (gainNode) {
-                    try {
-                        gainNode.disconnect(dest);
-                    } catch (e) {
-                        // 忽略斷開錯誤
-                    }
+                try {
+                    Tone.getDestination().disconnect(dest);
+                } catch (e) {
+                    // 忽略斷開錯誤
                 }
             };
 
             // 開始錄製
             setIsRecording(true);
-            mediaRecorderRef.current.start(100); // 每 100ms 收集一次數據
+            mediaRecorderRef.current.start(100);
 
             // 停止當前播放並重新開始
             audioPlayerRef.current.stop();
 
+            // 取得音樂時長
+            const duration = audioPlayerRef.current.getDuration();
+
             // 監聽播放結束
             const checkPlaybackEnd = setInterval(() => {
-                const player = audioPlayerRef.current as any;
+                const player = audioPlayerRef.current;
                 if (player) {
-                    const currentTime = player.currentTime || 0;
-                    const duration = player.duration || 1;
+                    const currentTime = player.getCurrentTime();
                     setRecordingProgress(Math.min((currentTime / duration) * 100, 100));
 
                     // 檢查是否播放結束
-                    if (player.state === 'STOPPED' || player.state === 'PAUSED' || currentTime >= duration) {
+                    if (!player.getIsPlaying() || currentTime >= duration) {
                         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-                            // 等待一小段時間確保所有音樂都被錄製
                             setTimeout(() => {
                                 if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
                                     mediaRecorderRef.current.stop();
