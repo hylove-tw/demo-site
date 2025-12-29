@@ -484,6 +484,24 @@ const TutorialPage: React.FC = () => {
                     </li>
                   </ul>
 
+                  <h3 className="text-lg font-semibold mt-6">樂譜報告設定（元神音/琴瑟合）</h3>
+                  <p>
+                    元神音和琴瑟合分析會產生可播放的樂譜報告，您可以調整以下設定：
+                  </p>
+                  <ul className="list-disc list-inside space-y-2 ml-4 mt-2">
+                    <li><strong>樂器選擇</strong>：可為不同聲部選擇不同樂器音色</li>
+                    <li><strong>速度 (BPM)</strong>：調整樂曲播放速度</li>
+                    <li><strong>音量</strong>：分別調整各聲部和鼓聲音量</li>
+                    <li><strong>節奏風格</strong>：選擇不同的節奏型態（搖滾、流行、爵士等）</li>
+                    <li><strong>自動連結音符</strong>：開啟後，八分音符及更短的音符會自動以橫線連結，讓樂譜更美觀易讀</li>
+                  </ul>
+                  <div className="alert alert-info mt-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>點擊「編輯設定」按鈕後調整參數，完成後點擊「確認套用」即可生效。</span>
+                  </div>
+
                   <h3 className="text-lg font-semibold mt-6">列印報告</h3>
                   <p>
                     點擊「列印報告」按鈕後，系統會開啟瀏覽器的列印對話框。

@@ -26,6 +26,167 @@ const getInstrumentMidiProgram = (key: string): number => {
     return inst?.midiProgram || 1; // 預設鋼琴
 };
 
+// 可以連結的音符類型（八分音符及更短）
+const BEAMABLE_TYPES = ['eighth', '16th', '32nd', '64th'];
+
+// 自動添加 beam 連結到 MusicXML
+function addAutoBeamToMusicXML(musicXML: string, timeSignature: string = '4/4'): string {
+    const parser = new DOMParser();
+    const serializer = new XMLSerializer();
+    const xmlDoc = parser.parseFromString(musicXML, 'text/xml');
+
+    // 解析拍號
+    const [beatsPerMeasure] = timeSignature.split('/').map(Number);
+    // 根據拍號決定分組：4/4 每 2 拍一組，3/4 每 1 拍一組
+    const beatsPerGroup = beatsPerMeasure === 3 ? 1 : 2;
+
+    const parts = xmlDoc.getElementsByTagName('part');
+
+    for (let p = 0; p < parts.length; p++) {
+        const part = parts[p];
+        const partId = part.getAttribute('id') || '';
+
+        // 跳過打擊樂聲部
+        if (partId.toLowerCase().includes('drum')) continue;
+
+        const measures = part.getElementsByTagName('measure');
+
+        for (let m = 0; m < measures.length; m++) {
+            const measure = measures[m];
+            let divisions = 1;
+
+            // 取得 divisions
+            const divisionsElem = measure.getElementsByTagName('divisions')[0];
+            if (divisionsElem) {
+                divisions = parseInt(divisionsElem.textContent || '1');
+            }
+
+            // 計算每組的 duration 單位
+            const durationPerBeat = divisions;
+            const durationPerGroup = durationPerBeat * beatsPerGroup;
+
+            // 收集小節內的音符
+            interface NoteInfo {
+                element: Element;
+                type: string;
+                duration: number;
+                positionInMeasure: number;
+                isChord: boolean;
+                isRest: boolean;
+            }
+
+            const notes: NoteInfo[] = [];
+            let currentPosition = 0;
+
+            const children = measure.children;
+            for (let c = 0; c < children.length; c++) {
+                const child = children[c];
+
+                if (child.tagName === 'note') {
+                    const typeElem = child.getElementsByTagName('type')[0];
+                    const durationElem = child.getElementsByTagName('duration')[0];
+                    const isChord = child.getElementsByTagName('chord').length > 0;
+                    const isRest = child.getElementsByTagName('rest').length > 0;
+
+                    const noteType = typeElem?.textContent || 'quarter';
+                    const duration = durationElem ? parseInt(durationElem.textContent || '1') : divisions;
+
+                    // 移除現有的 beam 元素
+                    const existingBeams = child.getElementsByTagName('beam');
+                    while (existingBeams.length > 0) {
+                        existingBeams[0].parentNode?.removeChild(existingBeams[0]);
+                    }
+
+                    notes.push({
+                        element: child,
+                        type: noteType,
+                        duration,
+                        positionInMeasure: isChord ? currentPosition : currentPosition,
+                        isChord,
+                        isRest,
+                    });
+
+                    if (!isChord) {
+                        currentPosition += duration;
+                    }
+                } else if (child.tagName === 'forward') {
+                    const durationElem = child.getElementsByTagName('duration')[0];
+                    if (durationElem) {
+                        currentPosition += parseInt(durationElem.textContent || '0');
+                    }
+                } else if (child.tagName === 'backup') {
+                    const durationElem = child.getElementsByTagName('duration')[0];
+                    if (durationElem) {
+                        currentPosition -= parseInt(durationElem.textContent || '0');
+                    }
+                }
+            }
+
+            // 將音符按群組分類並添加 beam
+            const beamableNotes = notes.filter(n =>
+                !n.isRest && BEAMABLE_TYPES.includes(n.type)
+            );
+
+            // 按位置分組
+            const groups: NoteInfo[][] = [];
+            let currentGroup: NoteInfo[] = [];
+            let currentGroupStart = 0;
+
+            for (const note of beamableNotes) {
+                const noteGroup = Math.floor(note.positionInMeasure / durationPerGroup);
+
+                if (currentGroup.length === 0) {
+                    currentGroupStart = noteGroup;
+                    currentGroup.push(note);
+                } else if (noteGroup === currentGroupStart) {
+                    currentGroup.push(note);
+                } else {
+                    if (currentGroup.length > 1) {
+                        groups.push(currentGroup);
+                    }
+                    currentGroup = [note];
+                    currentGroupStart = noteGroup;
+                }
+            }
+
+            if (currentGroup.length > 1) {
+                groups.push(currentGroup);
+            }
+
+            // 為每個群組添加 beam
+            for (const group of groups) {
+                for (let i = 0; i < group.length; i++) {
+                    const note = group[i];
+                    const beamElem = xmlDoc.createElement('beam');
+                    beamElem.setAttribute('number', '1');
+
+                    if (i === 0) {
+                        beamElem.textContent = 'begin';
+                    } else if (i === group.length - 1) {
+                        beamElem.textContent = 'end';
+                    } else {
+                        beamElem.textContent = 'continue';
+                    }
+
+                    // 找到 stem 元素後插入，或者在 type 後插入
+                    const stemElem = note.element.getElementsByTagName('stem')[0];
+                    const typeElem = note.element.getElementsByTagName('type')[0];
+
+                    if (stemElem) {
+                        stemElem.parentNode?.insertBefore(beamElem, stemElem.nextSibling);
+                    } else if (typeElem) {
+                        typeElem.parentNode?.insertBefore(beamElem, typeElem.nextSibling);
+                    } else {
+                        note.element.appendChild(beamElem);
+                    }
+                }
+            }
+        }
+    }
+
+    return serializer.serializeToString(xmlDoc);
+}
+
 export interface MusicReportParams {
     title?: string;
     bpm?: number;
@@ -38,6 +199,7 @@ export interface MusicReportParams {
     p3_volume?: number;
     drum_volume?: number;
     beat?: string; // 節奏預設 ID
+    auto_beam?: boolean; // 自動連結音符
 }
 
 interface MusicReportEditorProps {
@@ -157,6 +319,10 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                 xml = injectDrumPartToMusicXML(xml, beatPreset, drumVolume);
             }
         }
+        // 自動連結音符（八分音符及更短）
+        if (appliedParams.auto_beam) {
+            xml = addAutoBeamToMusicXML(xml, appliedParams.time_signature || '4/4');
+        }
         return xml;
     }, [musicXML, appliedParams]);
 
@@ -185,7 +351,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     };
 
     // 處理參數變更
-    const handleParamChange = useCallback((field: keyof MusicReportParams, value: string | number) => {
+    const handleParamChange = useCallback((field: keyof MusicReportParams, value: string | number | boolean) => {
         setEditParams(prev => ({ ...prev, [field]: value }));
     }, []);
 
@@ -388,6 +554,22 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                             )}
                         </div>
 
+                        <div className="divider my-2 text-xs text-base-content/50">顯示設定</div>
+
+                        {/* 自動連結音符 */}
+                        <div className="form-control">
+                            <label className="label cursor-pointer justify-start gap-3 py-1">
+                                <input
+                                    type="checkbox"
+                                    className="checkbox checkbox-sm checkbox-primary"
+                                    checked={editParams.auto_beam ?? false}
+                                    onChange={(e) => handleParamChange('auto_beam', e.target.checked)}
+                                />
+                                <span className="label-text">自動連結音符</span>
+                                <span className="label-text-alt text-base-content/50">（八分音符及更短的音符會自動以橫線連結）</span>
+                            </label>
+                        </div>
+
                         {/* 按鈕 */}
                         <div className="flex justify-end gap-2 mt-4">
                             <button onClick={handleCancel} className="btn btn-ghost btn-sm">
@@ -416,7 +598,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                             </div>
                         </div>
                         <div className="divider my-3"></div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div>
                                 <span className="text-base-content/60">樂器：</span>
                                 <span className="font-medium ml-2">
@@ -427,6 +609,12 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                                 <span className="text-base-content/60">節奏：</span>
                                 <span className="font-medium ml-2">
                                     {getBeatPresetName(appliedParams.beat)}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-base-content/60">自動連結：</span>
+                                <span className="font-medium ml-2">
+                                    {appliedParams.auto_beam ? '開啟' : '關閉'}
                                 </span>
                             </div>
                         </div>
