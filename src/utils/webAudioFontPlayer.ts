@@ -271,6 +271,8 @@ export class WebAudioFontPlayer {
   private loadedInstruments: Map<string, any> = new Map();
   private masterGain: GainNode | null = null;
   private animationFrameId: number | null = null;
+  private nextEventIndex = 0;  // 下一個要排程的事件索引
+  private readonly SCHEDULE_AHEAD_TIME = 3;  // 提前排程時間（秒）
 
   async loadScore(musicXML: string, volume: number = 80): Promise<void> {
     // 解析 MusicXML
@@ -442,41 +444,89 @@ export class WebAudioFontPlayer {
     const offset = this.pauseTime;
     this.startTime = now - offset;
 
-    // 調度所有音符
-    for (const event of this.events) {
-      if (event.time < offset) continue;
+    // 找到要開始排程的事件索引
+    this.nextEventIndex = 0;
+    for (let i = 0; i < this.events.length; i++) {
+      if (this.events[i].time >= offset) {
+        this.nextEventIndex = i;
+        break;
+      }
+    }
 
-      const startTime = now + (event.time - offset);
+    // 開始持續排程
+    this.scheduleNextBatch();
+  }
+
+  // 分批排程音符（只排程接下來幾秒的音符）
+  private scheduleNextBatch(): void {
+    if (!this.isPlaying || !this.audioContext || !this.player) return;
+
+    const currentPlayTime = this.getCurrentTime();
+    const scheduleUntil = currentPlayTime + this.SCHEDULE_AHEAD_TIME;
+
+    // 清理已播放完的音符
+    this.cleanupPlayedNotes();
+
+    // 排程接下來的音符
+    while (this.nextEventIndex < this.events.length) {
+      const event = this.events[this.nextEventIndex];
+
+      // 如果音符超出排程範圍，停止排程
+      if (event.time > scheduleUntil) {
+        break;
+      }
+
+      // 跳過已經過去的音符
+      if (event.time < currentPlayTime - 0.1) {
+        this.nextEventIndex++;
+        continue;
+      }
+
+      const startTime = this.audioContext.currentTime + (event.time - currentPlayTime);
       const preset = this.getPresetForEvent(event);
 
-      if (preset) {
+      if (preset && startTime > this.audioContext.currentTime) {
         const note = this.player.queueWaveTable(
           this.audioContext,
           this.masterGain,
           preset,
           startTime,
           event.midi,
-          event.duration,
+          Math.min(event.duration, 2), // 限制最大持續時間
           event.velocity
         );
-        this.scheduledNotes.push(note);
+        if (note) {
+          this.scheduledNotes.push({ note, endTime: event.time + event.duration });
+        }
       }
+      this.nextEventIndex++;
     }
 
-    // 監控播放結束
-    this.checkPlaybackEnd();
-  }
-
-  private checkPlaybackEnd(): void {
-    if (!this.isPlaying || !this.audioContext) return;
-
-    const currentTime = this.getCurrentTime();
-    if (currentTime >= this.duration) {
+    // 檢查是否播放結束
+    if (currentPlayTime >= this.duration) {
       this.stop();
       return;
     }
 
-    this.animationFrameId = requestAnimationFrame(() => this.checkPlaybackEnd());
+    // 繼續排程（每 500ms 檢查一次）
+    this.animationFrameId = window.setTimeout(() => {
+      this.scheduleNextBatch();
+    }, 500) as unknown as number;
+  }
+
+  // 清理已播放完的音符以釋放記憶體
+  private cleanupPlayedNotes(): void {
+    const currentPlayTime = this.getCurrentTime();
+    this.scheduledNotes = this.scheduledNotes.filter(item => {
+      if (item.endTime && item.endTime < currentPlayTime - 1) {
+        // 嘗試取消已結束的音符
+        if (item.note && item.note.cancel) {
+          try { item.note.cancel(); } catch (e) { /* ignore */ }
+        }
+        return false;
+      }
+      return true;
+    });
   }
 
   pause(): void {
@@ -486,13 +536,14 @@ export class WebAudioFontPlayer {
     this.isPlaying = false;
     this.isPaused = true;
 
-    // 取消所有調度的音符
-    this.cancelAllNotes();
-
+    // 取消排程計時器
     if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
+      clearTimeout(this.animationFrameId);
       this.animationFrameId = null;
     }
+
+    // 取消所有調度的音符
+    this.cancelAllNotes();
   }
 
   stop(): void {
@@ -501,19 +552,22 @@ export class WebAudioFontPlayer {
     this.isPlaying = false;
     this.isPaused = false;
     this.pauseTime = 0;
+    this.nextEventIndex = 0;
 
-    this.cancelAllNotes();
-
+    // 取消排程計時器
     if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
+      clearTimeout(this.animationFrameId);
       this.animationFrameId = null;
     }
+
+    this.cancelAllNotes();
   }
 
   private cancelAllNotes(): void {
-    for (const note of this.scheduledNotes) {
+    for (const item of this.scheduledNotes) {
+      const note = item.note || item;
       if (note && note.cancel) {
-        note.cancel();
+        try { note.cancel(); } catch (e) { /* ignore */ }
       }
     }
     this.scheduledNotes = [];
