@@ -431,7 +431,15 @@ export interface MineralReportData {
 }
 
 export const renderTreasureReport = (result: any): React.ReactNode => {
-    const {te_scores, te_comments, ea0, ea1, me_score, ea_before_timing_diagram, ea_after_timing_diagram} = result;
+    const {
+        te_scores = {},
+        te_comments = {},
+        ea0,
+        ea1,
+        me_score,
+        ea_before_timing_diagram = [],
+        ea_after_timing_diagram = []
+    } = result || {};
 
     return (
         <div className="p-6 space-y-6">
@@ -442,20 +450,21 @@ export const renderTreasureReport = (result: any): React.ReactNode => {
                 {['te1', 'te2', 'te3', 'te4'].map((k, i) => (
                     <div key={k} className="card bg-base-100 shadow p-4">
                         <h4 className="font-semibold">TE{i + 1} 分數</h4>
-                        <p>{te_scores[k]}</p>
-                        <p className="text-sm text-gray-500">{te_comments[k]}</p>
+                        <p>{te_scores?.[k] ?? '-'}</p>
+                        <p className="text-sm text-gray-500">{te_comments?.[k] ?? ''}</p>
                     </div>
                 ))}
             </div>
 
             {/* EAn 與 ME */}
             <div className="grid grid-cols-3 gap-4">
-                <div className="card p-4">EA0: {ea0}</div>
-                <div className="card p-4">EA1: {ea1}</div>
-                <div className="card p-4">ME: {me_score}</div>
+                <div className="card p-4">EA0: {ea0 ?? '-'}</div>
+                <div className="card p-4">EA1: {ea1 ?? '-'}</div>
+                <div className="card p-4">ME: {me_score ?? '-'}</div>
             </div>
 
             {/* 時序圖（用 Highcharts 當示意） */}
+            {ea_before_timing_diagram.length > 0 && (
             <div className="card p-4">
                 <h4 className="mb-2">情緒前後測時序圖</h4>
                 <HighchartsReact
@@ -471,6 +480,7 @@ export const renderTreasureReport = (result: any): React.ReactNode => {
                     }}
                 />
             </div>
+            )}
 
             {/* 固定文字 A/B */}
             <div className="card p-4">
@@ -490,23 +500,20 @@ export const renderTreasureReport = (result: any): React.ReactNode => {
 };
 export const renderPerfumeReport = (result: any): React.ReactNode => {
     const {
-        te_scores, te_comments, ea0, ea1, me_score,
-        ea_before_timing_diagram, ea_after_timing_diagram,
-        fragrances, brands
-    } = result;
+        fragrances = [],
+        brands = []
+    } = result || {};
 
     return (
         <div className="p-6 space-y-6">
             <h2 className="text-3xl font-bold">情香意報告</h2>
-            {/* 同 TE/EAn/ME/Card, 時序圖 */}
-            {/* … */}
             <div className="card p-4">
                 <h4 className="font-semibold">A.最佳炁場之中調香氛</h4>
-                <p>{fragrances.join('、')}</p>
+                <p>{fragrances.length > 0 ? fragrances.join('、') : '-'}</p>
             </div>
             <div className="card p-4">
                 <h4 className="font-semibold">B.推薦市場著名香氛</h4>
-                <p>{brands.join('、')}</p>
+                <p>{brands.length > 0 ? brands.join('、') : '-'}</p>
             </div>
         </div>
     );
