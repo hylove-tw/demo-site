@@ -17,10 +17,10 @@ export interface SectionGroup {
 
 // 群組定義
 export const SECTION_GROUPS: SectionGroup[] = [
-  { id: 'intro', title: 'What is HyLove?' },
-  { id: 'guide', title: 'User Guide' },
+  { id: 'intro', title: '關於 HyLove' },
+  { id: 'guide', title: '使用指南' },
   { id: 'features', title: '功能說明' },
-  { id: 'faq', title: 'FAQ' },
+  { id: 'faq', title: '常見問題' },
 ];
 
 // 通用元件
@@ -47,62 +47,83 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
   // ===== What is HyLove? =====
   {
     id: 'overview',
-    title: '系統概覽',
+    title: '關於 HyLove',
     group: 'intro',
     content: (
-      <div className="space-y-6">
-        <p className="text-lg">
-          HyLove 是一套專業的<strong>腦波分析系統</strong>，透過先進的演算法將腦波資料轉換為有意義的分析報告，
-          協助您了解大腦活動模式並獲得深入的洞察。
+      <div className="space-y-8">
+        {/* 簡介 */}
+        <p className="text-lg leading-relaxed">
+          HyLove 是一套開源的<strong>腦波分析系統</strong>，所有資料儲存於瀏覽器本地端，確保完全的資料隱私。
         </p>
-        <InfoBox>所有資料都儲存在您的瀏覽器中，確保隱私安全。</InfoBox>
 
-        <h3 className="text-xl font-semibold mt-8">系統特色</h3>
-        <div className="grid gap-3 md:grid-cols-3">
-          {[
-            { title: '檔案支援', value: 'CSV / XLSX', desc: '標準腦波資料格式' },
-            { title: '資料儲存', value: '本地瀏覽器', desc: '隱私安全有保障' },
-            { title: '分析報告', value: '可列印 PDF', desc: '專業報告輸出' },
-          ].map((stat, i) => (
-            <div key={i} className="stat bg-base-200 rounded-lg">
-              <div className="stat-title">{stat.title}</div>
-              <div className="stat-value text-lg">{stat.value}</div>
-              <div className="stat-desc">{stat.desc}</div>
-            </div>
-          ))}
+        {/* 核心概念 */}
+        <div>
+          <h3 className="text-xl font-semibold mb-3">核心概念</h3>
+          <p className="text-base-content/80">
+            透過先進的演算法，將腦波資料轉換為有意義的分析報告，協助您了解大腦活動模式。
+            系統支援多種分析模式，包含音樂轉換、職能評估、能量分析等功能。
+          </p>
         </div>
 
-        <h3 className="text-xl font-semibold mt-8">分析功能分類</h3>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="card bg-primary/10 border border-primary/20">
-            <div className="card-body">
-              <h4 className="card-title text-base text-primary">主要功能</h4>
-              <ul className="text-sm space-y-1">
-                <li>元神音、琴瑟合</li>
-                <li>亨運來、貞天賦</li>
-                <li>珍寶炁、情香意</li>
+        {/* 主要特色 */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">主要特色</h3>
+          <div className="space-y-4">
+            {/* 隱私與安全 */}
+            <div>
+              <h4 className="font-medium text-primary mb-2">隱私與安全</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70 ml-2">
+                <li>資料完全儲存於瀏覽器本地端</li>
+                <li>無需伺服器帳號或登入</li>
+                <li>您的資料不會上傳至雲端</li>
+              </ul>
+            </div>
+            {/* 多元分析 */}
+            <div>
+              <h4 className="font-medium text-primary mb-2">多元分析模式</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70 ml-2">
+                <li>腦波音樂轉換（元神音、琴瑟合）</li>
+                <li>職能與人格評估（亨運來、貞天賦）</li>
+                <li>能量與情緒分析（利養炁、易 Motion 系列）</li>
+              </ul>
+            </div>
+            {/* 易於使用 */}
+            <div>
+              <h4 className="font-medium text-primary mb-2">易於使用</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70 ml-2">
+                <li>支援 CSV / XLSX 標準格式</li>
+                <li>報告可列印或儲存為 PDF</li>
+                <li>響應式設計，支援各種裝置</li>
               </ul>
             </div>
           </div>
-          <div className="card bg-secondary/10 border border-secondary/20">
-            <div className="card-body">
-              <h4 className="card-title text-base text-secondary">利養炁系列</h4>
-              <ul className="text-sm space-y-1">
-                <li>正念修行</li>
-                <li>練炁修行</li>
-                <li>練炁品階</li>
-              </ul>
-            </div>
+        </div>
+
+        {/* 快速開始 */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">快速開始</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            {[
+              { title: '受測者管理', desc: '建立與管理受測者資料', section: 'user-management' },
+              { title: '檔案管理', desc: '上傳與管理腦波檔案', section: 'file-management' },
+              { title: '執行分析', desc: '選擇功能並開始分析', section: 'run-analysis' },
+              { title: '功能說明', desc: '了解各分析功能詳情', section: 'yuanshenyin' },
+            ].map((item, i) => (
+              <div key={i} className="p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+                <div className="font-medium">{item.title}</div>
+                <div className="text-sm text-base-content/60">{item.desc}</div>
+              </div>
+            ))}
           </div>
-          <div className="card bg-accent/10 border border-accent/20">
-            <div className="card-body">
-              <h4 className="card-title text-base text-accent">易 Motion 系列</h4>
-              <ul className="text-sm space-y-1">
-                <li>情緒管理、寵物評比</li>
-                <li>品茶/酒/咖啡</li>
-                <li>香水、音樂、短視頻</li>
-              </ul>
-            </div>
+        </div>
+
+        {/* 為什麼選擇 HyLove */}
+        <div>
+          <h3 className="text-xl font-semibold mb-3">為什麼選擇 HyLove？</h3>
+          <div className="flex flex-wrap gap-2">
+            {['隱私優先', '本地儲存', '多元分析', '專業報告', '易於操作'].map((item, i) => (
+              <span key={i} className="badge badge-lg badge-outline">{item}</span>
+            ))}
           </div>
         </div>
       </div>
