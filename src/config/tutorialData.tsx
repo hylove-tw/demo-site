@@ -117,15 +117,6 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           </div>
         </div>
 
-        {/* 為什麼選擇 HyLove */}
-        <div>
-          <h3 className="text-xl font-semibold mb-3">為什麼選擇 HyLove？</h3>
-          <div className="flex flex-wrap gap-2">
-            {['隱私優先', '本地儲存', '多元分析', '專業報告', '易於操作'].map((item, i) => (
-              <span key={i} className="badge badge-lg badge-outline">{item}</span>
-            ))}
-          </div>
-        </div>
       </div>
     ),
   },

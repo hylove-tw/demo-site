@@ -99,7 +99,25 @@ const TutorialPage: React.FC = () => {
                 const groupSections = getSectionsByGroup(group.id);
                 const isExpanded = expandedGroups.has(group.id);
                 const hasActiveSection = groupSections.some(s => s.id === activeSection);
+                const isSingleSection = groupSections.length === 1;
 
+                // 單一章節的群組：直接點擊進入，不展開
+                if (isSingleSection) {
+                  const section = groupSections[0];
+                  return (
+                    <li key={group.id}>
+                      <button
+                        type="button"
+                        className={`font-medium ${activeSection === section.id ? 'active' : ''}`}
+                        onClick={() => handleSectionClick(section.id, group.id)}
+                      >
+                        {group.title}
+                      </button>
+                    </li>
+                  );
+                }
+
+                // 多章節群組：可展開/收合
                 return (
                   <li key={group.id}>
                     {/* 群組標題 */}
