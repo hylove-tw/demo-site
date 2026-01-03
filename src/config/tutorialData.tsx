@@ -396,6 +396,271 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
     ),
   },
 
+  // ===== 利養炁系列 =====
+  {
+    id: 'zhengniuxiuxing',
+    title: '正念修行',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-secondary">利養炁系列</div>
+        <p className="text-lg font-medium">身心指數評估</p>
+        <p>透過腦波分析評估正念修行的成效，量化身心狀態的變化。</p>
+
+        <h4 className="font-medium mt-4">評估指標</h4>
+        <div className="grid gap-2 md:grid-cols-2 text-sm">
+          {['專注度', '放鬆度', '情緒穩定', '心流狀態'].map((item, i) => (
+            <div key={i} className="p-2 bg-base-200 rounded">{item}</div>
+          ))}
+        </div>
+
+        <h4 className="font-medium mt-4">適用情境</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>冥想練習前後對比</li>
+          <li>瑜伽課程成效評估</li>
+          <li>正念訓練追蹤</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'lianqixiuxing',
+    title: '練炁修行',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-secondary">利養炁系列</div>
+        <p className="text-lg font-medium">能量運行分析</p>
+        <p>分析練炁過程中的能量運行狀態，幫助修行者了解自身的能量變化。</p>
+
+        <h4 className="font-medium mt-4">分析面向</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>能量流動指數</li>
+          <li>氣脈暢通度</li>
+          <li>丹田蓄能狀態</li>
+          <li>能量平衡分析</li>
+        </ul>
+
+        <h4 className="font-medium mt-4">報告內容</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>能量運行圖表</li>
+          <li>修行建議</li>
+          <li>進步追蹤</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'lianqipinjie',
+    title: '練炁品階',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-secondary">利養炁系列</div>
+        <p className="text-lg font-medium">修行境界評估</p>
+        <p>根據腦波特徵評估修行者目前的練炁境界等級。</p>
+
+        <h4 className="font-medium mt-4">品階等級</h4>
+        <div className="grid gap-2 md:grid-cols-3 text-sm">
+          {['初階', '中階', '高階', '精進', '圓滿', '超越'].map((item, i) => (
+            <div key={i} className="p-2 bg-base-200 rounded text-center">{item}</div>
+          ))}
+        </div>
+
+        <h4 className="font-medium mt-4">評估依據</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>腦波穩定度</li>
+          <li>能量集中度</li>
+          <li>心神合一指數</li>
+        </ul>
+      </div>
+    ),
+  },
+
+  // ===== 易 Motion 系列 =====
+  {
+    id: 'emotion-management',
+    title: '情緒管理系統',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-accent">易 Motion</div>
+        <p className="text-lg font-medium">員工情緒追蹤與預測</p>
+        <p>企業級情緒管理工具，協助 HR 追蹤員工情緒狀態，預防職業倦怠。</p>
+
+        <h4 className="font-medium mt-4">功能特色</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>定期情緒檢測</li>
+          <li>壓力指數追蹤</li>
+          <li>團隊情緒報告</li>
+          <li>預警機制</li>
+        </ul>
+
+        <h4 className="font-medium mt-4">適用對象</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>企業人力資源部門</li>
+          <li>員工心理健康管理</li>
+          <li>團隊效能評估</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'pet-test',
+    title: '寵物評比測試',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-accent">易 Motion</div>
+        <p className="text-lg font-medium">視覺+觸覺情緒分析</p>
+        <p>分析您與寵物互動時的情緒反應，找出最適合您的寵物類型。</p>
+
+        <h4 className="font-medium mt-4">測試流程</h4>
+        <ol className="list-decimal list-inside space-y-1 text-sm">
+          <li>測量基準腦波</li>
+          <li>觀看寵物圖片/影片</li>
+          <li>與寵物實際互動（觸覺）</li>
+          <li>分析情緒變化</li>
+        </ol>
+
+        <h4 className="font-medium mt-4">分析維度</h4>
+        <div className="flex flex-wrap gap-2">
+          {['愉悅感', '放鬆感', '親密感', '活力感'].map((item, i) => (
+            <span key={i} className="badge badge-outline">{item}</span>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'taste-test',
+    title: '品茶/品酒/品咖啡',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-accent">易 Motion</div>
+        <p className="text-lg font-medium">嗅覺+味覺情緒分析</p>
+        <p>透過腦波分析您對不同飲品的情緒反應，找出最適合您的口味。</p>
+
+        <h4 className="font-medium mt-4">適用品項</h4>
+        <div className="grid gap-2 md:grid-cols-3 text-sm">
+          <div className="p-3 bg-base-200 rounded text-center">
+            <div className="font-medium">茶</div>
+            <div className="text-xs text-base-content/60">綠茶、紅茶、烏龍...</div>
+          </div>
+          <div className="p-3 bg-base-200 rounded text-center">
+            <div className="font-medium">酒</div>
+            <div className="text-xs text-base-content/60">紅酒、白酒、威士忌...</div>
+          </div>
+          <div className="p-3 bg-base-200 rounded text-center">
+            <div className="font-medium">咖啡</div>
+            <div className="text-xs text-base-content/60">淺焙、中焙、深焙...</div>
+          </div>
+        </div>
+
+        <h4 className="font-medium mt-4">測試項目</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>香氣反應（嗅覺）</li>
+          <li>口感反應（味覺）</li>
+          <li>整體情緒變化</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'perfume-test',
+    title: '香水評比測試',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-accent">易 Motion</div>
+        <p className="text-lg font-medium">嗅覺情緒分析</p>
+        <p>分析您對不同香水的情緒反應，協助找出最適合您的香氛。</p>
+
+        <h4 className="font-medium mt-4">測試流程</h4>
+        <ol className="list-decimal list-inside space-y-1 text-sm">
+          <li>測量基準腦波</li>
+          <li>依序聞取不同香水</li>
+          <li>每款香水測量後休息</li>
+          <li>分析情緒變化</li>
+        </ol>
+
+        <h4 className="font-medium mt-4">分析報告</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>各香水的情緒反應分數</li>
+          <li>最適合您的香調類型</li>
+          <li>香水推薦清單</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'music-test',
+    title: '音樂演奏/歌曲演唱',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-accent">易 Motion</div>
+        <p className="text-lg font-medium">聽覺情緒分析</p>
+        <p>分析您聆聽音樂時的情緒反應，適用於音樂治療和曲目選擇。</p>
+
+        <h4 className="font-medium mt-4">應用場景</h4>
+        <div className="grid gap-2 md:grid-cols-2 text-sm">
+          <div className="p-2 bg-base-200 rounded">
+            <div className="font-medium">音樂治療</div>
+            <div className="text-xs text-base-content/60">找出最具療癒效果的音樂</div>
+          </div>
+          <div className="p-2 bg-base-200 rounded">
+            <div className="font-medium">演奏評估</div>
+            <div className="text-xs text-base-content/60">評估演奏者的情感表達</div>
+          </div>
+          <div className="p-2 bg-base-200 rounded">
+            <div className="font-medium">歌曲測試</div>
+            <div className="text-xs text-base-content/60">測試歌曲的情緒感染力</div>
+          </div>
+          <div className="p-2 bg-base-200 rounded">
+            <div className="font-medium">曲目推薦</div>
+            <div className="text-xs text-base-content/60">依情緒需求推薦音樂</div>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'video-test',
+    title: '短視頻廣告評比',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="badge badge-accent">易 Motion</div>
+        <p className="text-lg font-medium">視聽覺情緒分析</p>
+        <p>分析觀看短視頻或廣告時的情緒反應，適用於廣告效果測試和內容評估。</p>
+
+        <h4 className="font-medium mt-4">適用場景</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>廣告效果測試（A/B Testing）</li>
+          <li>品牌形象評估</li>
+          <li>內容創作優化</li>
+          <li>觀眾反應研究</li>
+        </ul>
+
+        <h4 className="font-medium mt-4">分析指標</h4>
+        <div className="flex flex-wrap gap-2">
+          {['注意力', '情感共鳴', '記憶點', '購買意願'].map((item, i) => (
+            <span key={i} className="badge badge-outline">{item}</span>
+          ))}
+        </div>
+
+        <h4 className="font-medium mt-4">報告內容</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>時間軸情緒曲線</li>
+          <li>關鍵畫面情緒分析</li>
+          <li>整體效果評分</li>
+        </ul>
+      </div>
+    ),
+  },
+
   // ===== FAQ =====
   {
     id: 'faq-upload',
