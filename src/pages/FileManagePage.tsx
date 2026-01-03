@@ -23,8 +23,11 @@ const FileManagePage: React.FC = () => {
     createGroup,
   } = useFileManager();
   const { users, currentUser } = useUserContext();
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<'files' | 'groups'>('files');
+
+  // 上傳檔案 Modal
+  const [uploadModalOpen, setUploadModalOpen] = useState<boolean>(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // Modal 狀態與編輯用狀態
   const [aliasModalOpen, setAliasModalOpen] = useState<boolean>(false);
@@ -70,15 +73,17 @@ const FileManagePage: React.FC = () => {
       const count = selectedFiles.length;
       await addFiles(selectedFiles, currentUser.id);
       setSelectedFiles([]);
-      const fileInput = document.querySelector(
-        'input[type="file"]#single-file-input'
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      setUploadModalOpen(false);
       alert(`成功上傳 ${count} 個檔案`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知錯誤';
       alert('檔案上傳失敗：' + message);
     }
+  };
+
+  const handleUploadModalCancel = () => {
+    setUploadModalOpen(false);
+    setSelectedFiles([]);
   };
 
   const openAliasModal = (file: UploadedFile) => {
@@ -296,53 +301,36 @@ const FileManagePage: React.FC = () => {
       {/* 上傳區域 */}
       <div className="card bg-base-100 shadow-md mb-6">
         <div className="card-body">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-            <div>
-              <h2 className="card-title">上傳腦波檔案</h2>
-              <p className="text-sm text-base-content/60">
-                僅支援 CSV 格式，可同時選擇多個檔案
-              </p>
-            </div>
-            <button
-              className="btn btn-ghost mt-2 sm:mt-0"
-              onClick={() => setGroupUploadModalOpen(true)}
-              disabled={!currentUser}
-            >
-              上傳腦波資料群組
-            </button>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-            <div className="w-full max-w-xs">
-              <input
-                id="single-file-input"
-                type="file"
-                accept=".csv"
-                multiple
-                className="file-input file-input-bordered w-full"
-                onChange={handleFileChange}
-              />
-              {selectedFiles.length > 0 && (
-                <p className="text-sm text-base-content/60 mt-1">
-                  已選擇 {selectedFiles.length} 個檔案
-                </p>
-              )}
-            </div>
-            <button
-              className="btn btn-primary"
-              onClick={handleUpload}
-              disabled={selectedFiles.length === 0 || !currentUser}
-            >
-              上傳檔案
-            </button>
-          </div>
-          {!currentUser && (
-            <div className="alert alert-warning mt-4">
+          <h2 className="card-title mb-2">上傳腦波檔案</h2>
+          {!currentUser ? (
+            <div className="alert alert-warning">
               <span>
                 請先選擇受測者。
                 <Link to="/users" className="link link-primary ml-1">
                   前往受測者管理
                 </Link>
               </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="btn btn-primary"
+                onClick={() => setUploadModalOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                上傳腦波檔案
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={() => setGroupUploadModalOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                </svg>
+                上傳腦波資料群組
+              </button>
             </div>
           )}
         </div>
@@ -574,6 +562,62 @@ const FileManagePage: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* 上傳腦波檔案 Modal */}
+      {uploadModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box relative">
+            <button
+              className="btn btn-sm btn-circle absolute right-2 top-2"
+              onClick={handleUploadModalCancel}
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-bold mb-6">上傳腦波檔案</h3>
+
+            <div className="form-control form-control-minimal">
+              <label className="label label-minimal">
+                <span className="label-text">選擇腦波檔案（可多選）</span>
+              </label>
+              <input
+                type="file"
+                accept=".csv"
+                multiple
+                className="file-input file-input-bordered w-full"
+                onChange={handleFileChange}
+              />
+              <p className="text-xs text-base-content/50 mt-2">僅支援 CSV 格式</p>
+            </div>
+
+            {selectedFiles.length > 0 && (
+              <div className="bg-base-200 rounded-lg p-3 mt-4">
+                <p className="text-sm font-medium mb-2">
+                  已選擇 {selectedFiles.length} 個檔案：
+                </p>
+                <ul className="list-disc list-inside text-sm">
+                  {selectedFiles.map((file, index) => (
+                    <li key={index}>{file.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="modal-action">
+              <button className="btn btn-ghost" onClick={handleUploadModalCancel}>
+                取消
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleUpload}
+                disabled={selectedFiles.length === 0}
+              >
+                上傳檔案
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={handleUploadModalCancel} />
+        </div>
       )}
 
       {/* 修改別稱 Modal */}
