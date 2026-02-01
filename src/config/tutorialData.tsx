@@ -107,7 +107,7 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
               { title: '受測者管理', desc: '建立與管理受測者資料', section: 'user-management' },
               { title: '檔案管理', desc: '上傳與管理腦波檔案', section: 'file-management' },
               { title: '執行分析', desc: '選擇功能並開始分析', section: 'run-analysis' },
-              { title: '功能說明', desc: '了解各分析功能詳情', section: 'yuanshenyin' },
+              { title: '功能說明', desc: '了解各分析功能詳情', section: 'yuanshenyinv2' },
             ].map((item, i) => (
               <div key={i} className="p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
                 <div className="font-medium">{item.title}</div>
@@ -274,12 +274,77 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
 
   // ===== 功能說明 =====
   {
-    id: 'yuanshenyin',
-    title: '元神音',
+    id: 'yuanshenyinv2',
+    title: '元神音創意平台',
     group: 'features',
     content: (
       <div className="space-y-4">
         <div className="badge badge-primary">主要功能</div>
+        <p className="text-lg font-medium">腦波影音編碼 - 創意音樂平台</p>
+        <p>
+          全新的元神音創意平台，在原有腦波音樂轉換基礎上，新增豐富的創意選擇參數，
+          讓使用者自由組合曲風、調性、旋律模式、背景頻率與環境音效，打造獨一無二的心靈音樂。
+        </p>
+
+        <h4 className="font-medium mt-4">創意選擇參數</h4>
+        <div className="grid gap-2 md:grid-cols-2 text-sm">
+          {[
+            { badge: '音樂類型', text: '情緒音樂 / 心靈音樂' },
+            { badge: '調性', text: '大調 / 小調，12 種調中心' },
+            { badge: '主旋律', text: '9 種旋律模式（含拍號）' },
+            { badge: '曲風', text: 'Waltz、Soul、Blues、Tango 等' },
+            { badge: 'BPM', text: '依曲風自動限定範圍' },
+            { badge: '背景頻率', text: '2Hz ~ 58Hz 腦波頻率疊加' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-2 p-2 bg-base-200 rounded">
+              <span className="badge badge-sm">{item.badge}</span>
+              <span>{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        <h4 className="font-medium mt-4">功能特色</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>三聲部音樂：高音、中音、低音分別對應不同腦波頻段</li>
+          <li>曲風與旋律模式自動相容性過濾</li>
+          <li>節奏鼓組即時合成（DrumLooper）</li>
+          <li>樂譜即時渲染、播放與錄製下載</li>
+          <li>可下載 MusicXML 格式樂譜（匯入 MuseScore）</li>
+          <li>支援背景環境音效（海浪、風聲、雨聲等）</li>
+        </ul>
+
+        <h4 className="font-medium mt-4">輸入需求</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li>前測腦波檔案</li>
+          <li>後測腦波檔案</li>
+        </ul>
+
+        <h4 className="font-medium mt-4">開發進度</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm">
+          <li>創意參數選擇介面（曲風 / 調性 / 旋律 / BPM / 背景頻率 / 環境音效）</li>
+          <li>曲風-旋律相容性矩陣與自動過濾</li>
+          <li>WebAudioFont 即時樂譜播放引擎</li>
+          <li>DrumLooper 節奏鼓組合成與即時播放</li>
+          <li>樂譜播放器生命週期管理（AudioContext 釋放、interval 清理、race condition 防護）</li>
+          <li>MusicXML 下載與音樂錄製下載（WebM）</li>
+          <li>報告頁面顯示創意平台參數摘要</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'yuanshenyin',
+    title: '元神音（Legacy）',
+    group: 'features',
+    content: (
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <div className="badge badge-ghost">Legacy</div>
+        </div>
+        <WarningBox>
+          此為舊版元神音，已由「元神音創意平台」取代。舊版仍可使用，但不再新增功能。
+          請改用 <strong>元神音創意平台</strong> 以獲得完整的創意選擇功能。
+        </WarningBox>
         <p className="text-lg font-medium">腦波影音編碼 - 心靈音樂轉換</p>
         <p>將您的腦波資料轉換為獨特的心靈音樂，以三聲部樂譜呈現您的腦波韻律。</p>
 
