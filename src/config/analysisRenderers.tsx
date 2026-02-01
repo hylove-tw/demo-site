@@ -11,6 +11,15 @@ export interface MusicReportCustomParams {
     p1?: string;
     p2?: string;
     p3?: string;
+    // 創意平台欄位
+    musicType?: string;       // 'emotion' | 'spiritual'
+    recordingTime?: number;   // 紀錄時間（分鐘）
+    keyCenter?: string;       // 'C', 'G', 'F', ...
+    keyType?: string;         // 'major' | 'minor'
+    melodyPattern?: number;   // 1-9
+    genre?: string;           // 'waltz', 'soul', ...
+    brainwaveFrequency?: number | null;
+    natureSound?: string;
 }
 
 /**
@@ -28,6 +37,14 @@ export const renderBrainWaveMusicReport = (
         p1: customParams?.p1 || 'piano',
         p2: customParams?.p2 || 'piano',
         p3: customParams?.p3 || 'piano',
+        musicType: customParams?.musicType,
+        recordingTime: customParams?.recordingTime,
+        keyCenter: customParams?.keyCenter,
+        keyType: customParams?.keyType,
+        melodyPattern: customParams?.melodyPattern,
+        genre: customParams?.genre,
+        brainwaveFrequency: customParams?.brainwaveFrequency,
+        natureSound: customParams?.natureSound,
     };
 
     return (
