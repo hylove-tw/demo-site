@@ -14,3 +14,4 @@ import './music_test';
 import './video_test';
 import './zhenbaoqi';
 import './qingxiangyi';
+import './yuanshenyin-creative';

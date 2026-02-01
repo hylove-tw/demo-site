@@ -224,6 +224,33 @@ export async function perfumeAnalysis(data: any[][]): Promise<any> {
   };
 }
 
+// 元神音創意平台：腦波影音編碼及播放系統（創意版）
+export async function musicAnalysisCreative(
+  data: any[][],
+  customParams?: Record<string, any>
+): Promise<any> {
+  const payload = {
+    title: customParams?.title || '未命名的樂譜',
+    bpm: customParams?.bpm || 60,
+    time_signature: customParams?.time_signature || '4/4',
+    p1: customParams?.p1 || 'piano',
+    p2: customParams?.p2 || 'piano',
+    p3: customParams?.p3 || 'piano',
+    beforeBrainData: data[0],
+    afterBrainData: data[1],
+    // 創意平台新增欄位
+    musicType: customParams?.musicType || 'emotion',
+    recordingTime: customParams?.recordingTime || 5,
+    keyCenter: customParams?.keyCenter || 'C',
+    keyType: customParams?.keyType || 'major',
+    melodyPattern: customParams?.melodyPattern || 1,
+    genre: customParams?.genre || '',
+    brainwaveFrequency: customParams?.brainwaveFrequency ?? null,
+    natureSound: customParams?.natureSound || '',
+  };
+  return post('/api/v2/music', payload);
+}
+
 // 雙人腦波音樂：生成雙人腦波音樂譜
 export async function dualMusicAnalysis(
   data: any[][],
