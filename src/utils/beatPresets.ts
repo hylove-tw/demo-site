@@ -1,6 +1,8 @@
 // src/utils/beatPresets.ts
 // 經典節奏預設 - 用於在 MusicXML 中嵌入打擊樂聲部
 
+import { getCompatibleBeatTimeSignature } from '../config/musicCreativeConstants';
+
 export interface BeatPreset {
   id: string;
   name: string;
@@ -190,20 +192,29 @@ export function generateDrumScorePart(partId: string = 'P-Drums', volume: number
 
 /**
  * 根據節奏預設生成一個小節的打擊樂 MusicXML
+ * @param divisions MusicXML divisions（每四分音符的細分數，已依 musicBeatType 調整）
+ * @param musicBeatType 實際樂曲的 beat-type（4=四分音符, 8=八分音符）
  */
 function generateDrumMeasure(
   preset: BeatPreset,
   measureNumber: number,
-  divisions: number
+  divisions: number,
+  musicBeatType: number = 4
 ): string {
+  // beatDuration = 一拍在 MusicXML 中的 duration 值
+  // divisions 定義每四分音符的細分數，所以：
+  //   四分音符拍 (beatType=4) → beatDuration = divisions
+  //   八分音符拍 (beatType=8) → beatDuration = divisions / 2
+  const beatDuration = divisions * (4 / musicBeatType);
+
   if (preset.id === 'none' || !preset.pattern.kick.length) {
     // 空小節（休止符）
-    const [beats, beatType] = preset.timeSignature.split('/').map(Number);
+    const [beats] = preset.timeSignature.split('/').map(Number);
     return `
       <measure number="${measureNumber}">
         <note>
           <rest/>
-          <duration>${divisions * beats}</duration>
+          <duration>${beatDuration * beats}</duration>
           <voice>1</voice>
           <type>whole</type>
         </note>
@@ -212,9 +223,10 @@ function generateDrumMeasure(
 
   const [beats] = preset.timeSignature.split('/').map(Number);
   const totalSubdivisions = beats * preset.subdivisions;
-  const durationPerSubdivision = divisions / preset.subdivisions;
+  const durationPerSubdivision = beatDuration / preset.subdivisions;
 
   let notes = '';
+  let pendingRestDuration = 0;
 
   for (let i = 0; i < totalSubdivisions; i++) {
     const instruments: string[] = [];
@@ -227,15 +239,15 @@ function generateDrumMeasure(
     });
 
     if (instruments.length === 0) {
-      // 休止符
-      notes += `
-        <note>
-          <rest/>
-          <duration>${durationPerSubdivision}</duration>
-          <voice>1</voice>
-          <type>${preset.subdivisions === 4 ? '16th' : 'eighth'}</type>
-        </note>`;
+      // 累積空拍 duration（稍後以 <forward> 一次推進）
+      pendingRestDuration += durationPerSubdivision;
     } else {
+      // 先 flush 累積的空拍
+      if (pendingRestDuration > 0) {
+        notes += `
+        <forward><duration>${pendingRestDuration}</duration></forward>`;
+        pendingRestDuration = 0;
+      }
       // 生成音符（可能是和弦）
       instruments.forEach((instrument, idx) => {
         const drumInfo = DRUM_MIDI_MAP[instrument];
@@ -256,6 +268,12 @@ function generateDrumMeasure(
     }
   }
 
+  // flush 尾端空拍
+  if (pendingRestDuration > 0) {
+    notes += `
+        <forward><duration>${pendingRestDuration}</duration></forward>`;
+  }
+
   return `
       <measure number="${measureNumber}">
         ${measureNumber === 1 ? `
@@ -271,17 +289,19 @@ function generateDrumMeasure(
 
 /**
  * 生成完整的打擊樂聲部
+ * @param musicBeatType 實際樂曲的 beat-type（4=四分音符, 8=八分音符）
  */
 export function generateDrumPart(
   preset: BeatPreset,
   measureCount: number,
   divisions: number = 4,
-  partId: string = 'P-Drums'
+  partId: string = 'P-Drums',
+  musicBeatType: number = 4
 ): string {
   let measures = '';
 
   for (let i = 1; i <= measureCount; i++) {
-    measures += generateDrumMeasure(preset, i, divisions);
+    measures += generateDrumMeasure(preset, i, divisions, musicBeatType);
   }
 
   return `
@@ -319,10 +339,13 @@ export function injectDrumPartToMusicXML(
 
   if (measureCount === 0) return musicXML;
 
-  // 取得 divisions（通常在第一個小節的 attributes 中）
+  // 取得 divisions 和 beat-type（通常在第一個小節的 attributes 中）
   const firstMeasure = measures[0];
   const divisionsElem = firstMeasure.getElementsByTagName('divisions')[0];
   const divisions = divisionsElem ? parseInt(divisionsElem.textContent || '4') : 4;
+
+  const beatTypeElem = firstMeasure.getElementsByTagName('beat-type')[0];
+  const musicBeatType = beatTypeElem ? parseInt(beatTypeElem.textContent || '4') : 4;
 
   // 檢查是否已經有打擊樂聲部
   const scoreParts = xmlDoc.getElementsByTagName('score-part');
@@ -359,9 +382,20 @@ export function injectDrumPartToMusicXML(
   }
 
   // 在文檔末尾添加打擊樂聲部
+  // 若 beat-type 非四分音符，需確保 divisions 夠大以產生整數 duration
+  // 例：4/8 + divisions=4 + subdivisions=4 → beatDuration=2, durationPerSub=0.5 (非整數)
+  // 解法：將 drumDivisions 加倍使 durationPerSub 為整數
+  let drumDivisions = divisions;
+  if (musicBeatType > 4) {
+    const beatDuration = divisions * (4 / musicBeatType);
+    if (beatDuration % preset.subdivisions !== 0) {
+      drumDivisions = divisions * (musicBeatType / 4);
+    }
+  }
+
   const scorePartwise = xmlDoc.getElementsByTagName('score-partwise')[0];
   if (scorePartwise) {
-    const drumPartXML = generateDrumPart(preset, measureCount, divisions, drumPartId);
+    const drumPartXML = generateDrumPart(preset, measureCount, drumDivisions, drumPartId, musicBeatType);
     const tempDoc = parser.parseFromString(`<temp>${drumPartXML}</temp>`, 'text/xml');
     const drumPart = tempDoc.getElementsByTagName('part')[0];
     if (drumPart) {
@@ -374,10 +408,12 @@ export function injectDrumPartToMusicXML(
 
 /**
  * 根據拍號過濾適合的節奏預設
+ * 支援相容拍號：4/8→4/4 預設, 3/8→3/4 預設
  */
 export function getPresetsForTimeSignature(timeSignature: string): BeatPreset[] {
+  const compatTS = getCompatibleBeatTimeSignature(timeSignature);
   return BEAT_PRESETS.filter(
-    preset => preset.id === 'none' || preset.timeSignature === timeSignature
+    preset => preset.id === 'none' || (compatTS && preset.timeSignature === compatTS)
   );
 }
 

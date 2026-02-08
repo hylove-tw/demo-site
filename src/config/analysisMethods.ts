@@ -233,7 +233,43 @@ export async function musicAnalysisCreative(
   return post('/api/v2/music', payload);
 }
 
-// 雙人腦波音樂：生成雙人腦波音樂譜
+// 雙人腦波音樂創意平台：生成雙人腦波音樂譜（含創意平台參數）
+export async function dualMusicAnalysisCreative(
+  data: any[][],
+  customParams?: Record<string, any>
+): Promise<any> {
+  const payload = {
+    title: customParams?.title || '未命名的樂譜',
+    bpm: customParams?.bpm || 60,
+    time_signature: customParams?.time_signature || '4/4',
+    genre: customParams?.genre || '',
+    musicType: customParams?.musicType || 'emotion',
+    keyCenter: customParams?.keyCenter || 'C',
+    keyType: customParams?.keyType || 'major',
+    recordingTime: customParams?.recordingTime || 5,
+    brainwaveFrequency: customParams?.brainwaveFrequency ?? null,
+    natureSound: customParams?.natureSound || '',
+    first_player: {
+      instrument: {
+        p1: customParams?.first_p1 || 'piano',
+        p2: customParams?.first_p2 || 'piano',
+        p3: customParams?.first_p3 || 'piano',
+      },
+      ...data[0],
+    },
+    second_player: {
+      instrument: {
+        p1: customParams?.second_p1 || 'piano',
+        p2: customParams?.second_p2 || 'piano',
+        p3: customParams?.second_p3 || 'piano',
+      },
+      ...data[1],
+    },
+  };
+  return post('/api/v1/dualmusic', payload);
+}
+
+// 雙人腦波音樂：生成雙人腦波音樂譜（舊版，不含創意平台參數）
 export async function dualMusicAnalysis(
   data: any[][],
   customParams?: Record<string, any>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { registerPlugin, AnalysisPlugin } from '../registry';
-import { musicAnalysisCreative } from '../../config/analysisMethods';
-import { renderBrainWaveMusicReport } from '../../config/analysisRenderers';
+import { musicAnalysisCreative, dualMusicAnalysisCreative } from '../../config/analysisMethods';
+import { renderBrainWaveMusicReport, renderDualMusicReportCreative } from '../../config/analysisRenderers';
 import {
   KEY_CENTERS,
   MELODY_PATTERNS,
@@ -36,6 +36,7 @@ const EditComponent: React.FC<{
     onChange({ ...customParams, [field]: value });
   };
 
+  const playerMode = customParams.playerMode ?? 'single';
   const musicType = customParams.musicType ?? 'emotion';
   const keyType = customParams.keyType ?? 'major';
   const selectedMelody = customParams.melodyPattern as number | undefined;
@@ -99,7 +100,6 @@ const EditComponent: React.FC<{
       const compat = getCompatibleGenres(melodyId);
       if (!compat.find((g) => g.id === selectedGenre)) {
         delete updates.genre;
-        // 清除曲風連帶的 BPM 限制
       }
     }
 
@@ -107,7 +107,11 @@ const EditComponent: React.FC<{
   };
 
   const getDefaultInstrument = (field: string) => {
-    const defaults: Record<string, string> = { p1: 'flute', p2: 'piano', p3: 'cello' };
+    const defaults: Record<string, string> = {
+      p1: 'flute', p2: 'piano', p3: 'cello',
+      first_p1: 'flute', first_p2: 'piano', first_p3: 'cello',
+      second_p1: 'violin', second_p2: 'guitar', second_p3: 'bass',
+    };
     return defaults[field] || 'piano';
   };
 
@@ -141,6 +145,34 @@ const EditComponent: React.FC<{
 
   return (
     <div className="space-y-6 p-4 border border-base-300 rounded-lg">
+      {/* ── 區段 0：演奏模式切換 ── */}
+      <div>
+        <label className="label label-minimal">
+          <span className="label-text font-semibold">演奏模式</span>
+        </label>
+        <div className="join w-full">
+          <button
+            type="button"
+            className={`btn join-item flex-1 ${playerMode === 'single' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => handleChange('playerMode', 'single')}
+          >
+            單人模式
+          </button>
+          <button
+            type="button"
+            className={`btn join-item flex-1 ${playerMode === 'dual' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => handleChange('playerMode', 'dual')}
+          >
+            雙人模式（琴瑟合）
+          </button>
+        </div>
+        <div className="text-xs opacity-60 mt-2 px-1">
+          {playerMode === 'single'
+            ? '單人模式：上傳前測與後測腦波資料，生成三聲部樂譜'
+            : '雙人模式：上傳兩人腦波資料，生成六聲部合奏樂譜'}
+        </div>
+      </div>
+
       {/* ── 區段 1：音樂類型 ── */}
       <div>
         <label className="label label-minimal">
@@ -367,11 +399,32 @@ const EditComponent: React.FC<{
       <div className="divider-minimal">樂器設定</div>
 
       {/* ── 區段 7：樂器設定 ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {renderInstrumentSelect('p1', '高音域樂器 (P1)')}
-        {renderInstrumentSelect('p2', '中音域樂器 (P2)')}
-        {renderInstrumentSelect('p3', '低音域樂器 (P3)')}
-      </div>
+      {playerMode === 'single' ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {renderInstrumentSelect('p1', '高音域樂器 (P1)')}
+          {renderInstrumentSelect('p2', '中音域樂器 (P2)')}
+          {renderInstrumentSelect('p3', '低音域樂器 (P3)')}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-medium text-primary mb-3">第一演奏者</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {renderInstrumentSelect('first_p1', '高音域樂器 (P1)')}
+              {renderInstrumentSelect('first_p2', '中音域樂器 (P2)')}
+              {renderInstrumentSelect('first_p3', '低音域樂器 (P3)')}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-secondary mb-3">第二演奏者</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {renderInstrumentSelect('second_p1', '高音域樂器 (P1)')}
+              {renderInstrumentSelect('second_p2', '中音域樂器 (P2)')}
+              {renderInstrumentSelect('second_p3', '低音域樂器 (P3)')}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="divider-minimal">背景音效</div>
 
@@ -426,15 +479,25 @@ const plugin: AnalysisPlugin = {
   group: '主要功能',
   name: '元神音創意平台',
   badge: { text: 'New', color: 'badge-success' },
-  shortDescription: '進階腦波音樂創作，自訂曲風、主旋律、音中心與背景音效',
+  shortDescription: '進階腦波音樂創作，支援單人與雙人模式，自訂曲風、主旋律、音中心與背景音效',
   description:
-    '元神音創意平台提供完整的音樂創作選項流程，可自選情緒/心靈音樂類型、調性（大調/小調）、9 種主旋律、12 種曲風、BPM、樂器配置及腦波背景頻率與自然音效，生成專屬的腦波音樂五線譜。',
+    '元神音創意平台提供完整的音樂創作選項流程，可自選單人或雙人（琴瑟合）模式、情緒/心靈音樂類型、調性（大調/小調）、9 種主旋律、12 種曲風、BPM、樂器配置及腦波背景頻率與自然音效，生成專屬的腦波音樂五線譜。',
   requiredFiles: [
-    { verbose_name: '前測資料', name: 'beforeBrainData' },
-    { verbose_name: '後測資料', name: 'afterBrainData' },
+    { verbose_name: '腦波資料一', name: 'data1' },
+    { verbose_name: '腦波資料二', name: 'data2' },
   ],
-  execute: musicAnalysisCreative,
-  renderReport: renderBrainWaveMusicReport,
+  execute: (data: any[][], customParams?: Record<string, any>) => {
+    if (customParams?.playerMode === 'dual') {
+      return dualMusicAnalysisCreative(data, customParams);
+    }
+    return musicAnalysisCreative(data, customParams);
+  },
+  renderReport: (result: any, customParams?: any) => {
+    if (customParams?.playerMode === 'dual') {
+      return renderDualMusicReportCreative(result, customParams);
+    }
+    return renderBrainWaveMusicReport(result, customParams);
+  },
   customFields: [
     { label: '樂譜標題', fieldName: 'title', type: 'string', defaultValue: '未命名的樂譜' },
     { label: '速度 (BPM)', fieldName: 'bpm', type: 'number', defaultValue: 60 },

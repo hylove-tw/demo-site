@@ -3,6 +3,8 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import MusicReportEditor, { MusicReportParams } from '../components/MusicReportEditor';
 import DualMusicReportEditor, { DualMusicReportParams } from '../components/DualMusicReportEditor';
+import { GENRE_BEAT_MAP, getCompatibleBeatTimeSignature } from '../config/musicCreativeConstants';
+import { BEAT_PRESETS } from '../utils/beatPresets';
 
 export interface MusicReportCustomParams {
     title?: string;
@@ -47,6 +49,18 @@ export const renderBrainWaveMusicReport = (
         natureSound: customParams?.natureSound,
     };
 
+    // 曲風自動映射節拍：若 genre 已設定但 beat 未設定，依 GENRE_BEAT_MAP 自動填入
+    if (initialParams.genre && !initialParams.beat) {
+        const beatId = GENRE_BEAT_MAP[initialParams.genre];
+        if (beatId) {
+            const beatPreset = BEAT_PRESETS.find(b => b.id === beatId);
+            const compatTS = getCompatibleBeatTimeSignature(initialParams.time_signature || '4/4');
+            if (beatPreset && compatTS && beatPreset.timeSignature === compatTS) {
+                initialParams.beat = beatId;
+            }
+        }
+    }
+
     return (
         <MusicReportEditor
             musicXML={musicXML}
@@ -57,7 +71,7 @@ export const renderBrainWaveMusicReport = (
 
 /**
  * renderDualMusicReport:
- * 使用 DualMusicReportEditor 組件顯示可編輯的雙人樂譜報告
+ * 使用 DualMusicReportEditor 組件顯示可編輯的雙人樂譜報告（舊版，不含創意平台參數）
  */
 export const renderDualMusicReport = (
     musicXML: string,
@@ -74,6 +88,55 @@ export const renderDualMusicReport = (
         second_p2: customParams?.second_p2 || 'piano',
         second_p3: customParams?.second_p3 || 'piano',
     };
+
+    return (
+        <DualMusicReportEditor
+            musicXML={musicXML}
+            initialParams={initialParams}
+        />
+    );
+};
+
+/**
+ * renderDualMusicReportCreative:
+ * 使用 DualMusicReportEditor 組件顯示含創意平台參數的雙人樂譜報告
+ */
+export const renderDualMusicReportCreative = (
+    musicXML: string,
+    customParams?: Record<string, any>
+): React.ReactNode => {
+    const initialParams: DualMusicReportParams = {
+        title: customParams?.title || '未命名的樂譜',
+        bpm: customParams?.bpm || 60,
+        time_signature: customParams?.time_signature || '4/4',
+        first_p1: customParams?.first_p1 || 'flute',
+        first_p2: customParams?.first_p2 || 'piano',
+        first_p3: customParams?.first_p3 || 'cello',
+        second_p1: customParams?.second_p1 || 'violin',
+        second_p2: customParams?.second_p2 || 'guitar',
+        second_p3: customParams?.second_p3 || 'bass',
+        // 創意平台參數
+        musicType: customParams?.musicType,
+        recordingTime: customParams?.recordingTime,
+        keyCenter: customParams?.keyCenter,
+        keyType: customParams?.keyType,
+        melodyPattern: customParams?.melodyPattern,
+        genre: customParams?.genre,
+        brainwaveFrequency: customParams?.brainwaveFrequency,
+        natureSound: customParams?.natureSound,
+    };
+
+    // 曲風自動映射節拍：若 genre 已設定但 beat 未設定，依 GENRE_BEAT_MAP 自動填入
+    if (initialParams.genre && !initialParams.beat) {
+        const beatId = GENRE_BEAT_MAP[initialParams.genre];
+        if (beatId) {
+            const beatPreset = BEAT_PRESETS.find(b => b.id === beatId);
+            const compatTS = getCompatibleBeatTimeSignature(initialParams.time_signature || '4/4');
+            if (beatPreset && compatTS && beatPreset.timeSignature === compatTS) {
+                initialParams.beat = beatId;
+            }
+        }
+    }
 
     return (
         <DualMusicReportEditor

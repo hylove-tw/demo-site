@@ -18,12 +18,34 @@ export interface AnalysisHistory {
 const ANALYSIS_HISTORY_KEY = "analysisHistory";
 
 function loadAnalysisHistory(): AnalysisHistory[] {
-  const stored = localStorage.getItem(ANALYSIS_HISTORY_KEY);
-  return stored ? JSON.parse(stored) : [];
+  try {
+    const stored = localStorage.getItem(ANALYSIS_HISTORY_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
 }
 
-function saveAnalysisHistory(history: AnalysisHistory[]) {
-  localStorage.setItem(ANALYSIS_HISTORY_KEY, JSON.stringify(history));
+/**
+ * 儲存分析紀錄到 localStorage。
+ * 當超出配額時，自動刪除最舊的紀錄後重試（最多刪除 10 筆）。
+ */
+function saveAnalysisHistory(history: AnalysisHistory[]): void {
+  let records = [...history];
+  for (let attempt = 0; attempt <= 10; attempt++) {
+    try {
+      localStorage.setItem(ANALYSIS_HISTORY_KEY, JSON.stringify(records));
+      return;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'QuotaExceededError' && records.length > 1) {
+        // 移除最舊的紀錄（陣列尾端）後重試
+        records = records.slice(0, -1);
+      } else {
+        console.error('Failed to save analysis history:', e);
+        return;
+      }
+    }
+  }
 }
 
 export function useAnalysisManager() {

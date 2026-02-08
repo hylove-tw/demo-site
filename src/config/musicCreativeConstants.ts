@@ -66,6 +66,45 @@ export const GENRES: Genre[] = [
   { id: 'quick-waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 120], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
 ];
 
+// ── 拍號相容性工具 ──────────────────────────────────────
+// 節拍預設只有 4/4 和 3/4 兩種拍號。
+// 此函式將相同拍數但不同 beat-type 的拍號正規化為預設支援的拍號。
+// 例：4/8→4/4, 3/8→3/4（拍數相同，只是 beat-type 不同）
+
+/**
+ * 取得與指定拍號相容的節拍預設拍號
+ *
+ * @returns 相容的預設拍號，若無相容預設則回傳 null
+ */
+export function getCompatibleBeatTimeSignature(timeSignature: string): string | null {
+  const [beats, beatType] = timeSignature.split('/').map(Number);
+  // 4 拍系列：4/4, 4/8 → 使用 4/4 預設
+  if (beats === 4 && (beatType === 4 || beatType === 8)) return '4/4';
+  // 3 拍系列：3/4, 3/8 → 使用 3/4 預設
+  if (beats === 3 && (beatType === 4 || beatType === 8)) return '3/4';
+  // 6/8 → 複合拍，與 3/4 結構不同，暫不自動映射
+  // 2/4, 8/16, 12/16 等 → 無直接相容預設
+  return null;
+}
+
+// ── 曲風→節拍預設映射 ──────────────────────────────────
+// 將每個曲風 ID 映射到最接近的節拍預設 ID（beatPresets.ts）
+
+export const GENRE_BEAT_MAP: Record<string, string> = {
+  waltz: 'waltz',
+  soul: 'bossanova',
+  blues: 'jazz',
+  tango: 'tango',
+  giliba: 'pop',
+  rumba: 'rumba',
+  disco: 'pop',
+  twist: 'rock',
+  reggae: 'reggae',
+  rock: 'rock',
+  country: 'country',
+  'quick-waltz': 'waltz',
+};
+
 // ── 曲風-主旋律相容矩陣 ─────────────────────────────────
 // key = genre id, value = set of compatible melody pattern ids
 
@@ -140,4 +179,127 @@ export function getCompatibleGenres(melodyId: number): Genre[] {
 /** 計算 BPM 中位值 */
 export function getBpmMidpoint(bpmRange: [number, number]): number {
   return Math.round((bpmRange[0] + bpmRange[1]) / 2);
+}
+
+// ── 轉調工具 ──────────────────────────────────────────────
+// Spec: 「程式計算皆以 C 大調產生音符」，再依使用者選擇的調性做轉調。
+// 轉調方式：每一級升半音（參照 spec 半音階對照表）。
+
+/** 驗證 keyCenter 是否屬於指定 keyType 的合法調性 */
+export function isValidKeyCenter(
+  keyCenter: string,
+  keyType: 'major' | 'minor',
+): boolean {
+  return KEY_CENTERS[keyType].some((k) => k.value === keyCenter);
+}
+
+/**
+ * 解析並驗證調性，回傳安全的 keyCenter
+ *
+ * - 合法組合：原樣回傳
+ * - keyCenter 合法但 keyType 不符：回傳該 keyType 的第一個調性（大調=C，小調=A）
+ * - keyCenter 不在任何清單中：回傳該 keyType 的第一個調性
+ *
+ * @returns `{ keyCenter, fallback }` — fallback 為 true 表示使用了預設值
+ */
+export function resolveKeyCenter(
+  keyCenter: string,
+  keyType: 'major' | 'minor',
+): { keyCenter: string; fallback: boolean } {
+  if (isValidKeyCenter(keyCenter, keyType)) {
+    return { keyCenter, fallback: false };
+  }
+  return { keyCenter: KEY_CENTERS[keyType][0].value, fallback: true };
+}
+
+/** C 大調各音級在半音階上的位置（一個八度內，0-6 對應 C D E F G A B） */
+const C_MAJOR_SEMITONES = [0, 2, 4, 5, 7, 9, 11] as const;
+
+/** 各調性根音相對 C 的半音偏移量 */
+const KEY_SEMITONE_OFFSETS: Record<string, number> = {
+  C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, Bb: 10, B: 11,
+};
+
+/**
+ * 半音階音名表（兩個完整八度 + 延伸，對應 spec 半音階對照表）
+ * index 0 = C, 12 = c (高八度), 24 = c' (再高八度)
+ */
+const CHROMATIC_NOTE_NAMES = [
+  // 第一個八度 (0-11)
+  'C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B',
+  // 第二個八度 (12-23)
+  'c', 'c#/db', 'd', 'd#/eb', 'e', 'f', 'f#/gb', 'g', 'g#/ab', 'a', 'a#/bb', 'b',
+  // 延伸 (24-35)
+  "c'", "c#'/db'", "d'", "d#'/eb'", "e'", "f'", "f#'/gb'", "g'", "g#'/ab'", "a'", "a#'/bb'", "b'",
+] as const;
+
+/**
+ * 將 C 大調的「計算值」轉為半音階索引
+ *
+ * Spec 定義：
+ *  - 第二、第三音域：計算值 0-7 → C D E F G A B c（音級 0-7），
+ *                   計算值 8-15 → c d e f g a b c'（音級 0-7 + 12 半音）
+ *  - 第一音域：計算值 0-7 → C, D, E, F, G, A, B, C（低八度）
+ *
+ * @param diatonicValue  C 大調計算值（0-7 或 0-15）
+ */
+export function diatonicToChromaticIndex(diatonicValue: number): number {
+  const octave = Math.floor(diatonicValue / 8);
+  const degree = diatonicValue % 8;
+
+  if (degree === 7) {
+    // 音級 7 = 下一個八度的根音 (C/c/c')
+    return (octave + 1) * 12;
+  }
+  return C_MAJOR_SEMITONES[degree] + octave * 12;
+}
+
+/**
+ * 轉調：將 C 大調計算值轉換為目標調性的半音階索引
+ *
+ * @param diatonicValue  C 大調計算值（0-15）
+ * @param keyCenter      目標調性根音（e.g. 'G', 'Bb', 'A'）
+ * @returns 轉調後的半音階索引
+ *
+ * @example
+ * transposeNote(0, 'C')  // 0  → C 不變
+ * transposeNote(0, 'G')  // 7  → G
+ * transposeNote(4, 'D')  // 9  → A（C 大調 G + 2 半音 = A）
+ * transposeNote(8, 'F')  // 17 → f
+ */
+export function transposeNote(diatonicValue: number, keyCenter: string): number {
+  const chromatic = diatonicToChromaticIndex(diatonicValue);
+  const offset = KEY_SEMITONE_OFFSETS[keyCenter] ?? 0;
+  return chromatic + offset;
+}
+
+/**
+ * 取得半音階索引對應的音名
+ *
+ * @param chromaticIndex  半音階索引（0 起始）
+ * @returns 音名字串，超出預定義範圍時回傳數值表示
+ */
+export function getChromaticNoteName(chromaticIndex: number): string {
+  if (chromaticIndex >= 0 && chromaticIndex < CHROMATIC_NOTE_NAMES.length) {
+    return CHROMATIC_NOTE_NAMES[chromaticIndex];
+  }
+  return `[${chromaticIndex}]`;
+}
+
+/**
+ * 批次轉調：將一組 C 大調計算值轉為目標調性的音名
+ *
+ * @param diatonicValues  C 大調計算值陣列
+ * @param keyCenter       目標調性根音
+ * @returns 轉調後的音名陣列
+ *
+ * @example
+ * transposeManyToNames([0, 2, 4, 7], 'G')
+ * // → ['G', 'B', 'd', "d'"]
+ */
+export function transposeManyToNames(
+  diatonicValues: number[],
+  keyCenter: string,
+): string[] {
+  return diatonicValues.map((v) => getChromaticNoteName(transposeNote(v, keyCenter)));
 }

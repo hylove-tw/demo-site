@@ -274,6 +274,8 @@ export class WebAudioFontPlayer {
   private nextEventIndex = 0;  // 下一個要排程的事件索引
   private readonly SCHEDULE_AHEAD_TIME = 5;  // 提前排程時間（秒）
   private scheduleIntervalId: number | null = null;
+  private renderedBuffer: AudioBuffer | null = null;
+  private bufferSource: AudioBufferSourceNode | null = null;
 
   async loadScore(musicXML: string, volume: number = 80, skipDrums: boolean = false): Promise<void> {
     // 解析 MusicXML
@@ -344,38 +346,70 @@ export class WebAudioFontPlayer {
     });
   }
 
+  // Wait for all zone.file entries in a preset to finish decoding to AudioBuffer.
+  // adjustPreset uses callback-based decodeAudioData which is fire-and-forget;
+  // this ensures we don't proceed until every zone.buffer is ready.
+  private async awaitZoneBuffers(preset: any): Promise<void> {
+    if (!this.audioContext || !preset?.zones) return;
+    const promises: Promise<void>[] = [];
+    for (const zone of preset.zones) {
+      if (!zone.buffer && zone.file) {
+        const decoded = atob(zone.file);
+        const arraybuffer = new ArrayBuffer(decoded.length);
+        const view = new Uint8Array(arraybuffer);
+        for (let i = 0; i < decoded.length; i++) {
+          view[i] = decoded.charCodeAt(i);
+        }
+        promises.push(
+          this.audioContext.decodeAudioData(arraybuffer).then(audioBuffer => {
+            zone.buffer = audioBuffer;
+          })
+        );
+      }
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  }
+
   private async loadInstrument(program: number, preset: string): Promise<void> {
     const key = `instrument_${program}`;
     if (this.loadedInstruments.has(key)) {
       return;
     }
 
-    return new Promise((resolve, reject) => {
-      const varName = `_tone_${preset}`;
+    const varName = `_tone_${preset}`;
 
-      // 檢查是否已載入
-      if ((window as any)[varName]) {
-        this.loadedInstruments.set(key, (window as any)[varName]);
-        resolve();
-        return;
-      }
+    // Load the script if the preset variable isn't on window yet
+    if (!(window as any)[varName]) {
+      await new Promise<void>((resolve) => {
+        const script = document.createElement('script');
+        script.src = `https://surikov.github.io/webaudiofontdata/sound/${preset}.js`;
+        script.onload = () => resolve();
+        script.onerror = () => {
+          console.warn(`Failed to load instrument ${program}`);
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+    }
 
-      const script = document.createElement('script');
-      script.src = `https://surikov.github.io/webaudiofontdata/sound/${preset}.js`;
-      script.onload = () => {
-        const preset_data = (window as any)[varName];
-        if (preset_data) {
-          this.player.adjustPreset(this.audioContext, preset_data);
-          this.loadedInstruments.set(key, preset_data);
+    const preset_data = (window as any)[varName];
+    if (preset_data) {
+      // Save zone.file refs before adjustPreset clears them (zone.file=null)
+      const savedFiles = preset_data.zones?.map((z: any) => z.file) ?? [];
+      this.player.adjustPreset(this.audioContext, preset_data);
+      // Restore zone.file for zones whose async decode hasn't finished
+      if (preset_data.zones) {
+        for (let i = 0; i < preset_data.zones.length; i++) {
+          if (!preset_data.zones[i].buffer && !preset_data.zones[i].file && savedFiles[i]) {
+            preset_data.zones[i].file = savedFiles[i];
+          }
         }
-        resolve();
-      };
-      script.onerror = () => {
-        console.warn(`Failed to load instrument ${program}`);
-        resolve(); // 不拋出錯誤，使用預設音色
-      };
-      document.head.appendChild(script);
-    });
+      }
+      this.loadedInstruments.set(key, preset_data);
+      await this.awaitZoneBuffers(preset_data);
+    }
   }
 
   private async loadDrumNote(midiNote: number): Promise<void> {
@@ -395,33 +429,91 @@ export class WebAudioFontPlayer {
       return;
     }
 
-    return new Promise((resolve) => {
-      const varName = preset.variable;
+    const varName = preset.variable;
 
-      if ((window as any)[varName]) {
-        const drumData = (window as any)[varName];
-        this.player.adjustPreset(this.audioContext, drumData);
-        this.loadedInstruments.set(key, drumData);
-        resolve();
-        return;
-      }
+    // Load the script if the preset variable isn't on window yet
+    if (!(window as any)[varName]) {
+      await new Promise<void>((resolve) => {
+        const script = document.createElement('script');
+        script.src = `https://surikov.github.io/webaudiofontdata/sound/${preset.file}.js`;
+        script.onload = () => resolve();
+        script.onerror = () => {
+          console.warn(`Failed to load drum note ${midiNote}`);
+          resolve();
+        };
+        document.head.appendChild(script);
+      });
+    }
 
-      const script = document.createElement('script');
-      script.src = `https://surikov.github.io/webaudiofontdata/sound/${preset.file}.js`;
-      script.onload = () => {
-        const drumData = (window as any)[varName];
-        if (drumData) {
-          this.player.adjustPreset(this.audioContext, drumData);
-          this.loadedInstruments.set(key, drumData);
+    const drumData = (window as any)[varName];
+    if (drumData) {
+      // Save zone.file refs before adjustPreset clears them (zone.file=null)
+      const savedFiles = drumData.zones?.map((z: any) => z.file) ?? [];
+      this.player.adjustPreset(this.audioContext, drumData);
+      // Restore zone.file for zones whose async decode hasn't finished
+      if (drumData.zones) {
+        for (let i = 0; i < drumData.zones.length; i++) {
+          if (!drumData.zones[i].buffer && !drumData.zones[i].file && savedFiles[i]) {
+            drumData.zones[i].file = savedFiles[i];
+          }
         }
-        resolve();
-      };
-      script.onerror = () => {
-        console.warn(`Failed to load drum note ${midiNote}`);
-        resolve();
-      };
-      document.head.appendChild(script);
-    });
+      }
+      this.loadedInstruments.set(key, drumData);
+      await this.awaitZoneBuffers(drumData);
+    }
+  }
+
+  async renderToBuffer(): Promise<AudioBuffer> {
+    if (!this.audioContext || !this.player || this.events.length === 0) {
+      throw new Error('Must call loadScore() before renderToBuffer()');
+    }
+
+    // All zone.file presets are guaranteed decoded by loadInstrument/loadDrumNote.
+
+    const sampleRate = this.audioContext.sampleRate;
+    const length = Math.ceil(this.duration * sampleRate) + sampleRate * 2; // +2s padding for release tails
+    const offlineCtx = new OfflineAudioContext(2, length, sampleRate);
+
+    const gainNode = offlineCtx.createGain();
+    // Use gain=1.0 here — volume is applied by masterGain during real-time playback
+    gainNode.gain.value = 1.0;
+    gainNode.connect(offlineCtx.destination);
+
+    // Temporarily disable WebAudioFont's resumeContext during offline rendering.
+    // It calls console.log + audioContext.resume() for every note when state is
+    // 'suspended' (which OfflineAudioContext always is before startRendering).
+    const originalResumeContext = this.player.resumeContext;
+    this.player.resumeContext = () => {};
+
+    // Queue all notes at once
+    for (const event of this.events) {
+      const preset = this.getPresetForEvent(event);
+      if (preset) {
+        this.player.queueWaveTable(
+          offlineCtx,
+          gainNode,
+          preset,
+          event.time,
+          event.midi,
+          event.duration,
+          event.velocity
+        );
+      }
+    }
+
+    // Restore resumeContext for real-time playback
+    this.player.resumeContext = originalResumeContext;
+
+    this.renderedBuffer = await offlineCtx.startRendering();
+    return this.renderedBuffer;
+  }
+
+  clearRenderedBuffer(): void {
+    this.renderedBuffer = null;
+    if (this.bufferSource) {
+      try { this.bufferSource.stop(); } catch (e) { /* ignore */ }
+      this.bufferSource = null;
+    }
   }
 
   private getPresetForEvent(event: NoteEvent): any {
@@ -444,6 +536,13 @@ export class WebAudioFontPlayer {
       this.audioContext.resume();
     }
 
+    // Buffer mode: play pre-rendered buffer
+    if (this.renderedBuffer) {
+      this.playBuffer();
+      return;
+    }
+
+    // Fallback: real-time scheduling
     this.isPlaying = true;
     this.isPaused = false;
 
@@ -467,6 +566,31 @@ export class WebAudioFontPlayer {
     this.scheduleIntervalId = window.setInterval(() => {
       this.scheduleNextBatch();
     }, 300);
+  }
+
+  private playBuffer(): void {
+    if (!this.audioContext || !this.renderedBuffer || !this.masterGain) return;
+
+    this.bufferSource = this.audioContext.createBufferSource();
+    this.bufferSource.buffer = this.renderedBuffer;
+    this.bufferSource.connect(this.masterGain);
+
+    const offset = this.pauseTime;
+    this.startTime = this.audioContext.currentTime - offset;
+
+    this.bufferSource.onended = () => {
+      // Only mark as stopped if we weren't explicitly paused/stopped
+      if (this.isPlaying) {
+        this.isPlaying = false;
+        this.isPaused = false;
+        this.pauseTime = 0;
+        this.bufferSource = null;
+      }
+    };
+
+    this.isPlaying = true;
+    this.isPaused = false;
+    this.bufferSource.start(0, offset);
   }
 
   // 分批排程音符（只排程接下來幾秒的音符）
@@ -556,10 +680,15 @@ export class WebAudioFontPlayer {
     this.isPlaying = false;
     this.isPaused = true;
 
-    // 停止排程
-    this.stopScheduling();
+    // Buffer mode
+    if (this.bufferSource) {
+      try { this.bufferSource.stop(); } catch (e) { /* ignore */ }
+      this.bufferSource = null;
+      return;
+    }
 
-    // 取消所有調度的音符
+    // Fallback: real-time scheduling
+    this.stopScheduling();
     this.cancelAllNotes();
   }
 
@@ -571,9 +700,15 @@ export class WebAudioFontPlayer {
     this.pauseTime = 0;
     this.nextEventIndex = 0;
 
-    // 停止排程
-    this.stopScheduling();
+    // Buffer mode
+    if (this.bufferSource) {
+      try { this.bufferSource.stop(); } catch (e) { /* ignore */ }
+      this.bufferSource = null;
+      // Don't clear renderedBuffer — keep it for next play
+    }
 
+    // Fallback: real-time scheduling
+    this.stopScheduling();
     this.cancelAllNotes();
   }
 
@@ -617,6 +752,8 @@ export class WebAudioFontPlayer {
 
   dispose(): void {
     this.stop();
+    this.renderedBuffer = null;
+    this.bufferSource = null;
 
     if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close();

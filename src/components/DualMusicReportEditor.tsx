@@ -2,6 +2,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import MusicEmbed from './MusicEmbed';
 import { BEAT_PRESETS, getPresetsForTimeSignature, injectDrumPartToMusicXML, convertPresetToDrumLooperPattern } from '../utils/beatPresets';
+import { transposeMusicXML } from '../utils/musicXmlTranspose';
+import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS } from '../config/musicCreativeConstants';
 
 // 可選樂器列表與 MIDI program number 對照 (General MIDI)
 const INSTRUMENTS = [
@@ -216,6 +218,15 @@ export interface DualMusicReportParams {
     drum_volume?: number;   // 鼓聲音量 0-100
     beat?: string; // 節奏預設 ID
     auto_beam?: boolean; // 自動連結音符
+    // 創意平台欄位（顯示用，不可編輯）
+    musicType?: string;
+    recordingTime?: number;
+    keyCenter?: string;
+    keyType?: string;
+    melodyPattern?: number;
+    genre?: string;
+    brainwaveFrequency?: number | null;
+    natureSound?: string;
 }
 
 interface DualMusicReportEditorProps {
@@ -314,6 +325,11 @@ function applyParamsToMusicXML(musicXML: string, params: DualMusicReportParams):
             }
             volumeElem.textContent = midiVolume.toString();
         }
+    }
+
+    // ── 音中心轉調 ────────────────────────────────────────
+    if (params.keyCenter && params.keyType) {
+        transposeMusicXML(xmlDoc, params.keyCenter, params.keyType);
     }
 
     return serializer.serializeToString(xmlDoc);
@@ -475,8 +491,14 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                                     value={editParams.time_signature ?? '4/4'}
                                     onChange={(e) => handleParamChange('time_signature', e.target.value)}
                                 >
+                                    <option value="2/4">2/4</option>
+                                    <option value="3/4">3/4</option>
+                                    <option value="3/8">3/8</option>
                                     <option value="4/4">4/4</option>
+                                    <option value="4/8">4/8</option>
                                     <option value="6/8">6/8</option>
+                                    <option value="8/16">8/16</option>
+                                    <option value="12/16">12/16</option>
                                 </select>
                             </div>
                         </div>
@@ -648,6 +670,83 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                                 </span>
                             </div>
                         </div>
+                        {/* 創意平台參數（僅在有相關參數時顯示） */}
+                        {appliedParams.musicType && (
+                            <>
+                                <div className="divider my-3 text-xs text-base-content/50">創意平台參數</div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <span className="text-base-content/60">音樂類型：</span>
+                                        <span className="font-medium">
+                                            {appliedParams.musicType === 'emotion' ? '情緒音樂' : '心靈音樂'}
+                                        </span>
+                                    </div>
+                                    {appliedParams.recordingTime != null && (
+                                        <div>
+                                            <span className="text-base-content/60">紀錄時間：</span>
+                                            <span className="font-medium">{appliedParams.recordingTime} 分鐘</span>
+                                        </div>
+                                    )}
+                                    {appliedParams.keyCenter && (
+                                        <div>
+                                            <span className="text-base-content/60">音中心：</span>
+                                            <span className="font-medium">
+                                                {(() => {
+                                                    const isMinor = appliedParams.keyType === 'minor';
+                                                    const keys = isMinor ? KEY_CENTERS.minor : KEY_CENTERS.major;
+                                                    const found = [...keys].find(k => k.value === appliedParams.keyCenter);
+                                                    return found?.label || `${appliedParams.keyCenter} ${isMinor ? '小調' : '大調'}`;
+                                                })()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {appliedParams.melodyPattern != null && (
+                                        <div>
+                                            <span className="text-base-content/60">主旋律：</span>
+                                            <span className="font-medium">
+                                                {(() => {
+                                                    const pattern = MELODY_PATTERNS.find(m => m.id === appliedParams.melodyPattern);
+                                                    return pattern
+                                                        ? `主旋律 ${pattern.id}（${pattern.timeSignature}）`
+                                                        : `主旋律 ${appliedParams.melodyPattern}`;
+                                                })()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {appliedParams.genre && (
+                                        <div>
+                                            <span className="text-base-content/60">曲風：</span>
+                                            <span className="font-medium">
+                                                {(() => {
+                                                    const g = GENRES.find(g => g.id === appliedParams.genre);
+                                                    return g ? `${g.nameZh}（${g.nameEn}）` : appliedParams.genre;
+                                                })()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <span className="text-base-content/60">腦波背景頻率：</span>
+                                        <span className="font-medium">
+                                            {(() => {
+                                                if (appliedParams.brainwaveFrequency == null) return '不使用';
+                                                const bf = BRAINWAVE_FREQUENCIES.find(b => b.value === appliedParams.brainwaveFrequency);
+                                                return bf ? `${bf.label}（${bf.description}）` : `${appliedParams.brainwaveFrequency} Hz`;
+                                            })()}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-base-content/60">自然音效：</span>
+                                        <span className="font-medium">
+                                            {(() => {
+                                                if (!appliedParams.natureSound) return '不使用';
+                                                const ns = NATURE_SOUNDS.find(n => n.value === appliedParams.natureSound);
+                                                return ns?.label || appliedParams.natureSound;
+                                            })()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </>
                 )}
             </div>

@@ -3,6 +3,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import MusicEmbed from './MusicEmbed';
 import { BEAT_PRESETS, getPresetsForTimeSignature, injectDrumPartToMusicXML, convertPresetToDrumLooperPattern } from '../utils/beatPresets';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS } from '../config/musicCreativeConstants';
+import { transposeMusicXML } from '../utils/musicXmlTranspose';
 
 // 可選樂器列表與 MIDI program number 對照 (General MIDI)
 const INSTRUMENTS = [
@@ -301,6 +302,11 @@ function applyParamsToMusicXML(musicXML: string, params: MusicReportParams): str
             }
             volumeElem.textContent = midiVolume.toString();
         }
+    }
+
+    // ── 音中心轉調 ────────────────────────────────────────
+    if (params.keyCenter && params.keyType) {
+        transposeMusicXML(xmlDoc, params.keyCenter, params.keyType);
     }
 
     return serializer.serializeToString(xmlDoc);
