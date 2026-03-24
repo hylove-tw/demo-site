@@ -27,6 +27,7 @@ export interface StemMixerProps {
     defaultVolumes?: { [key: string]: number | undefined };
     availableBrainwaves?: StemOption[];
     availableBackgrounds?: StemOption[];
+    isExporting?: boolean;
     onDownload: (config: MixDownloadConfig) => void;
 }
 
@@ -43,6 +44,7 @@ export function StemMixer({
     defaultVolumes,
     availableBrainwaves = [],
     availableBackgrounds = [],
+    isExporting = false,
     onDownload,
 }: StemMixerProps) {
     const fixedNames = Object.keys(stemUrls);
@@ -492,8 +494,14 @@ export function StemMixer({
                 })()}
             </div>
 
-            <button className="btn btn-sm btn-primary w-full" onClick={handleDownload}>
-                套用音量並重新下載 MP3
+            <button
+                className="btn btn-sm btn-primary w-full"
+                onClick={handleDownload}
+                disabled={isExporting}
+            >
+                {isExporting
+                    ? <><span className="loading loading-spinner loading-xs" />輸出中...</>
+                    : '輸出混音結果'}
             </button>
         </div>
     );

@@ -394,6 +394,8 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
 
     // stable ref so handleToolbarPlay doesn't depend on handleExportMp3 declaration order
     const exportMp3Ref = useRef<((config?: MixDownloadConfig) => void) | null>(null);
+    // tracks whether the current export was triggered from the mixer (for auto-download)
+    const mixerExportRef = useRef(false);
 
     // 工具列：播放 MP3
     // isReady 保證 downloadUrl 已存在，直接呼叫 play()（在用戶手勢 call stack 內）
@@ -483,6 +485,17 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         abortRef.current = controller;
         const volumes = mixConfig?.volumes;
         if (volumes) setStemVolumes(volumes as StemVolumes);
+
+        // Map mixer stemKey volumes (e.g. "brainwave_7.83", "background_ocean")
+        // back to the StemVolumes keys ("brainwave", "background") that the service expects
+        const bwFreq  = mixConfig?.brainwaves?.[0];
+        const bgSound = mixConfig?.backgrounds?.[0];
+        const resolvedVolumes: StemVolumes = {
+            ...(volumes ?? stemVolumes) as StemVolumes,
+            brainwave:  bwFreq  ? (volumes?.[`brainwave_${bwFreq}`]  ?? -15) : (stemVolumes?.brainwave  ?? -15),
+            background: bgSound ? (volumes?.[`background_${bgSound}`] ?? -15) : (stemVolumes?.background ?? -15),
+        };
+
         try {
             await exportMp3(
                 {
@@ -502,11 +515,11 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                     melodyPattern:       appliedParams.melodyPattern,
                     genre:               appliedParams.genre,
                     // Mixer selection overrides applied params for brainwave/background (use first selected)
-                    brainwaveFrequency:  mixConfig?.brainwaves?.length
-                        ? Number(mixConfig.brainwaves[0])
+                    brainwaveFrequency:  bwFreq != null
+                        ? Number(bwFreq)
                         : appliedParams.brainwaveFrequency,
-                    natureSound:         mixConfig?.backgrounds?.[0] ?? appliedParams.natureSound,
-                    stemVolumes:         (volumes ?? stemVolumes) as StemVolumes,
+                    natureSound:         bgSound ?? appliedParams.natureSound,
+                    stemVolumes:         resolvedVolumes,
                 },
                 setExportState,
                 controller.signal,
@@ -528,6 +541,22 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         handleExportMp3();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [canGenerateMp3]);
+
+    // 混音器輸出完成後自動下載
+    useEffect(() => {
+        if (!mixerExportRef.current) return;
+        if (exportState.status === 'completed' && exportState.downloadUrl) {
+            mixerExportRef.current = false;
+            const a = document.createElement('a');
+            a.href = exportState.downloadUrl;
+            a.download = '';
+            a.click();
+        } else if (exportState.status === 'failed') {
+            mixerExportRef.current = false;
+        }
+    }, [exportState.status, exportState.downloadUrl]);
+
+    const isMixerExporting = exportState.status === 'pending' || exportState.status === 'processing';
 
     const renderInstrumentSelect = (field: 'p1' | 'p2' | 'p3', label: string) => (
         <div className="form-control">
@@ -1028,7 +1057,9 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                             value: n.value,
                             label: n.label,
                         }))}
+                        isExporting={isMixerExporting}
                         onDownload={config => {
+                            mixerExportRef.current = true;
                             mp3AutoStarted.current = false;
                             setExportState({ status: 'idle' });
                             handleExportMp3(config);
