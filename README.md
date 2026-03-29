@@ -44,7 +44,7 @@
   └── Cloudflare (HTTPS)
         └── VPS nginx (172.105.230.72)
               ├── /api/v1/, /api/v2/   → Rails API (Passenger)
-              ├── /api/music-gen/v1/   → music-gen (Python/FastAPI, port 8001)
+              ├── /api/music-gen/      → music-gen (Python/FastAPI, port 8001)
               ├── /assets/             → 靜態資源（長期快取）
               └── /*                  → React SPA (public/index.html)
 ```
@@ -55,25 +55,19 @@
 |------|------|------|
 | 前端 | React 19 (靜態檔案) | `/` |
 | 分析 API | Ruby on Rails + Passenger | `/api/v1/`, `/api/v2/` |
-| 音樂生成 | Python FastAPI + FluidSynth | `/api/music-gen/v1/` |
+| 音樂生成 | Python FastAPI + FluidSynth | `/api/music-gen/api/v1/` |
 
 ### 環境變數
 
-所有 API 均在同一 origin，使用相對路徑（無需設定環境變數）：
-
-| 變數 | 正式值 | 說明 |
-|------|--------|------|
-| `REACT_APP_ANALYSIS_API_BASE` | `/` | 分析 API 根路徑 |
-| `REACT_APP_MUSIC_GEN_URL` | `/api/music-gen` | 音樂生成 API |
-| `REACT_APP_MUSIC_APP_ID` | `638abd901bbf6ba1bb99d620` | 應用程式 ID |
-
-本機開發時在 `.env` 覆寫（`.env` 已加入 `.gitignore`）：
+環境變數在 build 時從 `.env` 讀取（`.env` 已加入 `.gitignore`，不進版控）：
 
 ```env
 REACT_APP_ANALYSIS_API_BASE=https://hylove-demo.good-nas.cc
 REACT_APP_MUSIC_GEN_URL=https://hylove-demo.good-nas.cc/api/music-gen
 REACT_APP_MUSIC_APP_ID=638abd901bbf6ba1bb99d620
 ```
+
+> **注意**：`npm run build:vps` 使用 `PUBLIC_URL=/` 覆蓋資源路徑基底，但 API URL 仍從 `.env` 讀取。本機開發（`npm start）需要 `.env` 中的完整網址才能呼叫遠端 API。
 
 ## 開發指令
 
