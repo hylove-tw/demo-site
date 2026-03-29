@@ -1,7 +1,7 @@
 // src/components/DualMusicReportEditor.tsx
-import React, { useState, useCallback, useMemo } from 'react';
-import MusicEmbed from './MusicEmbed';
-import { BEAT_PRESETS, getPresetsForTimeSignature, injectDrumPartToMusicXML, convertPresetToDrumLooperPattern } from '../utils/beatPresets';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { renderScore, resolveRhythmPreset } from '../services/musicGenService';
+import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS } from '../config/musicCreativeConstants';
 
@@ -347,17 +347,9 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     // 是否處於編輯模式
     const [isEditing, setIsEditing] = useState(false);
 
-    // 計算處理後的 MusicXML
+    // 計算處理後的 MusicXML（僅旋律聲部；鼓聲部由伺服器端在 render-score 時注入）
     const processedXML = useMemo(() => {
         let xml = applyParamsToMusicXML(musicXML, appliedParams);
-        // 注入節奏聲部（僅用於顯示樂譜，播放由 DrumLooper 處理）
-        if (appliedParams.beat && appliedParams.beat !== 'none') {
-            const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
-            if (beatPreset) {
-                const drumVolume = appliedParams.drum_volume ?? 80;
-                xml = injectDrumPartToMusicXML(xml, beatPreset, drumVolume);
-            }
-        }
         // 自動連結音符（八分音符及更短）
         if (appliedParams.auto_beam) {
             xml = addAutoBeamToMusicXML(xml, appliedParams.time_signature || '4/4');
@@ -365,17 +357,33 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         return xml;
     }, [musicXML, appliedParams]);
 
-    // 計算 DrumLooper 用的節奏模式（循環播放，更省記憶體）
-    const drumPattern = useMemo(() => {
-        if (!appliedParams.beat || appliedParams.beat === 'none') {
-            return undefined;
-        }
-        const beatPreset = BEAT_PRESETS.find(b => b.id === appliedParams.beat);
-        if (!beatPreset) return undefined;
+    // 伺服器端樂譜渲染（Verovio SVG）
+    const [scorePages, setScorePages] = useState<string[] | null>(null);
+    const [scoreLoading, setScoreLoading] = useState(false);
+    const scoreAbortRef = useRef<AbortController | null>(null);
 
-        const bpm = appliedParams.bpm || 60;
-        return convertPresetToDrumLooperPattern(beatPreset, bpm);
-    }, [appliedParams.beat, appliedParams.bpm]);
+    useEffect(() => {
+        scoreAbortRef.current?.abort();
+        const controller = new AbortController();
+        scoreAbortRef.current = controller;
+        setScoreLoading(true);
+        const timer = setTimeout(async () => {
+            try {
+                const beatPreset = resolveRhythmPreset(appliedParams.beat, appliedParams.time_signature || '4/4');
+                const pages = await renderScore(processedXML, { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
+                setScorePages(pages);
+            } catch (err: any) {
+                if (err?.name !== 'AbortError') setScorePages(null);
+            } finally {
+                setScoreLoading(false);
+            }
+        }, 800);
+        return () => {
+            clearTimeout(timer);
+            controller.abort();
+            setScoreLoading(false);
+        };
+    }, [processedXML, appliedParams.beat, appliedParams.time_signature]);
 
     // 根據拍號過濾可用的節奏預設
     const availableBeatPresets = useMemo(() => {
@@ -752,7 +760,25 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
             </div>
 
             {/* 樂譜顯示 */}
-            <MusicEmbed musicXML={processedXML} height="600px" drumPattern={drumPattern || undefined} />
+            <div className="overflow-x-auto" style={{ minHeight: '300px' }}>
+                    {(scoreLoading || !scorePages) && (
+                        <div className="flex items-center justify-center py-10 text-base-content/50 gap-2">
+                            <span className="loading loading-spinner loading-sm"></span>
+                            <span className="text-sm">渲染樂譜中…</span>
+                        </div>
+                    )}
+                    {!scoreLoading && scorePages && (
+                        <div style={{ width: '100%', padding: '12px 16px 16px' }}>
+                            <style>{`
+                                .verovio-score svg { width: 100% !important; height: auto !important; display: block; }
+                            `}</style>
+                            {scorePages.map((svg, i) => (
+                                <div key={i} className="verovio-score w-full"
+                                     dangerouslySetInnerHTML={{ __html: svg }} />
+                            ))}
+                        </div>
+                    )}
+                </div>
 
             {/* 提示資訊 */}
             <div className="mt-4 p-3 bg-base-200 rounded-lg text-sm text-text-secondary">

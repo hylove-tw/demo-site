@@ -26,12 +26,19 @@ export interface MusicReportCustomParams {
 
 /**
  * renderBrainWaveMusicReport:
- * 使用 MusicReportEditor 組件顯示可編輯的樂譜報告
+ * 使用 MusicReportEditor 組件顯示可編輯的樂譜報告。
+ * result 可以是純 MusicXML 字串，或由 musicAnalysisCreative 回傳的物件
+ * { musicXML, _beforeBrainData, _afterBrainData }。
  */
 export const renderBrainWaveMusicReport = (
-    musicXML: string,
+    result: string | { musicXML: string; _beforeBrainData?: any; _afterBrainData?: any },
     customParams?: MusicReportCustomParams
 ): React.ReactNode => {
+    const musicXML = typeof result === 'string' ? result : result.musicXML;
+    const brainData = typeof result === 'object' && result._beforeBrainData != null
+        ? { before: result._beforeBrainData, after: result._afterBrainData }
+        : undefined;
+
     const initialParams: MusicReportParams = {
         title: customParams?.title || '未命名的樂譜',
         bpm: customParams?.bpm || 60,
@@ -61,10 +68,16 @@ export const renderBrainWaveMusicReport = (
         }
     }
 
+    // 若 beat 仍未設定，依拍號給預設值（與後端 resolveRhythmPreset 的 fallback 一致）
+    if (!initialParams.beat) {
+        initialParams.beat = (initialParams.time_signature || '4/4') === '3/4' ? 'waltz' : 'pop';
+    }
+
     return (
         <MusicReportEditor
             musicXML={musicXML}
             initialParams={initialParams}
+            brainData={brainData}
         />
     );
 };
@@ -136,6 +149,11 @@ export const renderDualMusicReportCreative = (
                 initialParams.beat = beatId;
             }
         }
+    }
+
+    // 若 beat 仍未設定，依拍號給預設值
+    if (!initialParams.beat) {
+        initialParams.beat = (initialParams.time_signature || '4/4') === '3/4' ? 'waltz' : 'pop';
     }
 
     return (

@@ -230,7 +230,9 @@ export async function musicAnalysisCreative(
     brainwaveFrequency: customParams?.brainwaveFrequency ?? null,
     natureSound: customParams?.natureSound || '',
   };
-  return post('/api/v2/music', payload);
+  const musicXML = await post('/api/v2/music', payload);
+  // Attach brain data so MusicReportEditor can call the music-gen export API
+  return { musicXML, _beforeBrainData: data[0], _afterBrainData: data[1] };
 }
 
 // 雙人腦波音樂創意平台：生成雙人腦波音樂譜（含創意平台參數）

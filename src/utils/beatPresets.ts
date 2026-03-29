@@ -206,12 +206,25 @@ function generateDrumMeasure(
   //   四分音符拍 (beatType=4) → beatDuration = divisions
   //   八分音符拍 (beatType=8) → beatDuration = divisions / 2
   const beatDuration = divisions * (4 / musicBeatType);
+  const [beats, beatType] = preset.timeSignature.split('/').map(Number);
+
+  // Verovio 需要每個 part 的第一小節宣告 <time>，否則無法正確分行
+  const attributesXML = measureNumber === 1 ? `
+        <attributes>
+          <divisions>${divisions}</divisions>
+          <time>
+            <beats>${beats}</beats>
+            <beat-type>${beatType}</beat-type>
+          </time>
+          <clef>
+            <sign>percussion</sign>
+          </clef>
+        </attributes>` : '';
 
   if (preset.id === 'none' || !preset.pattern.kick.length) {
-    // 空小節（休止符）
-    const [beats] = preset.timeSignature.split('/').map(Number);
     return `
       <measure number="${measureNumber}">
+        ${attributesXML}
         <note>
           <rest/>
           <duration>${beatDuration * beats}</duration>
@@ -221,17 +234,29 @@ function generateDrumMeasure(
       </measure>`;
   }
 
-  const [beats] = preset.timeSignature.split('/').map(Number);
   const totalSubdivisions = beats * preset.subdivisions;
   const durationPerSubdivision = beatDuration / preset.subdivisions;
+  const subNoteType = preset.subdivisions === 4 ? '16th' : 'eighth';
 
   let notes = '';
   let pendingRestDuration = 0;
 
+  const flushRest = () => {
+    if (pendingRestDuration <= 0) return;
+    // 用 <rest> note 取代 <forward>，Verovio 對打擊聲部的 <forward> 支援較差
+    notes += `
+        <note>
+          <rest/>
+          <duration>${pendingRestDuration}</duration>
+          <voice>1</voice>
+          <type>${subNoteType}</type>
+        </note>`;
+    pendingRestDuration = 0;
+  };
+
   for (let i = 0; i < totalSubdivisions; i++) {
     const instruments: string[] = [];
 
-    // 檢查每個打擊樂器在這個細分上是否有音
     Object.entries(preset.pattern).forEach(([instrument, pattern]) => {
       if (pattern && pattern[i] && pattern[i] > 0) {
         instruments.push(instrument);
@@ -239,16 +264,9 @@ function generateDrumMeasure(
     });
 
     if (instruments.length === 0) {
-      // 累積空拍 duration（稍後以 <forward> 一次推進）
       pendingRestDuration += durationPerSubdivision;
     } else {
-      // 先 flush 累積的空拍
-      if (pendingRestDuration > 0) {
-        notes += `
-        <forward><duration>${pendingRestDuration}</duration></forward>`;
-        pendingRestDuration = 0;
-      }
-      // 生成音符（可能是和弦）
+      flushRest();
       instruments.forEach((instrument, idx) => {
         const drumInfo = DRUM_MIDI_MAP[instrument];
         if (!drumInfo) return;
@@ -261,28 +279,18 @@ function generateDrumMeasure(
           </unpitched>
           <duration>${durationPerSubdivision}</duration>
           <voice>1</voice>
-          <type>${preset.subdivisions === 4 ? '16th' : 'eighth'}</type>
+          <type>${subNoteType}</type>
           ${drumInfo.notehead ? `<notehead>${drumInfo.notehead}</notehead>` : ''}
         </note>`;
       });
     }
   }
 
-  // flush 尾端空拍
-  if (pendingRestDuration > 0) {
-    notes += `
-        <forward><duration>${pendingRestDuration}</duration></forward>`;
-  }
+  flushRest();
 
   return `
       <measure number="${measureNumber}">
-        ${measureNumber === 1 ? `
-        <attributes>
-          <divisions>${divisions}</divisions>
-          <clef>
-            <sign>percussion</sign>
-          </clef>
-        </attributes>` : ''}
+        ${attributesXML}
         ${notes}
       </measure>`;
 }
