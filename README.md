@@ -1,4 +1,4 @@
-# HyLove 腦波分析系統 v2.2
+# HyLove 腦波分析系統 v2.5
 
 提供多種腦波資料分析功能的網頁應用程式。
 
@@ -13,7 +13,7 @@
 - **歷史紀錄**：追蹤所有分析結果，支援篩選與搜尋
 
 ### 分析功能
-- **元神音**：腦波影音編碼及播放系統
+- **元神音創意平台**：腦波影音編碼、音樂生成與混音輸出
 - **雙人腦波音樂**：雙人腦波音樂譜生成
 - **亨運來**：H.R. 評估系統
 - **貞天賦**：潛能評估系統
@@ -34,7 +34,46 @@
 - DaisyUI / TailwindCSS（大地色系主題）
 - Highcharts 資料視覺化
 - OpenSheetMusicDisplay 樂譜顯示
+- Web Audio API（多軌混音、crossfade looping）
 - Playwright E2E 測試
+
+## 架構設計
+
+```
+瀏覽器
+  └── Cloudflare (HTTPS)
+        └── VPS nginx (172.105.230.72)
+              ├── /api/v1/, /api/v2/   → Rails API (Passenger)
+              ├── /api/music-gen/v1/   → music-gen (Python/FastAPI, port 8001)
+              ├── /assets/             → 靜態資源（長期快取）
+              └── /*                  → React SPA (public/index.html)
+```
+
+### 服務說明
+
+| 服務 | 技術 | 路徑 |
+|------|------|------|
+| 前端 | React 19 (靜態檔案) | `/` |
+| 分析 API | Ruby on Rails + Passenger | `/api/v1/`, `/api/v2/` |
+| 音樂生成 | Python FastAPI + FluidSynth | `/api/music-gen/v1/` |
+
+### 環境變數
+
+所有 API 均在同一 origin，使用相對路徑（無需設定環境變數）：
+
+| 變數 | 正式值 | 說明 |
+|------|--------|------|
+| `REACT_APP_ANALYSIS_API_BASE` | `/` | 分析 API 根路徑 |
+| `REACT_APP_MUSIC_GEN_URL` | `/api/music-gen` | 音樂生成 API |
+| `REACT_APP_MUSIC_APP_ID` | `638abd901bbf6ba1bb99d620` | 應用程式 ID |
+
+本機開發時在 `.env` 覆寫（`.env` 已加入 `.gitignore`）：
+
+```env
+REACT_APP_ANALYSIS_API_BASE=https://hylove-demo.good-nas.cc
+REACT_APP_MUSIC_GEN_URL=https://hylove-demo.good-nas.cc/api/music-gen
+REACT_APP_MUSIC_APP_ID=638abd901bbf6ba1bb99d620
+```
 
 ## 開發指令
 
@@ -50,56 +89,28 @@ npm test
 
 # 執行 E2E 測試
 npm run test:e2e
-
-# 建置正式版本
-npm run build
 ```
 
 ## 部署
 
-### Docker 建置（多平台）
+### VPS 部署（正式環境）
 
 ```bash
-# 建立 builder（適用於 Apple Silicon）
-docker buildx create --use --name mybuilder
+# 建置（PUBLIC_URL=/ 確保路徑為根路徑）
+npm run build:vps
 
-# 登入 Docker Hub
-docker login
-
-# 建置並推送映像
-docker buildx build --platform linux/amd64,linux/arm64 \
-  -t p988744/hylove-demo:2.2 \
-  -t p988744/hylove-demo:latest . --push
+# 上傳至 VPS
+rsync -avz --delete build/ root@172.105.230.72:/home/deploy/staging_hylove/current/public/
 ```
 
-### 使用 Docker Compose 執行
+### GitHub Pages 部署（備用）
 
 ```bash
-# 建立 nginx 基本驗證檔案（選用）
-htpasswd -c ./nginx/.htpasswd admin
-export HTPASSWD_PATH=$(pwd)/nginx/.htpasswd
-
-# 使用 docker-compose 啟動
-docker compose -f docker-compose-prod.yml up -d
-```
-
-### GitHub Pages 部署
-
-```bash
+# 建置並推送至 gh-pages branch
 npm run deploy
 ```
 
-## 設定
-
-### 環境變數
-
-| 變數 | 說明 | 預設值 |
-|------|------|--------|
-| `REACT_APP_ANALYSIS_API_BASE` | 後端 API 基礎網址 | `http://localhost:3000` |
-
-### Cloudflare Tunnel 設定
-
-前往：`網路` > `Tunnels` > `設定` > `公用主機名稱`
+> GitHub Pages 網址：https://hylove-tw.github.io/demo-site
 
 ## 專案結構
 
@@ -109,11 +120,15 @@ src/
 │   ├── registry.ts     # 外掛註冊
 │   └── plugins/        # 個別分析外掛
 ├── components/         # 可重用 UI 元件
+│   ├── MusicReportEditor.tsx   # 音樂生成與混音介面
+│   └── StemMixer.tsx           # 多軌混音器（Web Audio API）
 ├── config/             # 分析方法與渲染器
 ├── context/            # React Context Provider
 ├── hooks/              # 自訂 React Hooks
 ├── pages/              # 頁面元件
-└── services/           # API 服務
+├── services/
+│   └── musicGenService.ts  # music-gen API 客戶端
+└── utils/              # 工具函式
 e2e/
 ├── fixtures/           # 測試資料與工具
 ├── helpers/            # 共用測試輔助函式

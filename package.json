@@ -39,7 +39,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "build:vps": "PUBLIC_URL=/ react-scripts build"
   },
   "eslintConfig": {
     "extends": [
