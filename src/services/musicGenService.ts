@@ -12,21 +12,23 @@ export const isMusicGenEnabled = (): boolean => Boolean(MUSIC_GEN_URL);
 
 // hylove-demo beat preset ID → music-gen YAML preset name
 const BEAT_TO_PRESET: Record<string, string> = {
-  pop:        'basic_pop',
-  rock:       'basic_pop',
-  rumba:      'rnb',
-  tango:      'bossa_nova',
+  pop:          'basic_pop',
+  rock:         'basic_pop',
+  rumba:        'rnb',
+  tango:        'bossa_nova',
   'bossa-nova': 'bossa_nova',
-  waltz:      'gentle_waltz',
-  country:    'basic_pop',
-  jazz:       'rnb',
-  reggae:     'ballad',
-  none:       'basic_pop',
+  waltz:        'compound_ballad',  // waltz API returns 6/8; pipeline auto-falls back to gentle_waltz for 3/4
+  country:      'basic_pop',
+  jazz:         'rnb',
+  reggae:       'ballad',
+  none:         'basic_pop',
 };
 
 export function resolveRhythmPreset(beatId: string | undefined, timeSignature: string): string {
   if (!beatId || beatId === 'none') {
-    return timeSignature === '3/4' ? 'gentle_waltz' : 'basic_pop';
+    if (timeSignature === '3/4') return 'gentle_waltz';
+    if (timeSignature === '6/8') return 'compound_ballad';
+    return 'basic_pop';
   }
   return BEAT_TO_PRESET[beatId] ?? 'basic_pop';
 }
