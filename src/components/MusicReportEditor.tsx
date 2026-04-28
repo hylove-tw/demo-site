@@ -1,7 +1,8 @@
 // src/components/MusicReportEditor.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { exportMp3, renderScore, resolveRhythmPreset, ExportState, StemVolumes } from '../services/musicGenService';
-import { StemMixer, MixDownloadConfig } from './StemMixer';
+import { exportMp3, renderScore, resolveRhythmPreset, StemVolumes } from '../services/musicGenService';
+import { StemMixer } from './StemMixer';
+import { useMp3Export } from '../hooks/useMp3Export';
 import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS } from '../config/musicCreativeConstants';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
@@ -326,12 +327,8 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     const [editParams, setEditParams] = useState<MusicReportParams>(initialParams);
     // 是否處於編輯模式
     const [isEditing, setIsEditing] = useState(false);
-    // 匯出 MP3 狀態
-    const [exportState, setExportState] = useState<ExportState>({ status: 'idle' });
-    const [stemVolumes, setStemVolumes] = useState<StemVolumes>({});
     // 樂譜 Modal
     const [scoreOpen, setScoreOpen] = useState(false);
-    const abortRef = useRef<AbortController | null>(null);
 
     // 伺服器端樂譜渲染（Verovio SVG）
     const [scorePages, setScorePages]   = useState<string[] | null>(null);
@@ -342,17 +339,65 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     const audioRef        = useRef<HTMLAudioElement>(null);
     const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
+    // Stable refs so doExport (called by the hook) sees current values
+    const appliedParamsRef = useRef<MusicReportParams>(initialParams);
+    appliedParamsRef.current = appliedParams;
+    const brainDataRef = useRef(brainData);
+    brainDataRef.current = brainData;
+
     // 是否需要等 MP3（有腦波資料 + music-gen 啟用時才等）
     const canGenerateMp3 = !!brainData;
+
+    const { exportState, setExportState, stemVolumes, isMixerExporting, runMixerExport, runSilentExport } =
+        useMp3Export<StemVolumes>({
+            canGenerate: canGenerateMp3,
+            doExport: async (config, signal) => {
+                const params = appliedParamsRef.current;
+                const bd = brainDataRef.current;
+                if (!bd) return;
+                const volumes = config?.volumes;
+                // Map mixer stemKey volumes (e.g. "brainwave_7.83", "background_ocean")
+                // back to canonical "brainwave" / "background" keys the service expects.
+                const bwFreq  = config?.brainwaves?.[0];
+                const bgSound = config?.backgrounds?.[0];
+                const resolvedVolumes: StemVolumes = {
+                    ...(volumes ?? {}) as StemVolumes,
+                    brainwave:  bwFreq  ? (volumes?.[`brainwave_${bwFreq}`]  ?? -15) : ((volumes as any)?.brainwave  ?? -15),
+                    background: bgSound ? (volumes?.[`background_${bgSound}`] ?? -15) : ((volumes as any)?.background ?? -15),
+                };
+                await exportMp3(
+                    {
+                        title:               params.title,
+                        bpm:                 params.bpm,
+                        time_signature:      params.time_signature,
+                        p1:                  params.p1,
+                        p2:                  params.p2,
+                        p3:                  params.p3,
+                        beat:                params.beat,
+                        beforeBrainData:     bd.before,
+                        afterBrainData:      bd.after,
+                        musicType:           params.musicType,
+                        recordingTime:       params.recordingTime,
+                        keyCenter:           params.keyCenter,
+                        keyType:             params.keyType,
+                        melodyPattern:       params.melodyPattern,
+                        genre:               params.genre,
+                        brainwaveFrequency:  bwFreq != null ? Number(bwFreq) : params.brainwaveFrequency,
+                        natureSound:         bgSound ?? params.natureSound,
+                        stemVolumes:         resolvedVolumes,
+                    },
+                    setExportState,
+                    signal,
+                );
+            },
+        });
+
     // Ready = 樂譜已渲染，且（不需要 MP3，或 MP3 已完成且 URL 存在）
     // failed 不算 ready，避免點播放後重新觸發生成使畫面倒退回 loading
     const isReady = !!scorePages && (
         !canGenerateMp3 ||
         (exportState.status === 'completed' && !!exportState.downloadUrl)
     );
-
-    // 自動開始 MP3 生成（只觸發一次）
-    const mp3AutoStarted = useRef(false);
 
     // 計算處理後的 MusicXML（僅旋律聲部；鼓聲部由伺服器端在 render-score 時注入）
     const processedXML = useMemo(() => {
@@ -391,11 +436,6 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
             setScoreLoading(false);
         };
     }, [processedXML]);
-
-    // stable ref so handleToolbarPlay doesn't depend on handleExportMp3 declaration order
-    const exportMp3Ref = useRef<((config?: MixDownloadConfig) => void) | null>(null);
-    // tracks whether the current export was triggered from the mixer (for auto-download)
-    const mixerExportRef = useRef(false);
 
     // 工具列：播放 MP3
     // isReady 保證 downloadUrl 已存在，直接呼叫 play()（在用戶手勢 call stack 內）
@@ -476,87 +516,6 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         setEditParams(appliedParams);
         setIsEditing(true);
     }, [appliedParams]);
-
-    // 匯出高品質 MP3（可傳入混音器設定，用於「套用並重新下載」）
-    const handleExportMp3 = useCallback(async (mixConfig?: MixDownloadConfig) => {
-        if (!brainData) return;
-        abortRef.current?.abort();
-        const controller = new AbortController();
-        abortRef.current = controller;
-        const volumes = mixConfig?.volumes;
-        if (volumes) setStemVolumes(volumes as StemVolumes);
-
-        // Map mixer stemKey volumes (e.g. "brainwave_7.83", "background_ocean")
-        // back to the StemVolumes keys ("brainwave", "background") that the service expects
-        const bwFreq  = mixConfig?.brainwaves?.[0];
-        const bgSound = mixConfig?.backgrounds?.[0];
-        const resolvedVolumes: StemVolumes = {
-            ...(volumes ?? stemVolumes) as StemVolumes,
-            brainwave:  bwFreq  ? (volumes?.[`brainwave_${bwFreq}`]  ?? -15) : (stemVolumes?.brainwave  ?? -15),
-            background: bgSound ? (volumes?.[`background_${bgSound}`] ?? -15) : (stemVolumes?.background ?? -15),
-        };
-
-        try {
-            await exportMp3(
-                {
-                    title:               appliedParams.title,
-                    bpm:                 appliedParams.bpm,
-                    time_signature:      appliedParams.time_signature,
-                    p1:                  appliedParams.p1,
-                    p2:                  appliedParams.p2,
-                    p3:                  appliedParams.p3,
-                    beat:                appliedParams.beat,
-                    beforeBrainData:     brainData.before,
-                    afterBrainData:      brainData.after,
-                    musicType:           appliedParams.musicType,
-                    recordingTime:       appliedParams.recordingTime,
-                    keyCenter:           appliedParams.keyCenter,
-                    keyType:             appliedParams.keyType,
-                    melodyPattern:       appliedParams.melodyPattern,
-                    genre:               appliedParams.genre,
-                    // Mixer selection overrides applied params for brainwave/background (use first selected)
-                    brainwaveFrequency:  bwFreq != null
-                        ? Number(bwFreq)
-                        : appliedParams.brainwaveFrequency,
-                    natureSound:         bgSound ?? appliedParams.natureSound,
-                    stemVolumes:         resolvedVolumes,
-                },
-                setExportState,
-                controller.signal,
-            );
-        } catch (err: any) {
-            if (err?.name !== 'AbortError') {
-                setExportState({ status: 'failed', error: err?.message || '匯出失敗' });
-            }
-        }
-    }, [brainData, appliedParams, stemVolumes]);
-
-    // keep stable ref in sync so handleToolbarPlay can call it without ordering issues
-    exportMp3Ref.current = handleExportMp3;
-
-    // 自動觸發 MP3 生成（mount 後只執行一次）
-    useEffect(() => {
-        if (!canGenerateMp3 || mp3AutoStarted.current) return;
-        mp3AutoStarted.current = true;
-        handleExportMp3();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [canGenerateMp3]);
-
-    // 混音器輸出完成後自動下載
-    useEffect(() => {
-        if (!mixerExportRef.current) return;
-        if (exportState.status === 'completed' && exportState.downloadUrl) {
-            mixerExportRef.current = false;
-            const a = document.createElement('a');
-            a.href = exportState.downloadUrl;
-            a.download = '';
-            a.click();
-        } else if (exportState.status === 'failed') {
-            mixerExportRef.current = false;
-        }
-    }, [exportState.status, exportState.downloadUrl]);
-
-    const isMixerExporting = exportState.status === 'pending' || exportState.status === 'processing';
 
     const renderInstrumentSelect = (field: 'p1' | 'p2' | 'p3', label: string) => (
         <div className="form-control">
@@ -910,7 +869,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                                             ? <>
                                                 <span className="text-error">✗ MP3 合成失敗：{exportState.error}</span>
                                                 <button className="btn btn-outline btn-error btn-xs"
-                                                    onClick={() => { mp3AutoStarted.current = false; setExportState({ status: 'idle' }); }}>
+                                                    onClick={() => { setExportState({ status: 'idle' }); runSilentExport(); }}>
                                                     重試
                                                 </button>
                                               </>
@@ -966,9 +925,9 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                         ) : (
                             <button
                                 className="btn btn-outline btn-sm gap-1"
-                                onClick={() => handleExportMp3()}
-                                disabled={!brainData || exportState.status === 'pending' || exportState.status === 'processing'}
-                                title={brainData ? '生成並下載 MP3' : '需要腦波資料才能生成 MP3'}
+                                onClick={() => runSilentExport()}
+                                disabled={!canGenerateMp3 || isMixerExporting}
+                                title={canGenerateMp3 ? '生成並下載 MP3' : '需要腦波資料才能生成 MP3'}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" /></svg>
                                 音樂下載
@@ -1059,10 +1018,8 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                         }))}
                         isExporting={isMixerExporting}
                         onDownload={config => {
-                            mixerExportRef.current = true;
-                            mp3AutoStarted.current = false;
                             setExportState({ status: 'idle' });
-                            handleExportMp3(config);
+                            runMixerExport(config);
                         }}
                     />
                 </div>
@@ -1074,9 +1031,9 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                     <button
                         className="btn btn-ghost btn-xs text-base-content/40"
                         onClick={() => {
-                            mp3AutoStarted.current = false;
                             setExportState({ status: 'idle' });
                             setScorePages(null);
+                            runSilentExport();
                         }}
                     >
                         重新生成

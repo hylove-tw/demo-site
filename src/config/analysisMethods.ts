@@ -236,6 +236,9 @@ export async function musicAnalysisCreative(
 }
 
 // 雙人腦波音樂創意平台：生成雙人腦波音樂譜（含創意平台參數）
+// Returns { musicXML, _firstBrainData, _secondBrainData } so the report editor
+// can call music-gen's /generate-dual endpoint for MP3 export, mirroring the
+// single-mode pattern used by musicAnalysisCreative.
 export async function dualMusicAnalysisCreative(
   data: any[][],
   customParams?: Record<string, any>
@@ -268,7 +271,8 @@ export async function dualMusicAnalysisCreative(
       ...data[1],
     },
   };
-  return post('/api/v1/dualmusic', payload);
+  const musicXML = await post('/api/v1/dualmusic', payload);
+  return { musicXML, _firstBrainData: data[0], _secondBrainData: data[1] };
 }
 
 // 雙人腦波音樂：生成雙人腦波音樂譜（舊版，不含創意平台參數）

@@ -65,6 +65,42 @@ export interface MusicGenExportParams {
   stemVolumes?: StemVolumes;
 }
 
+export interface DualStemVolumes {
+  first_p1?: number;
+  first_p2?: number;
+  first_p3?: number;
+  second_p1?: number;
+  second_p2?: number;
+  second_p3?: number;
+  drums?: number;
+  brainwave?: number;
+  background?: number;
+  [key: string]: number | undefined;
+}
+
+export interface MusicGenDualExportParams {
+  title?: string;
+  bpm?: number;
+  time_signature?: string;
+  first_p1?: string;
+  first_p2?: string;
+  first_p3?: string;
+  second_p1?: string;
+  second_p2?: string;
+  second_p3?: string;
+  beat?: string;
+  firstBrainData: any;
+  secondBrainData: any;
+  musicType?: string;
+  recordingTime?: number;
+  keyCenter?: string;
+  keyType?: string;
+  genre?: string;
+  brainwaveFrequency?: number | null;
+  natureSound?: string;
+  stemVolumes?: DualStemVolumes;
+}
+
 export type ExportStatus = 'idle' | 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface ExportState {
@@ -146,9 +182,70 @@ export async function exportMp3(
     background_volume_db: params.stemVolumes?.background ?? -15,
   };
 
+  await _submitAndPoll('/api/v1/generate', payload, onStatusChange, signal);
+}
+
+/**
+ * Generate an MP3 from a dual-player brain dataset.
+ * music-gen fetches a 6-part MusicXML score from Rails /api/v1/dualmusic
+ * (using the same dual logic as 琴瑟合) and renders it through the same
+ * MP3 / brainwave / nature-sound pipeline as single mode.
+ */
+export async function exportDualMp3(
+  params: MusicGenDualExportParams,
+  onStatusChange: (state: ExportState) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (!MUSIC_GEN_URL) {
+    throw new Error('REACT_APP_MUSIC_GEN_URL is not configured');
+  }
+  const timeSignature = params.time_signature || '4/4';
+  const rhythmPreset = resolveRhythmPreset(params.beat, timeSignature);
+
+  const payload = {
+    music_api_version:    'v1',
+    title:                params.title || '未命名的樂譜',
+    bpm:                  params.bpm || 60,
+    time_signature:       timeSignature,
+    first_p1:             params.first_p1  || 'flute',
+    first_p2:             params.first_p2  || 'piano',
+    first_p3:             params.first_p3  || 'cello',
+    second_p1:            params.second_p1 || 'violin',
+    second_p2:            params.second_p2 || 'guitar',
+    second_p3:            params.second_p3 || 'bass',
+    first_brain_data:     params.firstBrainData,
+    second_brain_data:    params.secondBrainData,
+    music_type:           params.musicType || 'emotion',
+    recording_time:       params.recordingTime || 5,
+    key_center:           params.keyCenter || 'C',
+    key_type:             params.keyType || 'major',
+    genre:                params.genre || '',
+    brainwave_frequency:  params.brainwaveFrequency ?? null,
+    nature_sound:         params.natureSound || 'none',
+    rhythm_preset:        rhythmPreset,
+    first_p1_volume_db:   params.stemVolumes?.first_p1  ?? 0,
+    first_p2_volume_db:   params.stemVolumes?.first_p2  ?? 0,
+    first_p3_volume_db:   params.stemVolumes?.first_p3  ?? 0,
+    second_p1_volume_db:  params.stemVolumes?.second_p1 ?? 0,
+    second_p2_volume_db:  params.stemVolumes?.second_p2 ?? 0,
+    second_p3_volume_db:  params.stemVolumes?.second_p3 ?? 0,
+    drum_volume_db:       params.stemVolumes?.drums      ?? 0,
+    brainwave_volume_db:  params.stemVolumes?.brainwave  ?? -15,
+    background_volume_db: params.stemVolumes?.background ?? -15,
+  };
+
+  await _submitAndPoll('/api/v1/generate-dual', payload, onStatusChange, signal);
+}
+
+async function _submitAndPoll(
+  endpoint: string,
+  payload: unknown,
+  onStatusChange: (state: ExportState) => void,
+  signal?: AbortSignal,
+): Promise<void> {
   onStatusChange({ status: 'pending' });
 
-  const genResp = await fetch(`${MUSIC_GEN_URL}/api/v1/generate`, {
+  const genResp = await fetch(`${MUSIC_GEN_URL}${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -163,7 +260,6 @@ export async function exportMp3(
   const { task_id } = await genResp.json();
   onStatusChange({ status: 'processing' });
 
-  // Poll every 2 s until completed or failed
   while (true) {
     await new Promise<void>((resolve, reject) => {
       const t = setTimeout(resolve, 2000);
@@ -177,7 +273,6 @@ export async function exportMp3(
 
     if (task.status === 'completed') {
       const downloadUrl = `${MUSIC_GEN_URL}/api/v1/download/${task_id}`;
-      // Prefix relative stem URLs with MUSIC_GEN_URL
       const stemUrls: Record<string, string> | undefined = task.stem_urls
         ? Object.fromEntries(
             Object.entries(task.stem_urls as Record<string, string>).map(

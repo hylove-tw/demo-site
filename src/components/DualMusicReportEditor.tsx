@@ -1,6 +1,8 @@
 // src/components/DualMusicReportEditor.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { renderScore, resolveRhythmPreset } from '../services/musicGenService';
+import { exportDualMp3, renderScore, resolveRhythmPreset, DualStemVolumes } from '../services/musicGenService';
+import { StemMixer } from './StemMixer';
+import { useMp3Export } from '../hooks/useMp3Export';
 import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS } from '../config/musicCreativeConstants';
@@ -233,6 +235,7 @@ interface DualMusicReportEditorProps {
     musicXML: string;
     initialParams: DualMusicReportParams;
     onParamsChange?: (params: DualMusicReportParams) => void;
+    brainData?: { first: any; second: any };
 }
 
 // 套用參數到 MusicXML
@@ -339,6 +342,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     musicXML,
     initialParams,
     onParamsChange,
+    brainData,
 }) => {
     // 當前生效的參數
     const [appliedParams, setAppliedParams] = useState<DualMusicReportParams>(initialParams);
@@ -346,6 +350,64 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     const [editParams, setEditParams] = useState<DualMusicReportParams>(initialParams);
     // 是否處於編輯模式
     const [isEditing, setIsEditing] = useState(false);
+    // 樂譜 Modal
+    const [scoreOpen, setScoreOpen] = useState(false);
+
+    // 工具列音訊播放（MP3）
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+
+    // Stable refs so doExport (called inside the hook) sees current values
+    const appliedParamsRef = useRef<DualMusicReportParams>(initialParams);
+    appliedParamsRef.current = appliedParams;
+    const brainDataRef = useRef(brainData);
+    brainDataRef.current = brainData;
+
+    const canGenerateMp3 = !!brainData;
+
+    const { exportState, setExportState, stemVolumes, isMixerExporting, runMixerExport, runSilentExport } =
+        useMp3Export<DualStemVolumes>({
+            canGenerate: canGenerateMp3,
+            doExport: async (config, signal) => {
+                const params = appliedParamsRef.current;
+                const bd = brainDataRef.current;
+                if (!bd) return;
+                const volumes = config?.volumes;
+                const bwFreq  = config?.brainwaves?.[0];
+                const bgSound = config?.backgrounds?.[0];
+                const resolvedVolumes: DualStemVolumes = {
+                    ...(volumes ?? {}) as DualStemVolumes,
+                    brainwave:  bwFreq  ? (volumes?.[`brainwave_${bwFreq}`]  ?? -15) : ((volumes as any)?.brainwave  ?? -15),
+                    background: bgSound ? (volumes?.[`background_${bgSound}`] ?? -15) : ((volumes as any)?.background ?? -15),
+                };
+                await exportDualMp3(
+                    {
+                        title:               params.title,
+                        bpm:                 params.bpm,
+                        time_signature:      params.time_signature,
+                        first_p1:            params.first_p1,
+                        first_p2:            params.first_p2,
+                        first_p3:            params.first_p3,
+                        second_p1:           params.second_p1,
+                        second_p2:           params.second_p2,
+                        second_p3:           params.second_p3,
+                        beat:                params.beat,
+                        firstBrainData:      bd.first,
+                        secondBrainData:     bd.second,
+                        musicType:           params.musicType,
+                        recordingTime:       params.recordingTime,
+                        keyCenter:           params.keyCenter,
+                        keyType:             params.keyType,
+                        genre:               params.genre,
+                        brainwaveFrequency:  bwFreq != null ? Number(bwFreq) : params.brainwaveFrequency,
+                        natureSound:         bgSound ?? params.natureSound,
+                        stemVolumes:         resolvedVolumes,
+                    },
+                    setExportState,
+                    signal,
+                );
+            },
+        });
 
     // 計算處理後的 MusicXML（僅旋律聲部；鼓聲部由伺服器端在 render-score 時注入）
     const processedXML = useMemo(() => {
@@ -361,6 +423,37 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     const [scorePages, setScorePages] = useState<string[] | null>(null);
     const [scoreLoading, setScoreLoading] = useState(false);
     const scoreAbortRef = useRef<AbortController | null>(null);
+
+    // Ready = 樂譜已渲染，且（不需要 MP3，或 MP3 已完成且 URL 存在）
+    const isReady = !!scorePages && (
+        !canGenerateMp3 ||
+        (exportState.status === 'completed' && !!exportState.downloadUrl)
+    );
+
+    // 工具列：播放 MP3
+    const handleToolbarPlay = useCallback(() => {
+        audioRef.current?.play().catch(() => {/* ignore */});
+    }, []);
+
+    // 工具列：停止播放
+    const handleToolbarStop = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+    }, []);
+
+    // 工具列：下載 MusicXML
+    const downloadXml = useCallback(() => {
+        const blob = new Blob([processedXML], { type: 'application/xml' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `${appliedParams.title || 'music'}.xml`;
+        a.click();
+        URL.revokeObjectURL(url);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [processedXML, appliedParams.title]);
 
     useEffect(() => {
         scoreAbortRef.current?.abort();
@@ -384,6 +477,25 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
             setScoreLoading(false);
         };
     }, [processedXML, appliedParams.beat, appliedParams.time_signature]);
+
+    // 工具列：列印 Verovio SVG 頁面
+    const printSvgScore = useCallback(() => {
+        if (!scorePages?.length) return;
+        const win = window.open('', '_blank', 'width=800,height=600');
+        if (!win) return;
+        const svgContent = scorePages.map(svg => `<div style="margin-bottom:8px">${svg}</div>`).join('');
+        win.document.write(`<!DOCTYPE html><html><head>
+            <meta charset="UTF-8"><title>${appliedParams.title || 'music'}</title>
+            <style>
+                @page { size:A4; margin:15mm }
+                body { margin:0; padding:10mm; background:white }
+                svg { width:100% !important; height:auto !important; display:block }
+                @media print { body { padding:0 } }
+            </style></head><body>${svgContent}
+            <script>window.onload=function(){setTimeout(function(){window.print();window.close();},400)}<\/script>
+        </body></html>`);
+        win.document.close();
+    }, [scorePages, appliedParams.title]);
 
     // 根據拍號過濾可用的節奏預設
     const availableBeatPresets = useMemo(() => {
@@ -760,25 +872,199 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
             </div>
 
             {/* 樂譜顯示 */}
-            <div className="overflow-x-auto" style={{ minHeight: '300px' }}>
-                    {(scoreLoading || !scorePages) && (
-                        <div className="flex items-center justify-center py-10 text-base-content/50 gap-2">
-                            <span className="loading loading-spinner loading-sm"></span>
-                            <span className="text-sm">渲染樂譜中…</span>
+            <div className="w-full border border-base-300 rounded-lg bg-white">
+                {/* ── 統一 Loading 畫面：樂譜和 MP3 都就緒前顯示 ── */}
+                {!isReady && (
+                    <div className="flex flex-col items-center justify-center gap-4 py-16 text-base-content/60">
+                        <span className="loading loading-spinner loading-lg text-primary"></span>
+                        <div className="flex flex-col items-center gap-1 text-sm">
+                            <div className="flex items-center gap-2">
+                                {scorePages
+                                    ? <span className="text-success">✓ 樂譜已渲染</span>
+                                    : <><span className="loading loading-dots loading-xs"></span><span>渲染樂譜中…</span></>
+                                }
+                            </div>
+                            {canGenerateMp3 && (
+                                <div className="flex items-center gap-2">
+                                    {exportState.status === 'completed'
+                                        ? <span className="text-success">✓ MP3 已合成</span>
+                                        : exportState.status === 'failed'
+                                            ? <>
+                                                <span className="text-error">✗ MP3 合成失敗：{exportState.error}</span>
+                                                <button className="btn btn-outline btn-error btn-xs"
+                                                    onClick={() => { setExportState({ status: 'idle' }); runSilentExport(); }}>
+                                                    重試
+                                                </button>
+                                              </>
+                                            : <><span className="loading loading-dots loading-xs"></span>
+                                              <span>{exportState.status === 'pending' ? '建立合成任務…' : '合成 MP3 中（約 30–60 秒）…'}</span></>
+                                    }
+                                </div>
+                            )}
                         </div>
-                    )}
-                    {!scoreLoading && scorePages && (
-                        <div style={{ width: '100%', padding: '12px 16px 16px' }}>
-                            <style>{`
-                                .verovio-score svg { width: 100% !important; height: auto !important; display: block; }
-                            `}</style>
-                            {scorePages.map((svg, i) => (
-                                <div key={i} className="verovio-score w-full"
-                                     dangerouslySetInnerHTML={{ __html: svg }} />
-                            ))}
+                    </div>
+                )}
+                {/* ── 就緒後顯示完整內容 ── */}
+                {isReady && (<div className="w-full">
+                    {/* 工具列 */}
+                    <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-base-300 bg-base-100">
+                        {/* 播放 / 暫停 */}
+                        {!isAudioPlaying ? (
+                            <button
+                                className="btn btn-primary btn-sm gap-1"
+                                onClick={handleToolbarPlay}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>
+                                播放
+                            </button>
+                        ) : (
+                            <button className="btn btn-secondary btn-sm gap-1" onClick={() => audioRef.current?.pause()}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clipRule="evenodd" /></svg>暫停
+                            </button>
+                        )}
+                        <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={handleToolbarStop}
+                            disabled={!isAudioPlaying}
+                            title="停止"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" /></svg>
+                        </button>
+
+                        <div className="divider divider-horizontal mx-0"></div>
+
+                        {/* XML 下載 */}
+                        <button className="btn btn-outline btn-sm gap-1" onClick={downloadXml} title="下載 MusicXML">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                            XML
+                        </button>
+
+                        {/* 音樂下載（MP3） */}
+                        {exportState.downloadUrl ? (
+                            <a href={exportState.downloadUrl} download className="btn btn-outline btn-sm gap-1" title="下載 MP3">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" /></svg>
+                                音樂下載
+                            </a>
+                        ) : (
+                            <button
+                                className="btn btn-outline btn-sm gap-1"
+                                onClick={() => runSilentExport()}
+                                disabled={!canGenerateMp3 || isMixerExporting}
+                                title={canGenerateMp3 ? '生成並下載 MP3' : '需要腦波資料才能生成 MP3'}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" /></svg>
+                                音樂下載
+                            </button>
+                        )}
+
+                        {/* 查看樂譜 */}
+                        <button className="btn btn-outline btn-sm gap-1" onClick={() => setScoreOpen(true)} disabled={!scorePages?.length} title="查看樂譜">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" /></svg>
+                            查看樂譜
+                        </button>
+
+                        {/* 列印 */}
+                        <button className="btn btn-outline btn-sm gap-1" onClick={printSvgScore} disabled={!scorePages?.length} title="列印樂譜">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" /></svg>
+                            列印
+                        </button>
+
+                        {/* 狀態 */}
+                        <span className="text-xs text-base-content/50 ml-auto">
+                            {scoreLoading ? '渲染中…' : exportState.status === 'completed' ? '✓ MP3 已就緒' : ''}
+                        </span>
+                    </div>
+
+                    {/* 隱藏 audio 元素 */}
+                    <audio
+                        ref={audioRef}
+                        src={exportState.downloadUrl || undefined}
+                        preload="auto"
+                        onPlay={() => setIsAudioPlaying(true)}
+                        onPause={() => setIsAudioPlaying(false)}
+                        onEnded={() => setIsAudioPlaying(false)}
+                    />
+                </div>)}
+
+                {/* 樂譜 Modal */}
+                {scoreOpen && (
+                    <div className="modal modal-open">
+                        <div className="modal-box w-11/12 max-w-5xl flex flex-col" style={{ maxHeight: '90vh' }}>
+                            <div className="flex items-center justify-between mb-3 shrink-0">
+                                <h3 className="font-bold text-base">{appliedParams.title || '樂譜'}</h3>
+                                <div className="flex items-center gap-2">
+                                    <button className="btn btn-outline btn-xs gap-1" onClick={printSvgScore}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" /></svg>
+                                        列印
+                                    </button>
+                                    <button className="btn btn-sm btn-circle btn-ghost" onClick={() => setScoreOpen(false)}>✕</button>
+                                </div>
+                            </div>
+                            <div className="overflow-y-auto overflow-x-auto flex-1">
+                                <style>{`
+                                    .verovio-score svg {
+                                        width: 100% !important;
+                                        height: auto !important;
+                                        display: block;
+                                    }
+                                `}</style>
+                                {scorePages?.map((svg, i) => (
+                                    <div key={i} className="verovio-score w-full"
+                                         dangerouslySetInnerHTML={{ __html: svg }} />
+                                ))}
+                            </div>
                         </div>
-                    )}
+                        <div className="modal-backdrop" onClick={() => setScoreOpen(false)} />
+                    </div>
+                )}
+            </div>
+
+            {/* 混音器（生成完成後顯示） */}
+            {exportState.status === 'completed' && exportState.stemUrls && (
+                <div className="mt-3 px-1">
+                    <StemMixer
+                        stemUrls={exportState.stemUrls}
+                        instrumentLabels={{
+                            first_p1:  `第一・${getInstrumentLabel(appliedParams.first_p1  ?? 'flute')}`,
+                            first_p2:  `第一・${getInstrumentLabel(appliedParams.first_p2  ?? 'piano')}`,
+                            first_p3:  `第一・${getInstrumentLabel(appliedParams.first_p3  ?? 'cello')}`,
+                            second_p1: `第二・${getInstrumentLabel(appliedParams.second_p1 ?? 'violin')}`,
+                            second_p2: `第二・${getInstrumentLabel(appliedParams.second_p2 ?? 'guitar')}`,
+                            second_p3: `第二・${getInstrumentLabel(appliedParams.second_p3 ?? 'bass')}`,
+                        }}
+                        defaultVolumes={stemVolumes}
+                        availableBrainwaves={BRAINWAVE_FREQUENCIES.map(b => ({
+                            value: String(b.value),
+                            label: `${b.label} ${b.description}`,
+                        }))}
+                        availableBackgrounds={NATURE_SOUNDS.map(n => ({
+                            value: n.value,
+                            label: n.label,
+                        }))}
+                        isExporting={isMixerExporting}
+                        onDownload={config => {
+                            setExportState({ status: 'idle' });
+                            runMixerExport(config);
+                        }}
+                    />
                 </div>
+            )}
+
+            {/* 重新生成按鈕（就緒後顯示在底部） */}
+            {isReady && canGenerateMp3 && (
+                <div className="mt-2 flex justify-end px-1">
+                    <button
+                        className="btn btn-ghost btn-xs text-base-content/40"
+                        onClick={() => {
+                            setExportState({ status: 'idle' });
+                            setScorePages(null);
+                            runSilentExport();
+                        }}
+                    >
+                        重新生成
+                    </button>
+                </div>
+            )}
 
             {/* 提示資訊 */}
             <div className="mt-4 p-3 bg-base-200 rounded-lg text-sm text-text-secondary">

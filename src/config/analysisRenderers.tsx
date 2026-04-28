@@ -112,12 +112,19 @@ export const renderDualMusicReport = (
 
 /**
  * renderDualMusicReportCreative:
- * 使用 DualMusicReportEditor 組件顯示含創意平台參數的雙人樂譜報告
+ * 使用 DualMusicReportEditor 組件顯示含創意平台參數的雙人樂譜報告。
+ * result 可以是純 MusicXML 字串，或由 dualMusicAnalysisCreative 回傳的物件
+ * { musicXML, _firstBrainData, _secondBrainData }。
  */
 export const renderDualMusicReportCreative = (
-    musicXML: string,
+    result: string | { musicXML: string; _firstBrainData?: any; _secondBrainData?: any },
     customParams?: Record<string, any>
 ): React.ReactNode => {
+    const musicXML = typeof result === 'string' ? result : result.musicXML;
+    const brainData = typeof result === 'object' && result._firstBrainData != null
+        ? { first: result._firstBrainData, second: result._secondBrainData }
+        : undefined;
+
     const initialParams: DualMusicReportParams = {
         title: customParams?.title || '未命名的樂譜',
         bpm: customParams?.bpm || 60,
@@ -160,6 +167,7 @@ export const renderDualMusicReportCreative = (
         <DualMusicReportEditor
             musicXML={musicXML}
             initialParams={initialParams}
+            brainData={brainData}
         />
     );
 };
