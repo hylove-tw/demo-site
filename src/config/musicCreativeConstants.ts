@@ -63,7 +63,8 @@ export const GENRES: Genre[] = [
   { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', bpmRange: [60, 120], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
   { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', bpmRange: [60, 120], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
   { id: 'country', nameZh: '鄉村', nameEn: 'Country', bpmRange: [60, 100], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
-  { id: 'quick-waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 120], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
+  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 120], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
+  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [60, 140], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
 ];
 
 // ── 拍號相容性工具 ──────────────────────────────────────
@@ -102,26 +103,50 @@ export const GENRE_BEAT_MAP: Record<string, string> = {
   reggae: 'reggae',
   rock: 'rock',
   country: 'country',
-  'quick-waltz': 'waltz',
+  quick_waltz: 'waltz',
+  chacha: 'pop',
 };
 
 // ── 曲風-主旋律相容矩陣 ─────────────────────────────────
 // key = genre id, value = set of compatible melody pattern ids
+// 須與 Rails /api/v2/music 的曲風-主旋律相容規則完全一致，否則送出後端會回 422。
 
 export const GENRE_MELODY_COMPATIBILITY: Record<string, Set<number>> = {
   waltz:        new Set([3, 4, 6, 7]),
-  soul:         new Set([1, 2, 3, 4, 5, 8, 9]),
+  soul:         new Set([1, 2, 3, 4, 8, 9]),
   blues:        new Set([1, 5, 8]),
   tango:        new Set([1, 5]),
   giliba:       new Set([2, 5, 9]),
   rumba:        new Set([1, 5]),
-  disco:        new Set([5, 8]),
-  twist:        new Set([5, 8]),
-  reggae:       new Set([2, 5, 8]),
-  rock:         new Set([5, 8]),
+  chacha:       new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+  disco:        new Set([5, 9]),
+  twist:        new Set([5, 9]),
+  reggae:       new Set([2, 5, 9]),
+  rock:         new Set([5, 9]),
   country:      new Set([2, 4, 5, 7, 8, 9]),
-  'quick-waltz': new Set([3, 6, 7]),
+  quick_waltz:  new Set([4, 7, 8]),
 };
+
+// ── 樂器（英文 value → Rails v2 中文 enum） ──────────────
+// Rails /api/v2/music 的 instrument.p1/p2/p3 只接受中文樂器名稱；
+// UI 內部仍用英文 value（沿用既有 INSTRUMENTS 選項），呼叫 v2 前需轉換。
+
+export const INSTRUMENT_ZH: Record<string, string> = {
+  piano:            '鋼琴',
+  guitar:           '吉他',
+  bass:             '貝斯',
+  violin:           '小提琴',
+  flute:            '長笛',
+  saxophone:        '中音薩克斯風',
+  cello:            '低音大提琴',
+  'electric guitar': '電子吉他',
+  vocals:           '人聲',
+};
+
+export function instrumentZh(value: string | undefined): string {
+  if (!value) return '鋼琴';
+  return INSTRUMENT_ZH[value] ?? value;
+}
 
 // ── 腦波背景頻率 ────────────────────────────────────────
 

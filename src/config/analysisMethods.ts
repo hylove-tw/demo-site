@@ -1,5 +1,6 @@
 // src/config/analysisMethods.ts
 import { post, ApiError } from '../services/api';
+import { instrumentZh } from './musicCreativeConstants';
 
 // 共用 payload 結構
 interface BrainDataPayload {
@@ -207,30 +208,31 @@ export async function perfumeAnalysis(data: any[][]): Promise<any> {
 }
 
 // 元神音創意平台：腦波影音編碼及播放系統（創意版）
+// 直接呼叫 Rails /api/v2/music（略過 music-gen），payload 需符合 v2 規格：
+// 包在 {"music": {...}} 內、樂器用中文 enum、genre 未設定時不可傳空字串。
 export async function musicAnalysisCreative(
   data: any[][],
   customParams?: Record<string, any>
 ): Promise<any> {
-  const payload = {
+  const music: Record<string, any> = {
     title: customParams?.title || '未命名的樂譜',
-    bpm: customParams?.bpm || 60,
-    time_signature: customParams?.time_signature || '4/4',
-    p1: customParams?.p1 || 'piano',
-    p2: customParams?.p2 || 'piano',
-    p3: customParams?.p3 || 'piano',
-    beforeBrainData: data[0],
-    afterBrainData: data[1],
-    // 創意平台新增欄位
+    bpm: customParams?.bpm || undefined,
+    melody: customParams?.melodyPattern || undefined,
+    genre: customParams?.genre || undefined,
     musicType: customParams?.musicType || 'emotion',
     recordingTime: customParams?.recordingTime || 5,
     keyCenter: customParams?.keyCenter || 'C',
     keyType: customParams?.keyType || 'major',
-    melodyPattern: customParams?.melodyPattern || 1,
-    genre: customParams?.genre || '',
+    instrument: {
+      p1: instrumentZh(customParams?.p1),
+      p2: instrumentZh(customParams?.p2),
+      p3: instrumentZh(customParams?.p3),
+    },
     brainwaveFrequency: customParams?.brainwaveFrequency ?? null,
-    natureSound: customParams?.natureSound || '',
+    natureSound: customParams?.natureSound || undefined,
+    beforeBrainData: data[0],
   };
-  const musicXML = await post('/api/v2/music', payload);
+  const musicXML = await post('/api/v2/music', { music });
   // Attach brain data so MusicReportEditor can call the music-gen export API
   return { musicXML, _beforeBrainData: data[0], _afterBrainData: data[1] };
 }
