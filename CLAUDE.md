@@ -57,6 +57,21 @@ To add a new analysis plugin:
 - xlsx library for Excel file parsing
 - Jest + React Testing Library for tests
 
+## music-gen（音樂生成服務）
+
+demo 的音樂生成走 music-gen（`REACT_APP_MUSIC_GEN_URL`，**build 時寫死**）。
+
+- **串接規格**：music-gen repo 的 `docs/INTEGRATION.md`——給正式站的完整契約
+- **開發紀錄**：`docs/MUSIC_GEN_INTEGRATION_NOTES.md`——本專案踩過的坑與決策理由
+
+上手前至少要知道的兩件事：
+
+1. **拍號不能指定**，由 `melody` 決定（`timeSignatureForMelody()`）。送 `time_signature` 會被忽略。
+2. **API 回應帶 `warnings`**，列出送了但不生效的欄位。串接出問題時先看它。
+
+作曲參數（調性／主旋律／曲風／BPM／樂器／背景音效）由 `CompositionParamsForm`
+統一提供，分析前的表單與分析後的編輯器共用同一份，不要各自複製。
+
 ## Backend API
 
 - **Base URL**: Configured via `REACT_APP_ANALYSIS_API_BASE` in `.env`
