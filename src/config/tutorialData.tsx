@@ -132,7 +132,7 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
         <ul className="steps steps-vertical">
           {[
             { title: '確認受測者', desc: '系統右上角會顯示目前受測者，可前往「受測者管理」新增或切換' },
-            { title: '上傳腦波檔案', desc: '前往「腦波檔案管理」上傳 CSV 或 XLSX 格式的腦波資料' },
+            { title: '上傳腦波檔案', desc: '前往「腦波檔案管理」上傳 CSV 或 XLSX 格式的腦波資料。沒有資料也沒關係——同一頁提供「載入範例」，一鍵取得前測與後測的完整範例組合' },
             { title: '選擇分析功能', desc: '從首頁選擇要使用的分析功能' },
             { title: '執行分析並查看報告', desc: '選擇前測/後測資料，點擊「開始分析」' },
           ].map((step, i) => (
@@ -145,6 +145,10 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           ))}
         </ul>
         <InfoBox>首次使用時，系統會自動建立一個「預設受測者」供您使用。</InfoBox>
+        <InfoBox>
+          手邊沒有腦波裝置？在「腦波檔案管理」頁點「載入範例：放鬆冥想」或「載入範例：專注工作」，
+          即可立刻體驗完整流程。範例會以資料群組的形式載入，與自行上傳的檔案走完全相同的解析流程。
+        </InfoBox>
       </div>
     ),
   },
@@ -182,6 +186,12 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
     group: 'guide',
     content: (
       <div className="space-y-4">
+        <InfoBox>
+          <span className="font-medium">沒有腦波資料可以先用範例。</span>
+          頁面上方提供兩組範例：「放鬆冥想」（Meditation 與 Theta 上升、Attention 下降）
+          與「專注工作」（Attention 與 Beta 上升）。每組都含前測與後測兩個檔案，
+          載入後會自動建立成一個資料群組，可直接執行分析。
+        </InfoBox>
         <div className="flex gap-2 mb-4">
           <span className="badge badge-primary badge-sm">CSV</span>
           <span className="badge badge-primary badge-sm">XLSX</span>
@@ -291,10 +301,11 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           {[
             { badge: '音樂類型', text: '情緒音樂 / 心靈音樂' },
             { badge: '調性', text: '大調 / 小調，12 種調中心' },
-            { badge: '主旋律', text: '9 種旋律模式（含拍號）' },
-            { badge: '曲風', text: 'Waltz、Soul、Blues、Tango 等' },
+            { badge: '主旋律', text: '9 種旋律模式，同時決定拍號' },
+            { badge: '曲風', text: 'Waltz、Soul、Blues、Tango 等 12 種' },
             { badge: 'BPM', text: '依曲風自動限定範圍' },
             { badge: '背景頻率', text: '2Hz ~ 58Hz 腦波頻率疊加' },
+            { badge: '節奏風格', text: '含森巴、雷鬼等，由音樂人調校' },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2 p-2 bg-base-200 rounded">
               <span className="badge badge-sm">{item.badge}</span>
@@ -302,6 +313,18 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
             </div>
           ))}
         </div>
+
+        <h4 className="font-medium mt-4">節奏風格</h4>
+        <p className="text-sm">
+          節奏風格決定伴奏的律動。其中<span className="font-medium">森巴（Samba）</span>與
+          <span className="font-medium">雷鬼（Reggae）</span>由音樂人<span className="font-medium"> 漢克呂 </span>
+          調校，選單中標示 <span className="badge badge-primary badge-xs">NEW</span>。
+        </p>
+        <p className="text-sm text-base-content/70">
+          這兩種風格除了鼓組，還內建中音部與低音部的伴奏，會自動移調到你選擇的調性，
+          並取代系統原本生成的中低音聲部——高音部仍由腦波資料決定。
+          兩者的律動來自留白（雷鬼的切分和弦只佔小節約 13% 的時間），因此聽起來會比其他風格更有空間感。
+        </p>
 
         <h4 className="font-medium mt-4">功能特色</h4>
         <ul className="list-disc list-inside space-y-1 text-sm">
@@ -328,6 +351,8 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           <li>樂譜播放器生命週期管理（AudioContext 釋放、interval 清理、race condition 防護）</li>
           <li>MusicXML 下載與音樂錄製下載（WebM）</li>
           <li>報告頁面顯示創意平台參數摘要</li>
+          <li>分析後可直接修改作曲參數（調性、主旋律、曲風、BPM、樂器、背景音效）並重新生成</li>
+          <li>森巴與雷鬼節奏（由音樂人提供 MIDI，含伴奏聲部與演奏細節還原）</li>
         </ul>
       </div>
     ),
@@ -347,6 +372,18 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
         </WarningBox>
         <p className="text-lg font-medium">腦波影音編碼 - 心靈音樂轉換</p>
         <p>將您的腦波資料轉換為獨特的心靈音樂，以三聲部樂譜呈現您的腦波韻律。</p>
+
+        <h4 className="font-medium mt-4">節奏風格</h4>
+        <p className="text-sm">
+          節奏風格決定伴奏的律動。其中<span className="font-medium">森巴（Samba）</span>與
+          <span className="font-medium">雷鬼（Reggae）</span>由音樂人<span className="font-medium"> 漢克呂 </span>
+          調校，選單中標示 <span className="badge badge-primary badge-xs">NEW</span>。
+        </p>
+        <p className="text-sm text-base-content/70">
+          這兩種風格除了鼓組，還內建中音部與低音部的伴奏，會自動移調到你選擇的調性，
+          並取代系統原本生成的中低音聲部——高音部仍由腦波資料決定。
+          兩者的律動來自留白（雷鬼的切分和弦只佔小節約 13% 的時間），因此聽起來會比其他風格更有空間感。
+        </p>
 
         <h4 className="font-medium mt-4">功能特色</h4>
         <ul className="list-disc list-inside space-y-1 text-sm">

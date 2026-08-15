@@ -1,6 +1,7 @@
 // src/pages/FileManagePage.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { SAMPLE_SCENARIOS, SampleScenario, loadSampleFiles } from '../config/sampleData';
 import {
   useFileManager,
   UploadedFile,
@@ -24,6 +25,8 @@ const FileManagePage: React.FC = () => {
   } = useFileManager();
   const { users, currentUser } = useUserContext();
   const [activeTab, setActiveTab] = useState<'files' | 'groups'>('files');
+
+  const [loadingSample, setLoadingSample] = useState<string | null>(null);
 
   // 上傳檔案 Modal
   const [uploadModalOpen, setUploadModalOpen] = useState<boolean>(false);
@@ -78,6 +81,30 @@ const FileManagePage: React.FC = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '未知錯誤';
       alert('檔案上傳失敗：' + message);
+    }
+  };
+
+  /**
+   * Load a bundled sample as if the user had uploaded it themselves.
+   *
+   * Deliberately routed through addFilesAsGroup, the same call the real upload
+   * makes, so a sample exercises the identical parsing and grouping code and
+   * cannot drift into behaving differently from a genuine file.
+   */
+  const handleLoadSample = async (scenario: SampleScenario) => {
+    if (!currentUser) {
+      alert('請先選擇受測者');
+      return;
+    }
+    setLoadingSample(scenario.id);
+    try {
+      const files = await loadSampleFiles(scenario);
+      await addFilesAsGroup(files, `範例：${scenario.name}`, currentUser.id);
+      alert(`已載入範例「${scenario.name}」，可直接到分析頁執行。`);
+    } catch (err: unknown) {
+      alert('載入範例資料失敗：' + (err instanceof Error ? err.message : '未知錯誤'));
+    } finally {
+      setLoadingSample(null);
     }
   };
 
@@ -331,6 +358,31 @@ const FileManagePage: React.FC = () => {
                 </svg>
                 上傳腦波資料群組
               </button>
+            </div>
+          )}
+
+          {currentUser && (
+            <div className="mt-4 pt-4 border-t border-base-300">
+              <p className="text-sm text-base-content/70 mb-1">沒有腦波資料？先用範例試試</p>
+              <p className="text-xs text-base-content/50 mb-3">
+                每組包含前測與後測兩個檔案，載入後會建立成一個資料群組，可直接執行分析。
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SAMPLE_SCENARIOS.map((scenario) => (
+                  <button
+                    key={scenario.id}
+                    className="btn btn-sm btn-outline btn-secondary"
+                    disabled={loadingSample !== null}
+                    onClick={() => handleLoadSample(scenario)}
+                    title={`${scenario.description}／${scenario.effect}`}
+                  >
+                    {loadingSample === scenario.id
+                      ? <span className="loading loading-spinner loading-xs" />
+                      : null}
+                    載入範例：{scenario.name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

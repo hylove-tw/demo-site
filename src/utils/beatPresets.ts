@@ -156,6 +156,19 @@ export const BEAT_PRESETS: BeatPreset[] = [
     },
     subdivisions: 4,
   },
+  {
+    id: 'samba',
+    name: '森巴',
+    nameEn: 'Samba',
+    description: '巴西森巴節奏，低音鼓落在每兩拍的後半',
+    timeSignature: '4/4',
+    pattern: {
+      kick:  [3, 0, 0, 0, 0, 0, 2, 0, 3, 0, 0, 0, 0, 0, 2, 0],
+      snare: [0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0],
+      hihat: [2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1],
+    },
+    subdivisions: 4,
+  },
 ];
 
 // MIDI 打擊樂器對應的 MusicXML unpitched 音符

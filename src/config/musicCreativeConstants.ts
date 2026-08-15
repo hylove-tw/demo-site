@@ -67,6 +67,21 @@ export const GENRES: Genre[] = [
   { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [60, 140], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
 ];
 
+// ── 拍號推導 ────────────────────────────────────────────
+// 拍號不是使用者選項，而是主旋律模式的結果。上游 v2 起由 `melody` 決定拍號並
+// 忽略送進去的 `time_signature`，所以前端必須用同一份對照推導，否則畫面顯示的
+// 拍號會跟聽到的音檔不一致。
+//
+// 這份對照必須與 music-gen 的 app/core/pipeline.py `_MELODY_TIME_SIG` 一致。
+
+export const DEFAULT_TIME_SIGNATURE = '4/4';
+
+/** 主旋律模式對應的拍號；未知模式回傳預設 4/4。 */
+export function timeSignatureForMelody(melodyId: number | undefined): string {
+  if (melodyId == null) return DEFAULT_TIME_SIGNATURE;
+  return MELODY_PATTERNS.find((m) => m.id === melodyId)?.timeSignature ?? DEFAULT_TIME_SIGNATURE;
+}
+
 // ── 拍號相容性工具 ──────────────────────────────────────
 // 節拍預設只有 4/4 和 3/4 兩種拍號。
 // 此函式將相同拍數但不同 beat-type 的拍號正規化為預設支援的拍號。

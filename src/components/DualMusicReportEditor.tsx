@@ -4,8 +4,10 @@ import { exportDualMp3, renderScore, resolveRhythmPreset, DualStemVolumes } from
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
 import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
+import { useMusicGenPresets, beatOptionLabel, beatCredit, presetForBeat } from '../hooks/useMusicGenPresets';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
-import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS } from '../config/musicCreativeConstants';
+import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS, timeSignatureForMelody } from '../config/musicCreativeConstants';
+import { CompositionParamsForm, DUAL_INSTRUMENT_FIELDS } from './CompositionParamsForm';
 
 // 可選樂器列表與 MIDI program number 對照 (General MIDI)
 const INSTRUMENTS = [
@@ -26,18 +28,6 @@ const getInstrumentLabel = (key: string) => {
 };
 
 // 預設樂器設定
-const DEFAULT_INSTRUMENTS: Record<string, string> = {
-    first_p1: 'flute',      // 第一演奏者：長笛（高音）
-    first_p2: 'piano',      // 第一演奏者：鋼琴（中音）
-    first_p3: 'cello',      // 第一演奏者：大提琴（低音）
-    second_p1: 'violin',    // 第二演奏者：小提琴（高音）
-    second_p2: 'guitar',    // 第二演奏者：吉他（中音）
-    second_p3: 'bass',      // 第二演奏者：貝斯（低音）
-};
-
-const getDefaultInstrument = (field: string): string => {
-    return DEFAULT_INSTRUMENTS[field] || 'piano';
-};
 
 const getInstrumentMidiProgram = (key: string): number => {
     const inst = INSTRUMENTS.find(i => i.value === key);
@@ -208,6 +198,7 @@ function addAutoBeamToMusicXML(musicXML: string, timeSignature: string = '4/4'):
 export interface DualMusicReportParams {
     title?: string;
     bpm?: number;
+    /** @deprecated 拍號由 `melodyPattern` 決定；保留僅為讀取舊報告，不再使用。 */
     time_signature?: string;
     first_p1?: string;
     first_p2?: string;
@@ -264,18 +255,8 @@ function applyParamsToMusicXML(musicXML: string, params: DualMusicReportParams):
         }
     }
 
-    // 更新拍號
-    if (params.time_signature) {
-        const [beats, beatType] = params.time_signature.split('/');
-        const beatsElems = xmlDoc.getElementsByTagName('beats');
-        const beatTypeElems = xmlDoc.getElementsByTagName('beat-type');
-        if (beatsElems.length > 0 && beats) {
-            beatsElems[0].textContent = beats;
-        }
-        if (beatTypeElems.length > 0 && beatType) {
-            beatTypeElems[0].textContent = beatType;
-        }
-    }
+    // 拍號刻意不覆寫：樂譜的拍號由上游依 `melody` 決定，本地再改一次只會讓
+    // 畫面與音檔對不起來（音檔那端會忽略前端送的 time_signature）。
 
     // 更新樂器 MIDI program (影響播放音色) 和音量
     // 雙人音樂有 6 個聲部：第一人 P1, P2, P3，第二人 P1, P2, P3
@@ -384,7 +365,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                     {
                         title:               params.title,
                         bpm:                 params.bpm,
-                        time_signature:      params.time_signature,
+                        melodyPattern:       params.melodyPattern,
                         first_p1:            params.first_p1,
                         first_p2:            params.first_p2,
                         first_p3:            params.first_p3,
@@ -414,7 +395,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         let xml = applyParamsToMusicXML(musicXML, appliedParams);
         // 自動連結音符（八分音符及更短）
         if (appliedParams.auto_beam) {
-            xml = addAutoBeamToMusicXML(xml, appliedParams.time_signature || '4/4');
+            xml = addAutoBeamToMusicXML(xml, timeSignatureForMelody(appliedParams.melodyPattern));
         }
         return xml;
     }, [musicXML, appliedParams]);
@@ -462,7 +443,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         setScoreLoading(true);
         const timer = setTimeout(async () => {
             try {
-                const beatPreset = resolveRhythmPreset(appliedParams.beat, appliedParams.time_signature || '4/4');
+                const beatPreset = resolveRhythmPreset(appliedParams.beat, timeSignatureForMelody(appliedParams.melodyPattern));
                 const pages = await renderScore(processedXML, { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
                 setScorePages(pages);
             } catch (err: any) {
@@ -498,9 +479,11 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     }, [scorePages, appliedParams.title]);
 
     // 根據拍號過濾可用的節奏預設
+    const musicGenPresets = useMusicGenPresets();
+
     const availableBeatPresets = useMemo(() => {
-        return getPresetsForTimeSignature(editParams.time_signature || '4/4');
-    }, [editParams.time_signature]);
+        return getPresetsForTimeSignature(timeSignatureForMelody(editParams.melodyPattern));
+    }, [editParams.melodyPattern]);
 
     // 取得節奏預設名稱
     const getBeatPresetName = (beatId: string | undefined) => {
@@ -533,24 +516,6 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         setIsEditing(true);
     }, [appliedParams]);
 
-    const renderInstrumentSelect = (field: keyof DualMusicReportParams, label: string) => (
-        <div className="form-control">
-            <label className="label py-1">
-                <span className="label-text text-xs">{label}</span>
-            </label>
-            <select
-                className="select select-bordered select-sm w-full"
-                value={(editParams[field] as string) ?? getDefaultInstrument(field)}
-                onChange={(e) => handleParamChange(field, e.target.value)}
-            >
-                {INSTRUMENTS.map((inst) => (
-                    <option key={inst.value} value={inst.value}>
-                        {inst.label}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
 
     return (
         <div className="p-4">
@@ -574,76 +539,14 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                 {isEditing ? (
                     /* 編輯模式 */
                     <div className="space-y-4">
-                        {/* 基本設定 */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="form-control">
-                                <label className="label py-1">
-                                    <span className="label-text text-xs">樂譜標題</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input input-bordered input-sm w-full"
-                                    placeholder="未命名的樂譜"
-                                    value={editParams.title ?? ''}
-                                    onChange={(e) => handleParamChange('title', e.target.value)}
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label py-1">
-                                    <span className="label-text text-xs">速度 (BPM)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    className="input input-bordered input-sm w-full"
-                                    placeholder="60"
-                                    min={40}
-                                    max={200}
-                                    value={editParams.bpm ?? 60}
-                                    onChange={(e) => handleParamChange('bpm', parseInt(e.target.value) || 60)}
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label py-1">
-                                    <span className="label-text text-xs">拍號</span>
-                                </label>
-                                <select
-                                    className="select select-bordered select-sm w-full"
-                                    value={editParams.time_signature ?? '4/4'}
-                                    onChange={(e) => handleParamChange('time_signature', e.target.value)}
-                                >
-                                    <option value="2/4">2/4</option>
-                                    <option value="3/4">3/4</option>
-                                    <option value="3/8">3/8</option>
-                                    <option value="4/4">4/4</option>
-                                    <option value="4/8">4/8</option>
-                                    <option value="6/8">6/8</option>
-                                    <option value="8/16">8/16</option>
-                                    <option value="12/16">12/16</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="divider my-2 text-xs text-base-content/50">樂器設定</div>
-
-                        {/* 第一演奏者樂器 */}
-                        <div>
-                            <h4 className="text-sm font-medium text-primary mb-2">第一演奏者</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {renderInstrumentSelect('first_p1', '高音域樂器 (P1)')}
-                                {renderInstrumentSelect('first_p2', '中音域樂器 (P2)')}
-                                {renderInstrumentSelect('first_p3', '低音域樂器 (P3)')}
-                            </div>
-                        </div>
-
-                        {/* 第二演奏者樂器 */}
-                        <div>
-                            <h4 className="text-sm font-medium text-secondary mb-2">第二演奏者</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {renderInstrumentSelect('second_p1', '高音域樂器 (P1)')}
-                                {renderInstrumentSelect('second_p2', '中音域樂器 (P2)')}
-                                {renderInstrumentSelect('second_p3', '低音域樂器 (P3)')}
-                            </div>
-                        </div>
+                        {/* 作曲參數：與分析前使用同一個元件，確保兩邊提供一樣的選項
+                            與一樣的相容性規則。重新產生樂譜的成本低，所以分析後也能改。 */}
+                        <CompositionParamsForm
+                            value={editParams}
+                            onChange={(next) => setEditParams(next as DualMusicReportParams)}
+                            variant="compact"
+                            instrumentFields={DUAL_INSTRUMENT_FIELDS}
+                        />
 
                         {/* 音量設定 */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -705,15 +608,25 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                             >
                                 {availableBeatPresets.map((preset) => (
                                     <option key={preset.id} value={preset.id}>
-                                        {preset.name} {preset.id !== 'none' && `(${preset.nameEn})`}
+                                        {beatOptionLabel(musicGenPresets, preset)}
                                     </option>
                                 ))}
                             </select>
                             {editParams.beat && editParams.beat !== 'none' && (
-                                <label className="label py-1">
+                                <label className="label py-1 flex-col items-start gap-1">
                                     <span className="label-text-alt text-base-content/50">
                                         {BEAT_PRESETS.find(b => b.id === editParams.beat)?.description}
                                     </span>
+                                    {beatCredit(musicGenPresets, editParams.beat) && (
+                                        <span className="label-text-alt flex items-center gap-1.5">
+                                            {presetForBeat(musicGenPresets, editParams.beat)?.isNew && (
+                                                <span className="badge badge-primary badge-sm">NEW</span>
+                                            )}
+                                            <span className="text-base-content/70">
+                                                {beatCredit(musicGenPresets, editParams.beat)}
+                                            </span>
+                                        </span>
+                                    )}
                                 </label>
                             )}
                         </div>
@@ -758,7 +671,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                             </div>
                             <div>
                                 <span className="text-base-content/60">拍號：</span>
-                                <span className="font-medium">{appliedParams.time_signature || '4/4'}</span>
+                                <span className="font-medium">{timeSignatureForMelody(appliedParams.melodyPattern)}</span>
                             </div>
                         </div>
                         <div className="divider my-3"></div>
@@ -1037,6 +950,14 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                             value: String(b.value),
                             label: `${b.label} ${b.description}`,
                         }))}
+                        appliedBrainwave={
+                            appliedParams.brainwaveFrequency != null
+                                ? String(appliedParams.brainwaveFrequency) : null
+                        }
+                        appliedBackground={
+                            appliedParams.natureSound && appliedParams.natureSound !== 'none'
+                                ? appliedParams.natureSound : null
+                        }
                         availableBackgrounds={NATURE_SOUNDS.map(n => ({
                             value: n.value,
                             label: n.label,

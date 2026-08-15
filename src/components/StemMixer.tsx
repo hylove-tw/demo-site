@@ -27,6 +27,17 @@ export interface StemMixerProps {
     defaultVolumes?: { [key: string]: number | undefined };
     availableBrainwaves?: StemOption[];
     availableBackgrounds?: StemOption[];
+    /**
+     * The brainwave frequency / nature sound the export was already rendered
+     * with, i.e. what the user chose before the analysis ran.
+     *
+     * The mix already contains these as fixed stems, so they are named here
+     * rather than left as a generic "腦波頻率" — otherwise there is no way to
+     * tell which frequency is playing, and they are also withheld from the add
+     * lists so the same sound cannot be layered on top of itself.
+     */
+    appliedBrainwave?: string | null;
+    appliedBackground?: string | null;
     isExporting?: boolean;
     onDownload: (config: MixDownloadConfig) => void;
 }
@@ -44,6 +55,8 @@ export function StemMixer({
     defaultVolumes,
     availableBrainwaves = [],
     availableBackgrounds = [],
+    appliedBrainwave = null,
+    appliedBackground = null,
     isExporting = false,
     onDownload,
 }: StemMixerProps) {
@@ -58,8 +71,10 @@ export function StemMixer({
     });
 
     const [optionalStems, setOptionalStems] = useState<OptionalStem[]>([]);
-    const [brainwavePick, setBrainwavePick] = useState(availableBrainwaves[0]?.value ?? '');
-    const [backgroundPick, setBackgroundPick] = useState(availableBackgrounds[0]?.value ?? '');
+    const [brainwavePick, setBrainwavePick] = useState(
+        availableBrainwaves.find(b => b.value !== appliedBrainwave)?.value ?? '');
+    const [backgroundPick, setBackgroundPick] = useState(
+        availableBackgrounds.find(b => b.value !== appliedBackground)?.value ?? '');
     const [addLoading, setAddLoading] = useState<string | null>(null);
     const [addError, setAddError] = useState<string | null>(null);
 
@@ -339,8 +354,18 @@ export function StemMixer({
 
     // ── Render helpers ───────────────────────────────────────────────────────
 
-    const stemLabel = (name: string) =>
-        instrumentLabels?.[name] || STEM_DEFAULT_LABELS[name] || name;
+    const appliedLabel = (options: StemOption[], value: string | null) =>
+        options.find(o => o.value === value)?.label ?? value ?? '';
+
+    const stemLabel = (name: string) => {
+        if (name === 'brainwave' && appliedBrainwave) {
+            return appliedLabel(availableBrainwaves, appliedBrainwave);
+        }
+        if (name === 'background' && appliedBackground) {
+            return appliedLabel(availableBackgrounds, appliedBackground);
+        }
+        return instrumentLabels?.[name] || STEM_DEFAULT_LABELS[name] || name;
+    };
 
     const fmtTime = (secs: number) =>
         `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, '0')}`;
@@ -436,6 +461,7 @@ export function StemMixer({
                 {/* Brainwave add */}
                 {(() => {
                     const addedBw = new Set(optionalStems.filter(s => s.type === 'brainwave').map(s => s.value));
+                    if (appliedBrainwave) addedBw.add(appliedBrainwave);
                     const remaining = availableBrainwaves.filter(b => !addedBw.has(b.value));
                     if (remaining.length === 0) return null;
                     return (
@@ -466,6 +492,7 @@ export function StemMixer({
                 {/* Background add */}
                 {(() => {
                     const addedBg = new Set(optionalStems.filter(s => s.type === 'background').map(s => s.value));
+                    if (appliedBackground) addedBg.add(appliedBackground);
                     const remaining = availableBackgrounds.filter(b => !addedBg.has(b.value));
                     if (remaining.length === 0) return null;
                     return (

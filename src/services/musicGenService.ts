@@ -1,3 +1,5 @@
+import { timeSignatureForMelody } from '../config/musicCreativeConstants';
+
 /**
  * musicGenService.ts
  *
@@ -6,7 +8,6 @@
  */
 
 const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/, '');
-const ANALYSIS_API_BASE = (process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhost:3000').replace(/\/$/, '');
 
 export const isMusicGenEnabled = (): boolean => Boolean(MUSIC_GEN_URL);
 
@@ -20,7 +21,8 @@ const BEAT_TO_PRESET: Record<string, string> = {
   waltz:        'compound_ballad',  // waltz API returns 6/8; pipeline auto-falls back to gentle_waltz for 3/4
   country:      'basic_pop',
   jazz:         'rnb',
-  reggae:       'ballad',
+  reggae:       'reggae',
+  samba:        'samba',
   none:         'basic_pop',
 };
 
@@ -31,6 +33,55 @@ export function resolveRhythmPreset(beatId: string | undefined, timeSignature: s
     return 'basic_pop';
   }
   return BEAT_TO_PRESET[beatId] ?? 'basic_pop';
+}
+
+/**
+ * A rhythm preset as music-gen describes it.
+ *
+ * `credit` and `isNew` are authored in the music-gen preset YAML, so the badge
+ * and the arranger's name come from the server rather than being duplicated
+ * here — two copies of the same fact is how they drift apart.
+ */
+export interface MusicGenPreset {
+  name: string;
+  displayName: string | null;
+  credit: string | null;
+  isNew: boolean;
+  hasAccompaniment: boolean;
+}
+
+let presetCache: Promise<Map<string, MusicGenPreset>> | null = null;
+
+/**
+ * Fetch the server's rhythm presets, keyed by preset name.
+ *
+ * Cached for the page's lifetime and never throws: this only decorates the
+ * picker, so a music-gen that is down or an older build that predates these
+ * fields must degrade to an unbadged list, not break the editor.
+ */
+export function fetchMusicGenPresets(): Promise<Map<string, MusicGenPreset>> {
+  if (presetCache) return presetCache;
+  if (!MUSIC_GEN_URL) return Promise.resolve(new Map());
+
+  presetCache = fetch(`${MUSIC_GEN_URL}/api/v1/presets`)
+    .then((res) => (res.ok ? res.json() : []))
+    .then((rows: any[]) => new Map(
+      (Array.isArray(rows) ? rows : []).map((row) => [row.name as string, {
+        name: row.name,
+        displayName: row.display_name ?? null,
+        credit: row.credit ?? null,
+        isNew: Boolean(row.is_new),
+        hasAccompaniment: Boolean(row.has_accompaniment),
+      }])
+    ))
+    .catch(() => new Map<string, MusicGenPreset>());
+
+  return presetCache;
+}
+
+/** Resolve the server preset backing a beat id, for badge/credit lookup. */
+export function presetNameForBeat(beatId: string | undefined): string {
+  return resolveRhythmPreset(beatId, '4/4');
 }
 
 export interface StemVolumes {
@@ -81,6 +132,8 @@ export interface DualStemVolumes {
 export interface MusicGenDualExportParams {
   title?: string;
   bpm?: number;
+  melodyPattern?: number;
+  /** @deprecated 拍號由 `melodyPattern` 決定，伺服器會忽略此欄位。 */
   time_signature?: string;
   first_p1?: string;
   first_p2?: string;
@@ -150,25 +203,23 @@ export async function exportMp3(
     throw new Error('REACT_APP_MUSIC_GEN_URL is not configured');
   }
 
-  const timeSignature = params.time_signature || '4/4';
-  const rhythmPreset = resolveRhythmPreset(params.beat, timeSignature);
+  const melody = params.melodyPattern || 1;
+  // The meter follows the melody pattern; the server derives it the same way and
+  // ignores any time_signature we send, so sending one only invites drift.
+  const rhythmPreset = resolveRhythmPreset(params.beat, timeSignatureForMelody(melody));
 
   const payload = {
-    music_api_base_url:  ANALYSIS_API_BASE,
-    music_api_version:   'v2',
     title:               params.title || '未命名的樂譜',
     bpm:                 params.bpm || 60,
-    time_signature:      timeSignature,
     p1:                  params.p1 || 'piano',
     p2:                  params.p2 || 'piano',
     p3:                  params.p3 || 'piano',
     before_brain_data:   params.beforeBrainData,
-    after_brain_data:    params.afterBrainData,
     music_type:          params.musicType || 'emotion',
     recording_time:      params.recordingTime || 5,
     key_center:          params.keyCenter || 'C',
     key_type:            params.keyType || 'major',
-    melody_pattern:      params.melodyPattern || 1,
+    melody,
     genre:               params.genre || '',
     brainwave_frequency: params.brainwaveFrequency ?? null,
     nature_sound:        params.natureSound || 'none',
@@ -199,14 +250,15 @@ export async function exportDualMp3(
   if (!MUSIC_GEN_URL) {
     throw new Error('REACT_APP_MUSIC_GEN_URL is not configured');
   }
-  const timeSignature = params.time_signature || '4/4';
-  const rhythmPreset = resolveRhythmPreset(params.beat, timeSignature);
+  const melody = params.melodyPattern || 1;
+  const rhythmPreset = resolveRhythmPreset(params.beat, timeSignatureForMelody(melody));
 
   const payload = {
-    music_api_version:    'v1',
     title:                params.title || '未命名的樂譜',
     bpm:                  params.bpm || 60,
-    time_signature:       timeSignature,
+    // Dual mode never forwarded this, so every duet was generated as melody 1
+    // whatever the user picked, and the meter followed from that.
+    melody,
     first_p1:             params.first_p1  || 'flute',
     first_p2:             params.first_p2  || 'piano',
     first_p3:             params.first_p3  || 'cello',
