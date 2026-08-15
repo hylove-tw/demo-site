@@ -210,6 +210,7 @@ export interface DualMusicReportParams {
     second_volume?: number; // 第二演奏者總音量 0-100
     drum_volume?: number;   // 鼓聲音量 0-100
     beat?: string; // 節奏預設 ID
+    accompaniment?: 'replace' | 'layer' | 'off';
     auto_beam?: boolean; // 自動連結音符
     // 創意平台欄位（顯示用，不可編輯）
     musicType?: string;
@@ -373,6 +374,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                         second_p2:           params.second_p2,
                         second_p3:           params.second_p3,
                         beat:                params.beat,
+                        accompaniment:       params.accompaniment,
                         firstBrainData:      bd.first,
                         secondBrainData:     bd.second,
                         musicType:           params.musicType,
@@ -595,6 +597,30 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                         </div>
 
                         <div className="divider my-2 text-xs text-base-content/50">節奏設定</div>
+
+                        {/* 伴奏模式：只有含伴奏 pattern 的節奏才有作用，其餘 preset
+                            送了也不會生效（API 會在 warnings 回報），所以不顯示。 */}
+                        {presetForBeat(musicGenPresets, editParams.beat)?.hasAccompaniment && (
+                            <div className="form-control">
+                                <label className="label py-1">
+                                    <span className="label-text text-xs">伴奏方式</span>
+                                </label>
+                                <select
+                                    className="select select-bordered select-sm w-full md:w-1/2"
+                                    value={editParams.accompaniment ?? 'replace'}
+                                    onChange={(e) => handleParamChange('accompaniment', e.target.value)}
+                                >
+                                    <option value="replace">取代中低音部（建議）</option>
+                                    <option value="layer">疊加在原聲部之上</option>
+                                    <option value="off">不使用伴奏</option>
+                                </select>
+                                <label className="label py-1">
+                                    <span className="label-text-alt text-base-content/50">
+                                        這類樂風的律動來自留白，「疊加」會把空隙填滿而蓋掉樂風感。
+                                    </span>
+                                </label>
+                            </div>
+                        )}
 
                         {/* 節奏預設 */}
                         <div className="form-control">

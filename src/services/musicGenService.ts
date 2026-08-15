@@ -84,6 +84,9 @@ export function presetNameForBeat(beatId: string | undefined): string {
   return resolveRhythmPreset(beatId, '4/4');
 }
 
+export type AccompanimentMode = 'replace' | 'layer' | 'off';
+export type AccompanimentHarmony = 'diatonic' | 'full';
+
 export interface StemVolumes {
   p1?: number;
   p2?: number;
@@ -96,6 +99,8 @@ export interface StemVolumes {
 
 export interface MusicGenExportParams {
   title?: string;
+  accompaniment?: AccompanimentMode;
+  accompanimentHarmony?: AccompanimentHarmony;
   bpm?: number;
   time_signature?: string;
   p1?: string;
@@ -131,6 +136,8 @@ export interface DualStemVolumes {
 
 export interface MusicGenDualExportParams {
   title?: string;
+  accompaniment?: AccompanimentMode;
+  accompanimentHarmony?: AccompanimentHarmony;
   bpm?: number;
   melodyPattern?: number;
   /** @deprecated 拍號由 `melodyPattern` 決定，伺服器會忽略此欄位。 */
@@ -224,6 +231,8 @@ export async function exportMp3(
     brainwave_frequency: params.brainwaveFrequency ?? null,
     nature_sound:        params.natureSound || 'none',
     rhythm_preset:       rhythmPreset,
+    accompaniment:       params.accompaniment ?? 'replace',
+    accompaniment_harmony: params.accompanimentHarmony ?? 'diatonic',
     // Per-stem volumes
     p1_volume_db:         params.stemVolumes?.p1         ?? 0,
     p2_volume_db:         params.stemVolumes?.p2         ?? 0,
@@ -275,6 +284,8 @@ export async function exportDualMp3(
     brainwave_frequency:  params.brainwaveFrequency ?? null,
     nature_sound:         params.natureSound || 'none',
     rhythm_preset:        rhythmPreset,
+    accompaniment:        params.accompaniment ?? 'replace',
+    accompaniment_harmony: params.accompanimentHarmony ?? 'diatonic',
     first_p1_volume_db:   params.stemVolumes?.first_p1  ?? 0,
     first_p2_volume_db:   params.stemVolumes?.first_p2  ?? 0,
     first_p3_volume_db:   params.stemVolumes?.first_p3  ?? 0,
