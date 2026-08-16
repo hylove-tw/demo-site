@@ -326,6 +326,27 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           兩者的律動來自留白（雷鬼的切分和弦只佔小節約 13% 的時間），因此聽起來會比其他風格更有空間感。
         </p>
 
+        <h5 className="font-medium mt-3 text-sm">伴奏方式</h5>
+        <p className="text-sm text-base-content/70">
+          選擇這兩種節奏後，參數區會多出「伴奏方式」：
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li><span className="font-medium">取代中低音部</span>（建議）：伴奏成為中音部與低音部</li>
+          <li><span className="font-medium">疊加在原聲部之上</span>：保留原本的三聲部，伴奏另外加上去</li>
+          <li><span className="font-medium">不使用伴奏</span>：只保留鼓組</li>
+        </ul>
+        <p className="text-sm text-base-content/70">
+          建議維持「取代」。這類樂風的律動來自留白，「疊加」會把空隙填滿，反而蓋掉樂風的特色。
+        </p>
+
+        <h5 className="font-medium mt-3 text-sm">自動結尾</h5>
+        <p className="text-sm text-base-content/70">
+          系統會自動讓曲子收在主和弦上，不需要額外設定。
+          雷鬼的伴奏本身就含主和弦，會調整循環讓它落在最後一小節；
+          森巴的伴奏是一段沒有主和弦的循環，系統會依樂理重新配置最後一小節的和聲，
+          <span className="font-medium">拍點完全不變</span>，只有音高調整。
+        </p>
+
         <h4 className="font-medium mt-4">功能特色</h4>
         <ul className="list-disc list-inside space-y-1 text-sm">
           <li>三聲部音樂：高音、中音、低音分別對應不同腦波頻段</li>
@@ -353,6 +374,8 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           <li>報告頁面顯示創意平台參數摘要</li>
           <li>分析後可直接修改作曲參數（調性、主旋律、曲風、BPM、樂器、背景音效）並重新生成</li>
           <li>森巴與雷鬼節奏（由音樂人提供 MIDI，含伴奏聲部與演奏細節還原）</li>
+          <li>伴奏方式可選（取代／疊加／不使用）</li>
+          <li>依樂理自動處理結尾，讓曲子收在主和弦上</li>
         </ul>
       </div>
     ),
@@ -383,6 +406,27 @@ export const TUTORIAL_SECTIONS: TutorialSection[] = [
           這兩種風格除了鼓組，還內建中音部與低音部的伴奏，會自動移調到你選擇的調性，
           並取代系統原本生成的中低音聲部——高音部仍由腦波資料決定。
           兩者的律動來自留白（雷鬼的切分和弦只佔小節約 13% 的時間），因此聽起來會比其他風格更有空間感。
+        </p>
+
+        <h5 className="font-medium mt-3 text-sm">伴奏方式</h5>
+        <p className="text-sm text-base-content/70">
+          選擇這兩種節奏後，參數區會多出「伴奏方式」：
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-sm text-base-content/70">
+          <li><span className="font-medium">取代中低音部</span>（建議）：伴奏成為中音部與低音部</li>
+          <li><span className="font-medium">疊加在原聲部之上</span>：保留原本的三聲部，伴奏另外加上去</li>
+          <li><span className="font-medium">不使用伴奏</span>：只保留鼓組</li>
+        </ul>
+        <p className="text-sm text-base-content/70">
+          建議維持「取代」。這類樂風的律動來自留白，「疊加」會把空隙填滿，反而蓋掉樂風的特色。
+        </p>
+
+        <h5 className="font-medium mt-3 text-sm">自動結尾</h5>
+        <p className="text-sm text-base-content/70">
+          系統會自動讓曲子收在主和弦上，不需要額外設定。
+          雷鬼的伴奏本身就含主和弦，會調整循環讓它落在最後一小節；
+          森巴的伴奏是一段沒有主和弦的循環，系統會依樂理重新配置最後一小節的和聲，
+          <span className="font-medium">拍點完全不變</span>，只有音高調整。
         </p>
 
         <h4 className="font-medium mt-4">功能特色</h4>
