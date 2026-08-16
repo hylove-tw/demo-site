@@ -14,7 +14,7 @@
 // Only presentation differs: `variant="full"` for the standing-alone form,
 // `variant="compact"` for the editor's parameter panel.
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useMusicGenPresets, presetForBeat, beatOptionLabel, beatCredit } from '../hooks/useMusicGenPresets';
 import { getPresetsForTimeSignature } from '../utils/beatPresets';
 import {
@@ -112,6 +112,11 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 }) => {
     const compact = variant === 'compact';
     const set = (field: string, v: any) => onChange({ ...value, [field]: v });
+
+    // Open only when a melody is already chosen, then leave it to the user.
+    // Deriving `open` from the value on every render would re-open the section
+    // each time they collapsed it.
+    const [melodyOpen, setMelodyOpen] = useState(Boolean(value.melodyPattern));
 
     // Picking a genre also picks the rhythm it maps to, so a genre backed by a
     // credited groove should say so here — this is where the choice is actually
@@ -244,56 +249,75 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 </div>
             </div>
 
-            <Divider>主旋律</Divider>
-
-            {compact ? (
-                <div className={fieldCls}>
-                    <select className={selectCls} value={selectedMelody ?? ''}
-                        onChange={(e) => onChange(applyMelody(value, Number(e.target.value)))}>
-                        <option value="" disabled>請選擇主旋律</option>
-                        {MELODY_PATTERNS.map((m) => (
-                            <option key={m.id} value={m.id}
-                                disabled={!availableMelodies.some((a) => a.id === m.id)}>
-                                主旋律 {m.id}（{m.timeSignature}）
-                            </option>
-                        ))}
-                    </select>
-                    <label className="label py-1">
-                        <span className="label-text-alt text-base-content/50">
-                            拍號 {timeSignatureForMelody(selectedMelody)}，由主旋律決定
-                        </span>
-                    </label>
-                </div>
-            ) : (
-                <div className="grid grid-cols-3 gap-3">
-                    {MELODY_PATTERNS.map((melody) => {
-                        const available = availableMelodies.some((m) => m.id === melody.id);
-                        const recommended = musicType === 'spiritual' && melody.id <= 3;
-                        const selected = selectedMelody === melody.id;
-                        return (
-                            <button key={melody.id} type="button" disabled={!available}
-                                className={`card card-compact border-2 text-left transition-all cursor-pointer
-                                    ${selected ? 'border-primary bg-primary/10'
-                                        : available ? 'border-base-300 hover:border-primary/50'
-                                            : 'border-base-200 opacity-40 cursor-not-allowed'}`}
-                                onClick={() => available && onChange(applyMelody(value, melody.id))}>
-                                <div className="card-body p-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="font-bold text-sm">主旋律 {melody.id}</span>
-                                        <div className="flex gap-1">
-                                            {recommended && <span className="badge badge-success badge-xs">推薦</span>}
-                                            <span className="badge badge-outline badge-xs">{melody.timeSignature}</span>
+            {/* 主旋律是進階選項：多數使用者用預設即可，而它同時決定拍號，
+                攤開在主流程上會讓表單看起來比實際複雜。收合後在標題列顯示
+                目前選擇與拍號，不必展開也知道現在是什麼。 */}
+            <details className="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box"
+                     open={melodyOpen}
+                     onToggle={(e) => setMelodyOpen((e.target as HTMLDetailsElement).open)}>
+                <summary className="collapse-title min-h-0 py-3 text-sm font-medium flex items-center gap-2">
+                    <span>主旋律</span>
+                    <span className="badge badge-ghost badge-sm">進階</span>
+                    <span className="ml-auto text-xs font-normal text-base-content/60">
+                        {selectedMelody
+                            ? `主旋律 ${selectedMelody}・${timeSignatureForMelody(selectedMelody)}`
+                            : '尚未選擇'}
+                    </span>
+                </summary>
+                <div className="collapse-content">
+                    <p className="text-xs text-base-content/60 mb-3">
+                        主旋律決定音符密度，同時決定拍號。不選則沿用預設。
+                    </p>
+                {compact ? (
+                    <div className={fieldCls}>
+                        <select className={selectCls} value={selectedMelody ?? ''}
+                            onChange={(e) => onChange(applyMelody(value, Number(e.target.value)))}>
+                            <option value="" disabled>請選擇主旋律</option>
+                            {MELODY_PATTERNS.map((m) => (
+                                <option key={m.id} value={m.id}
+                                    disabled={!availableMelodies.some((a) => a.id === m.id)}>
+                                    主旋律 {m.id}（{m.timeSignature}）
+                                </option>
+                            ))}
+                        </select>
+                        <label className="label py-1">
+                            <span className="label-text-alt text-base-content/50">
+                                拍號 {timeSignatureForMelody(selectedMelody)}，由主旋律決定
+                            </span>
+                        </label>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                        {MELODY_PATTERNS.map((melody) => {
+                            const available = availableMelodies.some((m) => m.id === melody.id);
+                            const recommended = musicType === 'spiritual' && melody.id <= 3;
+                            const selected = selectedMelody === melody.id;
+                            return (
+                                <button key={melody.id} type="button" disabled={!available}
+                                    className={`card card-compact border-2 text-left transition-all cursor-pointer
+                                        ${selected ? 'border-primary bg-primary/10'
+                                            : available ? 'border-base-300 hover:border-primary/50'
+                                                : 'border-base-200 opacity-40 cursor-not-allowed'}`}
+                                    onClick={() => available && onChange(applyMelody(value, melody.id))}>
+                                    <div className="card-body p-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-sm">主旋律 {melody.id}</span>
+                                            <div className="flex gap-1">
+                                                {recommended && <span className="badge badge-success badge-xs">推薦</span>}
+                                                <span className="badge badge-outline badge-xs">{melody.timeSignature}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-xs opacity-70 mt-1 grid grid-cols-2 gap-x-2">
+                                            {melody.noteValues.map((nv, i) => <span key={i}>值{i}: {nv}</span>)}
                                         </div>
                                     </div>
-                                    <div className="text-xs opacity-70 mt-1 grid grid-cols-2 gap-x-2">
-                                        {melody.noteValues.map((nv, i) => <span key={i}>值{i}: {nv}</span>)}
-                                    </div>
-                                </div>
-                            </button>
-                        );
-                    })}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
                 </div>
-            )}
+            </details>
 
             <Divider>曲風</Divider>
 
