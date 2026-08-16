@@ -16,7 +16,8 @@
 
 import React, { useState } from 'react';
 import { useMusicGenPresets, presetForBeat, beatOptionLabel, beatCredit } from '../hooks/useMusicGenPresets';
-import { getPresetsForTimeSignature } from '../utils/beatPresets';
+import { getPresetsForTimeSignature, BEAT_PRESETS } from '../utils/beatPresets';
+import { BeatPatternStaff } from './BeatPatternStaff';
 import {
     GENRE_BEAT_MAP,
     KEY_CENTERS,
@@ -116,7 +117,8 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     // Open only when a melody is already chosen, then leave it to the user.
     // Deriving `open` from the value on every render would re-open the section
     // each time they collapsed it.
-    const [melodyOpen, setMelodyOpen] = useState(Boolean(value.melodyPattern));
+    const [advancedOpen, setAdvancedOpen] = useState(
+        Boolean(value.melodyPattern) || Boolean(value.beat));
 
     // Picking a genre also picks the rhythm it maps to, so a genre backed by a
     // credited groove should say so here — this is where the choice is actually
@@ -249,24 +251,26 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 </div>
             </div>
 
-            {/* 主旋律是進階選項：多數使用者用預設即可，而它同時決定拍號，
-                攤開在主流程上會讓表單看起來比實際複雜。收合後在標題列顯示
-                目前選擇與拍號，不必展開也知道現在是什麼。 */}
+            {/* 主旋律與伴奏節奏都收在這裡。「曲風」是使用者唯一需要做的風格選擇——
+                它同時決定作曲與伴奏節奏。把節奏另外攤在主流程上會與曲風混淆：兩者的
+                選項名稱大量重疊（雷鬼、探戈、倫巴…），使用者沒有理由分得出來哪個管什麼。
+                只有想用曲風清單裡沒有對應項目的節奏（例如森巴）才需要展開。 */}
             <details className="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box"
-                     open={melodyOpen}
-                     onToggle={(e) => setMelodyOpen((e.target as HTMLDetailsElement).open)}>
+                     open={advancedOpen}
+                     onToggle={(e) => setAdvancedOpen((e.target as HTMLDetailsElement).open)}>
                 <summary className="collapse-title min-h-0 py-3 text-sm font-medium flex items-center gap-2">
-                    <span>主旋律</span>
-                    <span className="badge badge-ghost badge-sm">進階</span>
+                    <span>進階選項</span>
                     <span className="ml-auto text-xs font-normal text-base-content/60">
-                        {selectedMelody
-                            ? `主旋律 ${selectedMelody}・${timeSignatureForMelody(selectedMelody)}`
-                            : '尚未選擇'}
+                        {`主旋律 ${selectedMelody ?? '預設'}・節奏 ${
+                            value.beat
+                                ? (availableBeats.find((b) => b.id === value.beat)?.name ?? value.beat)
+                                : '跟隨曲風'}`}
                     </span>
                 </summary>
                 <div className="collapse-content">
+                    <div className="text-sm font-medium">主旋律</div>
                     <p className="text-xs text-base-content/60 mb-3">
-                        主旋律決定音符密度，同時決定拍號。不選則沿用預設。
+                        決定音符密度，同時決定拍號。不選則沿用預設。
                     </p>
                 {compact ? (
                     <div className={fieldCls}>
@@ -316,65 +320,15 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                         })}
                     </div>
                 )}
-                </div>
-            </details>
 
-            <Divider>曲風</Divider>
+                    <div className="divider my-3" />
 
-            {compact ? (
-                <div className={fieldCls}>
-                    <select className={selectCls} value={selectedGenre ?? ''}
-                        onChange={(e) => onChange(applyGenre(value, e.target.value))}>
-                        <option value="" disabled>請選擇曲風</option>
-                        {GENRES.map((g) => (
-                            <option key={g.id} value={g.id}
-                                disabled={!availableGenres.some((a) => a.id === g.id)}>
-                                {g.nameZh}（BPM {g.bpmRange[0]}~{g.bpmRange[1]}）
-                                {rhythmFor(g.id)?.isNew ? ' ‧ NEW' : ''}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {GENRES.map((genre) => {
-                        const available = availableGenres.some((g) => g.id === genre.id);
-                        const selected = selectedGenre === genre.id;
-                        return (
-                            <button key={genre.id} type="button" disabled={!available}
-                                className={`card card-compact border-2 text-left transition-all cursor-pointer
-                                    ${selected ? 'border-primary bg-primary/10'
-                                        : available ? 'border-base-300 hover:border-primary/50'
-                                            : 'border-base-200 opacity-40 cursor-not-allowed'}`}
-                                onClick={() => available && onChange(applyGenre(value, genre.id))}>
-                                <div className="card-body p-3">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="font-bold text-sm">{genre.nameZh}</span>
-                                        {rhythmFor(genre.id)?.isNew && (
-                                            <span className="badge badge-primary badge-xs">NEW</span>
-                                        )}
-                                    </div>
-                                    <div className="text-xs opacity-60">{genre.nameEn}</div>
-                                    {rhythmFor(genre.id)?.credit && (
-                                        <div className="text-xs text-primary/80 mt-0.5">
-                                            節奏由 {rhythmFor(genre.id)!.credit} 調校
-                                        </div>
-                                    )}
-                                    <div className="text-xs mt-1">
-                                        <span className="badge badge-outline badge-xs">
-                                            BPM {genre.bpmRange[0]}~{genre.bpmRange[1]}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs opacity-50 mt-0.5">{genre.beatPattern}</div>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
-
-            <Divider>節奏風格</Divider>
-
+                    <div className="text-sm font-medium">伴奏節奏</div>
+                    <p className="text-xs text-base-content/60 mb-3">
+                        決定鼓組與伴奏聲部，<span className="font-medium">預設跟隨曲風</span>，一般不需更動。
+                        只有想用曲風清單裡沒有對應項目的節奏（例如<span className="font-medium">森巴</span>）
+                        才需要在這裡選。
+                    </p>
             <div className={fieldCls}>
                 <select className={selectCls} value={value.beat ?? ''}
                     onChange={(e) => set('beat', e.target.value || undefined)}>
@@ -411,6 +365,75 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                     </label>
                 )}
             </div>
+                </div>
+            </details>
+
+            <Divider>曲風</Divider>
+
+            {compact ? (
+                <div className={fieldCls}>
+                    <select className={selectCls} value={selectedGenre ?? ''}
+                        onChange={(e) => onChange(applyGenre(value, e.target.value))}>
+                        <option value="" disabled>請選擇曲風</option>
+                        {GENRES.map((g) => (
+                            <option key={g.id} value={g.id}
+                                disabled={!availableGenres.some((a) => a.id === g.id)}>
+                                {g.nameZh}（BPM {g.bpmRange[0]}~{g.bpmRange[1]}
+                                {BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[g.id])
+                                    ? `・節奏 ${BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[g.id])!.name}`
+                                    : ''}）
+                                {rhythmFor(g.id)?.isNew ? ' ‧ NEW' : ''}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {GENRES.map((genre) => {
+                        const available = availableGenres.some((g) => g.id === genre.id);
+                        const selected = selectedGenre === genre.id;
+                        return (
+                            <button key={genre.id} type="button" disabled={!available}
+                                className={`card card-compact border-2 text-left transition-all cursor-pointer
+                                    ${selected ? 'border-primary bg-primary/10'
+                                        : available ? 'border-base-300 hover:border-primary/50'
+                                            : 'border-base-200 opacity-40 cursor-not-allowed'}`}
+                                onClick={() => available && onChange(applyGenre(value, genre.id))}>
+                                <div className="card-body p-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="font-bold text-sm">{genre.nameZh}</span>
+                                        {rhythmFor(genre.id)?.isNew && (
+                                            <span className="badge badge-primary badge-xs">NEW</span>
+                                        )}
+                                    </div>
+                                    <div className="text-xs opacity-60">{genre.nameEn}</div>
+                                    {rhythmFor(genre.id)?.credit && (
+                                        <div className="text-xs text-primary/80 mt-0.5">
+                                            節奏由 {rhythmFor(genre.id)!.credit} 調校
+                                        </div>
+                                    )}
+                                    <div className="text-xs mt-1">
+                                        <span className="badge badge-outline badge-xs">
+                                            BPM {genre.bpmRange[0]}~{genre.bpmRange[1]}
+                                        </span>
+                                    </div>
+                                    <div className="mt-1">
+                                        <BeatPatternStaff
+                                            pattern={genre.beatPattern}
+                                            label={`${genre.nameZh} 節拍：${genre.beatPattern}`}
+                                        />
+                                    </div>
+                                    {BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[genre.id]) && (
+                                        <div className="text-xs opacity-50">
+                                            節奏：{BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[genre.id])!.name}
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             <Divider>BPM</Divider>
 
