@@ -329,9 +329,6 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     const [scoreLoading, setScoreLoading] = useState(false);
     const scoreAbortRef = useRef<AbortController | null>(null);
 
-    // 工具列音訊播放（MP3）
-    const audioRef        = useRef<HTMLAudioElement>(null);
-    const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
     // Stable refs so doExport (called by the hook) sees current values
     const appliedParamsRef = useRef<MusicReportParams>(initialParams);
@@ -442,18 +439,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     }, [processedXML, exportState.taskId]);
 
     // 工具列：播放 MP3
-    // isReady 保證 downloadUrl 已存在，直接呼叫 play()（在用戶手勢 call stack 內）
-    const handleToolbarPlay = useCallback(() => {
-        audioRef.current?.play().catch(() => {/* browser blocked — unlikely in user-gesture context */});
-    }, []);
 
-    // 工具列：停止播放
-    const handleToolbarStop = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-        }
-    }, []);
 
     // 工具列：下載 MusicXML
     const downloadXml = useCallback(() => {
@@ -858,29 +844,10 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                 {isReady && (<div className="w-full">
                     {/* 工具列 */}
                     <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b border-base-300 bg-base-100">
-                        {/* 播放 / 暫停（isReady 保證 MP3 已就緒） */}
-                        {!isAudioPlaying ? (
-                            <button
-                                className="btn btn-primary btn-sm gap-1"
-                                onClick={handleToolbarPlay}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>
-                                播放
-                            </button>
-                        ) : (
-                            <button className="btn btn-secondary btn-sm gap-1" onClick={() => audioRef.current?.pause()}>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clipRule="evenodd" /></svg>暫停
-                            </button>
-                        )}
-                        <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={handleToolbarStop}
-                            disabled={!isAudioPlaying}
-                            title="停止"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clipRule="evenodd" /></svg>
-                        </button>
-
+                        {/* 播放交由下方混音器負責。這裡曾另有一組播放/停止，
+                            走的是 <audio> 播放最終 MP3，與混音器的 Web Audio 各自
+                            獨立——同一頁兩個播放鍵、彼此不同步，按了哪個會有聲音
+                            並不明顯。 */}
                         <div className="divider divider-horizontal mx-0"></div>
 
                         {/* XML 下載 */}
@@ -925,15 +892,6 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                         </span>
                     </div>
 
-                    {/* 隱藏 audio 元素 */}
-                    <audio
-                        ref={audioRef}
-                        src={exportState.downloadUrl || undefined}
-                        preload="auto"
-                        onPlay={() => setIsAudioPlaying(true)}
-                        onPause={() => setIsAudioPlaying(false)}
-                        onEnded={() => setIsAudioPlaying(false)}
-                    />
 
                 </div>)}
 
