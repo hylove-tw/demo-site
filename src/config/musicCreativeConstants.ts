@@ -103,6 +103,36 @@ export function getCompatibleBeatTimeSignature(timeSignature: string): string | 
   return null;
 }
 
+// ── 只有節奏、沒有對應曲風的風格 ────────────────────────
+// 上游的 genre 是固定列舉，沒有森巴。但森巴的伴奏節奏存在且由音樂人調校，
+// 使用者應該選得到。這類項目與曲風並列呈現，選擇時同時設定：
+//   beat  → 送 music-gen，決定鼓組與伴奏（這才是使用者真正想要的東西）
+//   genre → 送上游決定作曲；挑一個限制最少、速度範圍相容的曲風
+//
+// chacha 對 melody 沒有限制、BPM 60–140 也涵蓋森巴的範圍，是最安全的搭配。
+
+export interface RhythmOnlyStyle {
+  id: string;
+  nameZh: string;
+  nameEn: string;
+  beat: string;
+  baseGenre: string;
+  bpmRange: [number, number];
+  beatPattern: string;
+}
+
+export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
+  {
+    id: 'samba',
+    nameZh: '森巴',
+    nameEn: 'Samba',
+    beat: 'samba',
+    baseGenre: 'chacha',
+    bpmRange: [95, 135],
+    beatPattern: '重-輕-重-輕',
+  },
+];
+
 // ── 曲風→節拍預設映射 ──────────────────────────────────
 // 將每個曲風 ID 映射到最接近的節拍預設 ID（beatPresets.ts）
 

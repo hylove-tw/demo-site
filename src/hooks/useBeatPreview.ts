@@ -18,8 +18,8 @@ const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/,
 export interface BeatPreview {
     /** Genre id currently sounding, or null. */
     playing: string | null;
-    /** Start the genre's clip; calling with the one already playing stops it. */
-    toggle: (genreId: string) => void;
+    /** Start the clip for a genre id or beat id; the one playing stops it. */
+    toggle: (id: string) => void;
     stop: () => void;
     /** Genre id whose clip is still loading. */
     loading: string | null;
@@ -33,8 +33,10 @@ export function useBeatPreview(): BeatPreview {
     const [playing, setPlaying] = useState<string | null>(null);
     const [loading, setLoading] = useState<string | null>(null);
 
-    const previewUrl = useCallback((genreId: string): string | null => {
-        const preset = presetForBeat(presets, GENRE_BEAT_MAP[genreId]);
+    const previewUrl = useCallback((id: string): string | null => {
+        // Accepts a genre id or, for styles that have no upstream genre (森巴),
+        // a beat id directly.
+        const preset = presetForBeat(presets, GENRE_BEAT_MAP[id] ?? id);
         if (!preset?.previewUrl) return null;
         return `${MUSIC_GEN_URL}${preset.previewUrl}`;
     }, [presets]);

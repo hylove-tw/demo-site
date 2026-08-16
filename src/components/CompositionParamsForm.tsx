@@ -21,6 +21,7 @@ import { useBeatPreview } from '../hooks/useBeatPreview';
 import { BeatPatternStaff } from './BeatPatternStaff';
 import {
     GENRE_BEAT_MAP,
+    RHYTHM_ONLY_STYLES,
     KEY_CENTERS,
     MELODY_PATTERNS,
     GENRES,
@@ -435,16 +436,17 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {/* 曲風一律可選：曲風的優先序高於主旋律，選了之後主旋律會自動
+                        跟著設成相容的值。反過來讓主旋律把曲風變灰，等於讓次要的選擇
+                        限制主要的選擇。 */}
                     {GENRES.map((genre) => {
-                        const available = availableGenres.some((g) => g.id === genre.id);
-                        const selected = selectedGenre === genre.id;
+                        const selected = selectedGenre === genre.id && !value.beat;
                         return (
-                            <button key={genre.id} type="button" disabled={!available}
+                            <button key={genre.id} type="button"
                                 className={`card card-compact border-2 text-left transition-all cursor-pointer
                                     ${selected ? 'border-primary bg-primary/10'
-                                        : available ? 'border-base-300 hover:border-primary/50'
-                                            : 'border-base-200 opacity-40 cursor-not-allowed'}`}
-                                onClick={() => available && onChange(applyGenre(value, genre.id))}>
+                                        : 'border-base-300 hover:border-primary/50'}`}
+                                onClick={() => onChange({ ...applyGenre(value, genre.id), beat: undefined })}>
                                 <div className="card-body p-3">
                                     <div className="flex items-center gap-1.5">
                                         <span className="font-bold text-sm">{genre.nameZh}</span>
@@ -497,6 +499,67 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                             節奏：{BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[genre.id])!.name}
                                         </div>
                                     )}
+                                </div>
+                            </button>
+                        );
+                    })}
+
+                    {/* 只有節奏、沒有對應上游曲風的風格。與曲風並列，因為對使用者
+                        而言它們是同一種選擇；差別只在送給後端的欄位。 */}
+                    {RHYTHM_ONLY_STYLES.map((style) => {
+                        const rhythm = presetForBeat(musicGenPresets, style.beat);
+                        const selected = value.beat === style.beat;
+                        return (
+                            <button key={style.id} type="button"
+                                className={`card card-compact border-2 text-left transition-all cursor-pointer
+                                    ${selected ? 'border-primary bg-primary/10'
+                                        : 'border-base-300 hover:border-primary/50'}`}
+                                onClick={() => onChange({
+                                    ...applyGenre(value, style.baseGenre),
+                                    beat: style.beat,
+                                })}>
+                                <div className="card-body p-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="font-bold text-sm">{style.nameZh}</span>
+                                        {rhythm?.isNew && (
+                                            <span className="badge badge-primary badge-xs">NEW</span>
+                                        )}
+                                        {preview.canPreview(style.id) && (
+                                        <span
+                                            role="button" tabIndex={0}
+                                            aria-label={`試聽 ${style.nameZh} 節奏`}
+                                            title={preview.playing === style.id ? '停止試聽' : '試聽節奏'}
+                                            className="ml-auto btn btn-ghost btn-xs px-1"
+                                            onClick={(e) => { e.stopPropagation(); preview.toggle(style.id); }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault(); e.stopPropagation();
+                                                    preview.toggle(style.id);
+                                                }
+                                            }}
+                                        >
+                                            {preview.loading === style.id
+                                                ? <span className="loading loading-spinner loading-xs" />
+                                                : preview.playing === style.id ? '■' : '▶'}
+                                        </span>
+                                        )}
+                                    </div>
+                                    <div className="text-xs opacity-60">{style.nameEn}</div>
+                                    {rhythm?.credit && (
+                                        <div className="text-xs text-primary/80 mt-0.5">
+                                            節奏由 {rhythm.credit} 調校
+                                        </div>
+                                    )}
+                                    <div className="text-xs mt-1">
+                                        <span className="badge badge-outline badge-xs">
+                                            BPM {style.bpmRange[0]}~{style.bpmRange[1]}
+                                        </span>
+                                    </div>
+                                    <div className="mt-1">
+                                        <BeatPatternStaff pattern={style.beatPattern}
+                                            label={`${style.nameZh} 節拍：${style.beatPattern}`} />
+                                    </div>
+                                    <div className="text-xs opacity-50">節奏：{style.nameZh}</div>
                                 </div>
                             </button>
                         );
