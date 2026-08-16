@@ -15,7 +15,8 @@
 // `variant="compact"` for the editor's parameter panel.
 
 import React from 'react';
-import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
+import { useMusicGenPresets, presetForBeat, beatOptionLabel, beatCredit } from '../hooks/useMusicGenPresets';
+import { getPresetsForTimeSignature } from '../utils/beatPresets';
 import {
     GENRE_BEAT_MAP,
     KEY_CENTERS,
@@ -119,6 +120,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     const rhythmFor = (genreId: string) =>
         presetForBeat(musicGenPresets, GENRE_BEAT_MAP[genreId]);
 
+
     const playerMode = value.playerMode ?? 'single';
     const musicType = value.musicType ?? 'emotion';
     const keyType = (value.keyType ?? 'major') as 'major' | 'minor';
@@ -129,6 +131,14 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
         selectedGenre ? getCompatibleMelodies(selectedGenre) : MELODY_PATTERNS;
     const availableGenres: Genre[] =
         selectedMelody ? getCompatibleGenres(selectedMelody) : GENRES;
+
+// Rhythms that fit the metre the chosen melody produces. Left unset, the
+    // rhythm follows the genre — some rhythms (森巴) have no matching genre in
+    // the upstream enum, so without an explicit choice they are unreachable.
+    const availableBeats = getPresetsForTimeSignature(
+        timeSignatureForMelody(selectedMelody));
+    const effectiveBeat = value.beat
+        || (selectedGenre ? GENRE_BEAT_MAP[selectedGenre] : undefined);
 
     const currentGenre = GENRES.find((g) => g.id === selectedGenre);
     const bpmMin = currentGenre?.bpmRange[0] ?? 30;
@@ -338,6 +348,45 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                     })}
                 </div>
             )}
+
+            <Divider>節奏風格</Divider>
+
+            <div className={fieldCls}>
+                <select className={selectCls} value={value.beat ?? ''}
+                    onChange={(e) => set('beat', e.target.value || undefined)}>
+                    <option value="">
+                        依曲風自動決定
+                        {effectiveBeat && !value.beat
+                            ? `（目前：${availableBeats.find(b => b.id === effectiveBeat)?.name ?? effectiveBeat}）`
+                            : ''}
+                    </option>
+                    {availableBeats.filter(b => b.id !== 'none').map((beat) => (
+                        <option key={beat.id} value={beat.id}>
+                            {beatOptionLabel(musicGenPresets, beat)}
+                        </option>
+                    ))}
+                    <option value="none">不加節奏</option>
+                </select>
+                {beatCredit(musicGenPresets, effectiveBeat) && (
+                    <label className={labelCls}>
+                        <span className="label-text-alt flex items-center gap-1.5">
+                            {presetForBeat(musicGenPresets, effectiveBeat)?.isNew && (
+                                <span className="badge badge-primary badge-xs">NEW</span>
+                            )}
+                            <span className="text-base-content/70">
+                                {beatCredit(musicGenPresets, effectiveBeat)}
+                            </span>
+                        </span>
+                    </label>
+                )}
+                {!compact && (
+                    <label className="label py-1">
+                        <span className="label-text-alt text-base-content/50">
+                            森巴等節奏在曲風清單中沒有對應項目，需要在這裡直接選。
+                        </span>
+                    </label>
+                )}
+            </div>
 
             <Divider>BPM</Divider>
 

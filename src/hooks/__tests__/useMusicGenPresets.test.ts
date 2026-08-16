@@ -95,3 +95,17 @@ describe('genre cards', () => {
         expect(presetForBeat(presets, beatFor.waltz)).toBeUndefined();
     });
 });
+
+describe('rhythms with no matching genre', () => {
+    it('samba is credited even though no genre maps to it', () => {
+        // The upstream genre enum has no samba, so it is only reachable through
+        // an explicit rhythm choice — and must still show its credit there.
+        expect(presetForBeat(presets, 'samba')?.credit).toBe('漢克呂');
+        expect(presetForBeat(presets, 'samba')?.isNew).toBe(true);
+    });
+
+    it('labels samba with the NEW marker', () => {
+        expect(beatOptionLabel(presets, beat('samba', '森巴', 'Samba')))
+            .toBe('森巴 (Samba) ‧ NEW');
+    });
+});
