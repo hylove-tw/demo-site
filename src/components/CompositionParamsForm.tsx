@@ -15,7 +15,9 @@
 // `variant="compact"` for the editor's parameter panel.
 
 import React from 'react';
+import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
 import {
+    GENRE_BEAT_MAP,
     KEY_CENTERS,
     MELODY_PATTERNS,
     GENRES,
@@ -109,6 +111,13 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 }) => {
     const compact = variant === 'compact';
     const set = (field: string, v: any) => onChange({ ...value, [field]: v });
+
+    // Picking a genre also picks the rhythm it maps to, so a genre backed by a
+    // credited groove should say so here — this is where the choice is actually
+    // made, and the two happen to share a name (雷鬼 the genre, 雷鬼 the rhythm).
+    const musicGenPresets = useMusicGenPresets();
+    const rhythmFor = (genreId: string) =>
+        presetForBeat(musicGenPresets, GENRE_BEAT_MAP[genreId]);
 
     const playerMode = value.playerMode ?? 'single';
     const musicType = value.musicType ?? 'emotion';
@@ -287,6 +296,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                             <option key={g.id} value={g.id}
                                 disabled={!availableGenres.some((a) => a.id === g.id)}>
                                 {g.nameZh}（BPM {g.bpmRange[0]}~{g.bpmRange[1]}）
+                                {rhythmFor(g.id)?.isNew ? ' ‧ NEW' : ''}
                             </option>
                         ))}
                     </select>
@@ -304,8 +314,18 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                             : 'border-base-200 opacity-40 cursor-not-allowed'}`}
                                 onClick={() => available && onChange(applyGenre(value, genre.id))}>
                                 <div className="card-body p-3">
-                                    <div className="font-bold text-sm">{genre.nameZh}</div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="font-bold text-sm">{genre.nameZh}</span>
+                                        {rhythmFor(genre.id)?.isNew && (
+                                            <span className="badge badge-primary badge-xs">NEW</span>
+                                        )}
+                                    </div>
                                     <div className="text-xs opacity-60">{genre.nameEn}</div>
+                                    {rhythmFor(genre.id)?.credit && (
+                                        <div className="text-xs text-primary/80 mt-0.5">
+                                            節奏由 {rhythmFor(genre.id)!.credit} 調校
+                                        </div>
+                                    )}
                                     <div className="text-xs mt-1">
                                         <span className="badge badge-outline badge-xs">
                                             BPM {genre.bpmRange[0]}~{genre.bpmRange[1]}

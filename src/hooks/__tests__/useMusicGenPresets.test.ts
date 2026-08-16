@@ -78,3 +78,20 @@ describe('beatCredit', () => {
         expect(beatCredit(new Map(), 'reggae')).toBeNull();
     });
 });
+
+describe('genre cards', () => {
+    // Choosing a genre also chooses the rhythm it maps to, so the credit shown
+    // on a genre card comes from that rhythm — not from the genre itself.
+    const beatFor: Record<string, string> = {
+        reggae: 'reggae', waltz: 'waltz', blues: 'jazz', giliba: 'pop',
+    };
+
+    it('credits the rhythm a genre maps to', () => {
+        expect(presetForBeat(presets, beatFor.reggae)?.credit).toBe('漢克呂');
+    });
+
+    it('leaves genres whose rhythm has no credit unmarked', () => {
+        expect(presetForBeat(presets, beatFor.giliba)?.credit).toBeNull();
+        expect(presetForBeat(presets, beatFor.waltz)).toBeUndefined();
+    });
+});
