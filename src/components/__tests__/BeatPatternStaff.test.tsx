@@ -9,7 +9,7 @@ describe('BeatPatternStaff', () => {
 
     it('fills the stressed beats and leaves the rest open', () => {
         const { container } = render(<BeatPatternStaff pattern="重-輕-重-輕" />);
-        const filled = [...container.querySelectorAll('ellipse')]
+        const filled = Array.from(container.querySelectorAll('ellipse'))
             .filter((e) => e.getAttribute('fill') === 'currentColor');
         expect(filled).toHaveLength(2);
     });

@@ -86,11 +86,35 @@ export function applyGenre(params: CompositionParams, genreId: string): Composit
     const genre = GENRES.find((g) => g.id === genreId);
     if (!genre) return params;
 
-    const next: CompositionParams = { ...params, genre: genreId, bpm: getBpmMidpoint(genre.bpmRange) };
-    if (params.melodyPattern && !getCompatibleMelodies(genreId).some((m) => m.id === params.melodyPattern)) {
-        delete next.melodyPattern;
-    }
-    return next;
+    // Choosing a genre settles the melody outright, including when the same
+    // genre is picked again — that is the way back from a custom combination.
+    return {
+        ...params,
+        genre: genreId,
+        bpm: getBpmMidpoint(genre.bpmRange),
+        melodyPattern: defaultMelodyFor(genreId),
+    };
+}
+
+/**
+ * A melody the genre actually accepts, preferred to match the genre's rhythm.
+ *
+ * Leaving this unset is not an option: the export falls back to melody 1, which
+ * eight of the thirteen genres reject outright — and since the melody picker is
+ * tucked into the advanced section, nobody sets it by hand.
+ *
+ * Matching the rhythm's metre matters beyond taste. music-gen swaps in a
+ * different rhythm preset when the score's metre does not match the one it was
+ * asked for, so picking a 4/8 melody for reggae would silently deliver
+ * basic_pop's drums under a preset the user chose for its reggae feel.
+ */
+export function defaultMelodyFor(genreId: string): number | undefined {
+    const compatible = getCompatibleMelodies(genreId);
+    if (compatible.length === 0) return undefined;
+
+    const rhythmMetre = BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[genreId])?.timeSignature;
+    const matching = compatible.find((m) => m.timeSignature === rhythmMetre);
+    return (matching ?? compatible[0]).id;
 }
 
 /** Apply a melody choice, dropping a genre that is no longer compatible. */
@@ -146,6 +170,13 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
         timeSignatureForMelody(selectedMelody));
     const effectiveBeat = value.beat
         || (selectedGenre ? GENRE_BEAT_MAP[selectedGenre] : undefined);
+
+    // Choosing a genre settles the melody. If the user then changes it, the
+    // combination is no longer that genre's — say so rather than keep showing
+    // the genre as if it still described what will be composed.
+    const isCustomGenre = Boolean(
+        selectedGenre && selectedMelody
+        && selectedMelody !== defaultMelodyFor(selectedGenre));
 
     const currentGenre = GENRES.find((g) => g.id === selectedGenre);
     const bpmMin = currentGenre?.bpmRange[0] ?? 30;
@@ -261,7 +292,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 <summary className="collapse-title min-h-0 py-3 text-sm font-medium flex items-center gap-2">
                     <span>進階選項</span>
                     <span className="ml-auto text-xs font-normal text-base-content/60">
-                        {`主旋律 ${selectedMelody ?? '預設'}・節奏 ${
+                        {`主旋律 ${selectedMelody ?? '預設'}${isCustomGenre ? '（自訂）' : ''}・節奏 ${
                             value.beat
                                 ? (availableBeats.find((b) => b.id === value.beat)?.name ?? value.beat)
                                 : '跟隨曲風'}`}
@@ -270,7 +301,9 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 <div className="collapse-content">
                     <div className="text-sm font-medium">主旋律</div>
                     <p className="text-xs text-base-content/60 mb-3">
-                        決定音符密度，同時決定拍號。不選則沿用預設。
+                        決定音符密度，同時決定拍號。
+                        <span className="font-medium">選擇曲風時會自動帶出對應的主旋律</span>，
+                        在此改動會讓曲風變成「自訂曲風」。
                     </p>
                 {compact ? (
                     <div className={fieldCls}>
@@ -368,7 +401,18 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 </div>
             </details>
 
-            <Divider>曲風</Divider>
+            <Divider>{isCustomGenre ? '曲風（自訂）' : '曲風'}</Divider>
+
+            {isCustomGenre && (
+                <div className="alert alert-info py-2 text-xs">
+                    <span>
+                        目前是<span className="font-medium">自訂曲風</span>：主旋律已改為
+                        {` ${selectedMelody}`}，與「{currentGenre?.nameZh}」預設的
+                        {` ${defaultMelodyFor(selectedGenre!)}`} 不同。
+                        重新點選曲風即可回到預設組合。
+                    </span>
+                </div>
+            )}
 
             {compact ? (
                 <div className={fieldCls}>
