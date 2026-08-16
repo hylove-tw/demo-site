@@ -1,6 +1,6 @@
 // src/components/MusicReportEditor.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { exportMp3, renderScore, resolveRhythmPreset, StemVolumes } from '../services/musicGenService';
+import { exportMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, StemVolumes } from '../services/musicGenService';
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
 import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
@@ -413,7 +413,15 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         const timer = setTimeout(async () => {
             try {
                 const beatPreset = resolveRhythmPreset(appliedParams.beat, timeSignatureForMelody(appliedParams.melodyPattern));
-                const pages = await renderScore(processedXML, { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
+                // Prefer the score the server actually rendered. With an
+                // accompaniment preset the sounding p2/p3 are not the upstream
+                // ones, so drawing the upstream copy would show notes that are
+                // never played and hide the ones that are.
+                const rendered = exportState.taskId
+                    ? await fetchRenderedScore(exportState.taskId)
+                    : null;
+                const pages = await renderScore(rendered ?? processedXML,
+                    { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
                 setScorePages(pages);
             } catch (err: any) {
                 if (err?.name !== 'AbortError') {
@@ -429,7 +437,9 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
             controller.abort();
             setScoreLoading(false);
         };
-    }, [processedXML]);
+        // Re-render once the task id arrives: only then can the server-rendered
+        // score be fetched, and until it does we are drawing the upstream copy.
+    }, [processedXML, exportState.taskId]);
 
     // 工具列：播放 MP3
     // isReady 保證 downloadUrl 已存在，直接呼叫 play()（在用戶手勢 call stack 內）

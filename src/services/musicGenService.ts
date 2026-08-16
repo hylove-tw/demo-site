@@ -87,6 +87,24 @@ export function presetNameForBeat(beatId: string | undefined): string {
 export type AccompanimentMode = 'replace' | 'layer' | 'off';
 export type AccompanimentHarmony = 'diatonic' | 'full';
 
+/**
+ * The MusicXML that was actually rendered for a finished task.
+ *
+ * Differs from the upstream MusicXML whenever a preset's accompaniment replaced
+ * p2/p3 — displaying the upstream copy would print parts nobody plays and omit
+ * the ones they do. Resolves to null when the server has no score saved, so the
+ * caller can fall back to what it already has.
+ */
+export async function fetchRenderedScore(taskId: string): Promise<string | null> {
+  if (!MUSIC_GEN_URL) return null;
+  try {
+    const res = await fetch(`${MUSIC_GEN_URL}/api/v1/score/${taskId}`);
+    return res.ok ? await res.text() : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface StemVolumes {
   p1?: number;
   p2?: number;
@@ -169,6 +187,8 @@ export interface ExportState {
   downloadUrl?: string;
   /** Available after generation completes: stem name → download URL */
   stemUrls?: Record<string, string>;
+  /** Needed to fetch the score that was actually rendered. */
+  taskId?: string;
 }
 
 /**
@@ -343,7 +363,7 @@ async function _submitAndPoll(
             )
           )
         : undefined;
-      onStatusChange({ status: 'completed', downloadUrl, stemUrls });
+      onStatusChange({ status: 'completed', downloadUrl, stemUrls, taskId: task_id });
       return;
     }
     if (task.status === 'failed') {

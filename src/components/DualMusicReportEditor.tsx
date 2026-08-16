@@ -1,6 +1,6 @@
 // src/components/DualMusicReportEditor.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { exportDualMp3, renderScore, resolveRhythmPreset, DualStemVolumes } from '../services/musicGenService';
+import { exportDualMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, DualStemVolumes } from '../services/musicGenService';
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
 import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
@@ -446,7 +446,15 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         const timer = setTimeout(async () => {
             try {
                 const beatPreset = resolveRhythmPreset(appliedParams.beat, timeSignatureForMelody(appliedParams.melodyPattern));
-                const pages = await renderScore(processedXML, { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
+                // Prefer the score the server actually rendered. With an
+                // accompaniment preset the sounding p2/p3 are not the upstream
+                // ones, so drawing the upstream copy would show notes that are
+                // never played and hide the ones that are.
+                const rendered = exportState.taskId
+                    ? await fetchRenderedScore(exportState.taskId)
+                    : null;
+                const pages = await renderScore(rendered ?? processedXML,
+                    { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
                 setScorePages(pages);
             } catch (err: any) {
                 if (err?.name !== 'AbortError') setScorePages(null);
@@ -459,7 +467,9 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
             controller.abort();
             setScoreLoading(false);
         };
-    }, [processedXML, appliedParams.beat, appliedParams.time_signature]);
+        // Re-render once the task id arrives: only then can the server-rendered
+        // score be fetched. time_signature is gone — the metre follows melody.
+    }, [processedXML, appliedParams.beat, appliedParams.melodyPattern, exportState.taskId]);
 
     // 工具列：列印 Verovio SVG 頁面
     const printSvgScore = useCallback(() => {
