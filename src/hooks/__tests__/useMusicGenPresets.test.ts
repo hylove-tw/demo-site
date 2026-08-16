@@ -10,15 +10,15 @@ import type { MusicGenPreset } from '../../services/musicGenService';
 const presets = new Map<string, MusicGenPreset>([
     ['reggae', {
         name: 'reggae', displayName: '雷鬼 Reggae', credit: '漢克呂',
-        isNew: true, hasAccompaniment: true,
+        isNew: true, hasAccompaniment: true, previewUrl: '/api/v1/assets/preview/reggae',
     }],
     ['samba', {
         name: 'samba', displayName: '森巴 Samba', credit: '漢克呂',
-        isNew: true, hasAccompaniment: true,
+        isNew: true, hasAccompaniment: true, previewUrl: '/api/v1/assets/preview/samba',
     }],
     ['basic_pop', {
         name: 'basic_pop', displayName: null, credit: null,
-        isNew: false, hasAccompaniment: false,
+        isNew: false, hasAccompaniment: false, previewUrl: '/api/v1/assets/preview/basic_pop',
     }],
 ]);
 

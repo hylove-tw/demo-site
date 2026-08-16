@@ -453,6 +453,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                         )}
                                         {/* 試聽。用 span 而非 button：這張卡本身就是按鈕，
                                             巢狀的互動元素在部分瀏覽器不合法也不好操作。 */}
+                                        {preview.canPreview(genre.id) && (
                                         <span
                                             role="button"
                                             tabIndex={0}
@@ -472,6 +473,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                                 ? <span className="loading loading-spinner loading-xs" />
                                                 : preview.playing === genre.id ? '■' : '▶'}
                                         </span>
+                                        )}
                                     </div>
                                     <div className="text-xs opacity-60">{genre.nameEn}</div>
                                     {rhythmFor(genre.id)?.credit && (

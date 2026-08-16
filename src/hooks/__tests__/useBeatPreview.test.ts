@@ -1,29 +1,41 @@
-import { GENRES, GENRE_BEAT_MAP, getBpmMidpoint } from '../../config/musicCreativeConstants';
-import { BEAT_PRESETS, convertPresetToDrumLooperPattern } from '../../utils/beatPresets';
+import { GENRES, GENRE_BEAT_MAP } from '../../config/musicCreativeConstants';
+import { presetForBeat } from '../useMusicGenPresets';
+import { presetNameForBeat } from '../../services/musicGenService';
+import type { MusicGenPreset } from '../../services/musicGenService';
 
-// The preview synthesises locally from BEAT_PRESETS, so a genre whose mapped
-// beat is missing or unconvertible would simply do nothing when clicked —
-// silently, since the preview deliberately swallows its own failures.
-describe.each(GENRES.map((g) => [g.id, g.nameZh]))('preview for %s (%s)', (genreId) => {
-    it('maps to a beat preset that exists', () => {
-        const beat = BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[genreId as string]);
-        expect(beat).toBeDefined();
+// Previews are pre-rendered clips served by music-gen. What matters here is
+// that every genre resolves through beat id to a *server preset name* that a
+// clip can exist for — a genre that dead-ends gets no play button at all, and
+// does so silently.
+const preset = (name: string): MusicGenPreset => ({
+    name, displayName: null, credit: null, isNew: false,
+    hasAccompaniment: false, previewUrl: `/api/v1/assets/preview/${name}`,
+});
+
+// Keyed the way presetForBeat looks them up: by server preset name, not beat id.
+const presets = new Map<string, MusicGenPreset>(
+    Object.values(GENRE_BEAT_MAP)
+        .map((beat) => presetNameForBeat(beat))
+        .map((name) => [name, preset(name)]),
+);
+
+describe.each(GENRES.map((g) => [g.id, g.nameZh]))('%s (%s)', (genreId) => {
+    it('maps to a rhythm', () => {
+        expect(GENRE_BEAT_MAP[genreId as string]).toBeDefined();
     });
 
-    it('produces a playable pattern with at least one hit', () => {
-        const genre = GENRES.find((g) => g.id === genreId)!;
-        const beat = BEAT_PRESETS.find((b) => b.id === GENRE_BEAT_MAP[genreId as string])!;
-        const pattern = convertPresetToDrumLooperPattern(beat, getBpmMidpoint(genre.bpmRange));
-
-        expect(pattern).not.toBeNull();
-        expect(pattern!.pattern.length).toBeGreaterThan(0);
-        expect(pattern!.beatsPerMeasure).toBeGreaterThan(0);
+    it('resolves to a server preset that can carry a preview', () => {
+        const found = presetForBeat(presets, GENRE_BEAT_MAP[genreId as string]);
+        expect(found?.previewUrl).toMatch(/^\/api\/v1\/assets\/preview\//);
     });
+});
 
-    it('previews at a tempo inside the genre range', () => {
-        const genre = GENRES.find((g) => g.id === genreId)!;
-        const bpm = getBpmMidpoint(genre.bpmRange);
-        expect(bpm).toBeGreaterThanOrEqual(genre.bpmRange[0]);
-        expect(bpm).toBeLessThanOrEqual(genre.bpmRange[1]);
+describe('presets without a rendered clip', () => {
+    it('reports no preview rather than a broken url', () => {
+        const name = presetNameForBeat('pop');
+        const empty = new Map<string, MusicGenPreset>([
+            [name, { ...preset(name), previewUrl: null }],
+        ]);
+        expect(presetForBeat(empty, 'pop')?.previewUrl).toBeNull();
     });
 });

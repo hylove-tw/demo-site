@@ -48,6 +48,8 @@ export interface MusicGenPreset {
   credit: string | null;
   isNew: boolean;
   hasAccompaniment: boolean;
+  /** Pre-rendered clip of this rhythm, for previewing before generating. */
+  previewUrl: string | null;
 }
 
 let presetCache: Promise<Map<string, MusicGenPreset>> | null = null;
@@ -72,6 +74,7 @@ export function fetchMusicGenPresets(): Promise<Map<string, MusicGenPreset>> {
         credit: row.credit ?? null,
         isNew: Boolean(row.is_new),
         hasAccompaniment: Boolean(row.has_accompaniment),
+        previewUrl: row.preview_url ?? null,
       }])
     ))
     .catch(() => new Map<string, MusicGenPreset>());
