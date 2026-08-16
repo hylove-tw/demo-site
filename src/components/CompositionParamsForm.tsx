@@ -17,6 +17,7 @@
 import React, { useState } from 'react';
 import { useMusicGenPresets, presetForBeat, beatOptionLabel, beatCredit } from '../hooks/useMusicGenPresets';
 import { getPresetsForTimeSignature, BEAT_PRESETS } from '../utils/beatPresets';
+import { useBeatPreview } from '../hooks/useBeatPreview';
 import { BeatPatternStaff } from './BeatPatternStaff';
 import {
     GENRE_BEAT_MAP,
@@ -148,6 +149,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     // credited groove should say so here — this is where the choice is actually
     // made, and the two happen to share a name (雷鬼 the genre, 雷鬼 the rhythm).
     const musicGenPresets = useMusicGenPresets();
+    const preview = useBeatPreview();
     const rhythmFor = (genreId: string) =>
         presetForBeat(musicGenPresets, GENRE_BEAT_MAP[genreId]);
 
@@ -449,6 +451,27 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                         {rhythmFor(genre.id)?.isNew && (
                                             <span className="badge badge-primary badge-xs">NEW</span>
                                         )}
+                                        {/* 試聽。用 span 而非 button：這張卡本身就是按鈕，
+                                            巢狀的互動元素在部分瀏覽器不合法也不好操作。 */}
+                                        <span
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-label={`試聽 ${genre.nameZh} 節奏`}
+                                            title={preview.playing === genre.id ? '停止試聽' : '試聽節奏'}
+                                            className="ml-auto btn btn-ghost btn-xs px-1"
+                                            onClick={(e) => { e.stopPropagation(); preview.toggle(genre.id); }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    preview.toggle(genre.id);
+                                                }
+                                            }}
+                                        >
+                                            {preview.loading === genre.id
+                                                ? <span className="loading loading-spinner loading-xs" />
+                                                : preview.playing === genre.id ? '■' : '▶'}
+                                        </span>
                                     </div>
                                     <div className="text-xs opacity-60">{genre.nameEn}</div>
                                     {rhythmFor(genre.id)?.credit && (
