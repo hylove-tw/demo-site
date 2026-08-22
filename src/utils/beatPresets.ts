@@ -130,6 +130,19 @@ export const BEAT_PRESETS: BeatPreset[] = [
     subdivisions: 4,
   },
   {
+    id: 'soul',
+    name: '靈魂',
+    nameEn: 'Soul',
+    description: '慢板靈魂樂，落地鼓在一三拍、反拍小鼓',
+    timeSignature: '4/4',
+    pattern: {
+      kick:  [3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
+      snare: [0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+      hihat: [2, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0],
+    },
+    subdivisions: 4,
+  },
+  {
     id: 'jazz',
     name: '爵士',
     nameEn: 'Jazz Swing',

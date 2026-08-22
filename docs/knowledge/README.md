@@ -16,7 +16,7 @@ frontmatter**（`title` / `keywords` / `dateModified`），沒有 JSON-LD、
 | 條目 | 摘要 |
 |---|---|
 | [`preset-id-key-mismatch`](entries/preset-id-key-mismatch.md) | preset 的 id 字串要跟查表用的 key 完全一致，否則查表落空會靜默 fallback 成別的預設值，沒有任何錯誤訊息——bossa nova 曾經因此整個選不到，只會安靜地播成 `basic_pop`。 |
-| [`preset-bpm-range-mismatch`](entries/preset-bpm-range-mismatch.md) | 前端滑桿的 `bpmRange` 要跟後端 preset YAML 的 `bpm_range` 對齊，否則超出範圍的值會被後端靜默夾掉，畫面顯示的數字跟實際播放的速度對不上——reggae 是實際發生過的案例，掃過後發現還有更大範圍的落差待處理。 |
+| [`preset-bpm-range-mismatch`](entries/preset-bpm-range-mismatch.md) | 前端滑桿的 `bpmRange` 要跟後端 preset YAML 的 `bpm_range` 對齊，否則超出範圍的值會被後端靜默夾掉。reggae/disco/tango/blues/country 已對齊，soul 是妥協而非真正修好（誠實記錄了限制），waltz/quick_waltz/rock/twist/chacha/giliba 仍未處理。 |
 | [`bundle-verification-unicode-escaping`](entries/bundle-verification-unicode-escaping.md) | 驗證 CRA build 產物是否對應特定原始碼時，字面 grep 中文字串必然找不到（CRA 把非 ASCII 轉義成 `\uXXXX`），用 diff 的新增行抽驗字串也不可靠；決定性做法是清快取重建後比對 bundle 的 hash/md5。 |
 | [`shared-logic-across-ui-paths`](entries/shared-logic-across-ui-paths.md) | 同一段「選了某選項該套用什麼參數」的邏輯，如果分別寫在兩個平行的 UI 路徑（例如卡片版跟下拉選單版）裡，遲早會 drift——要抽成共用 helper，讓兩邊呼叫同一份實作。 |
 

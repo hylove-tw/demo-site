@@ -16,7 +16,9 @@ const BEAT_TO_PRESET: Record<string, string> = {
   pop:          'basic_pop',
   rock:         'basic_pop',
   rumba:        'rnb',
-  tango:        'bossa_nova',
+  // bossa_nova's legal bpm_range ([100,150]) barely overlapped tango's
+  // [60,100] frontend range; rnb's [75,100] gives it real overlap instead.
+  tango:        'rnb',
   // The beat preset's id is `bossanova`; this key was hyphenated, so the
   // lookup missed and every bossa-nova beat fell back to basic_pop —
   // the bossa_nova preset was unreachable from the picker.
@@ -24,7 +26,14 @@ const BEAT_TO_PRESET: Record<string, string> = {
   disco:        'disco',
   waltz:        'compound_ballad',  // waltz API returns 6/8; pipeline auto-falls back to gentle_waltz for 3/4
   country:      'basic_pop',
-  jazz:         'rnb',
+  // 'jazz' is blues' beat id only. lofi's [70,90] gives blues full overlap;
+  // rnb's [75,100] used to leave a quarter of blues' range dead.
+  jazz:         'lofi',
+  // soul had no dedicated preset and borrowed bossa_nova (zero overlap with
+  // its own tempo range). ballad's [60,80] isn't soul-tuned either — this is
+  // the closest available compromise, not a real fix. See
+  // docs/knowledge/preset-bpm-range-mismatch.md.
+  soul:         'ballad',
   reggae:       'reggae',
   samba:        'samba',
   none:         'basic_pop',

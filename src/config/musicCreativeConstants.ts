@@ -53,8 +53,14 @@ export interface Genre {
 
 export const GENRES: Genre[] = [
   { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', bpmRange: [60, 120], timeSignature: '3/4', beatPattern: '重-輕-輕' },
-  { id: 'soul', nameZh: '靈魂', nameEn: 'Soul', bpmRange: [30, 60], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
-  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
+  // bpmRange aligned to the 'ballad' preset it now maps to (see
+  // GENRE_BEAT_MAP) — full overlap, but this is a compromise, not a real
+  // fix: 30-60 was the actually-intended soul tempo, and ballad's [60,80]
+  // is the closest existing preset, not a soul-tuned one. See
+  // docs/knowledge/preset-bpm-range-mismatch.md for why.
+  { id: 'soul', nameZh: '靈魂', nameEn: 'Soul', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
+  // bpmRange aligned to the 'lofi' preset (see BEAT_TO_PRESET['jazz']).
+  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', bpmRange: [70, 90], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
   { id: 'tango', nameZh: '探戈', nameEn: 'Tango', bpmRange: [60, 100], timeSignature: '4/4', beatPattern: '重-重-輕-輕-重' },
   { id: 'giliba', nameZh: '吉利巴', nameEn: 'Giliba', bpmRange: [80, 120], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重' },
@@ -65,7 +71,8 @@ export const GENRES: Genre[] = [
   // (the slider showed a value the render never actually used).
   { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', bpmRange: [75, 100], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
   { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', bpmRange: [60, 120], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
-  { id: 'country', nameZh: '鄉村', nameEn: 'Country', bpmRange: [60, 100], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  // bpmRange aligned to 'basic_pop' (see BEAT_TO_PRESET['country']).
+  { id: 'country', nameZh: '鄉村', nameEn: 'Country', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 120], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
   { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [60, 140], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
 ];
@@ -152,7 +159,7 @@ export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
 
 export const GENRE_BEAT_MAP: Record<string, string> = {
   waltz: 'waltz',
-  soul: 'bossanova',
+  soul: 'soul',
   blues: 'jazz',
   tango: 'tango',
   giliba: 'pop',
