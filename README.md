@@ -87,6 +87,25 @@ npm run test:e2e
 
 ## 部署
 
+### 部署拓撲總覽
+
+demo site 目前部署在三個平台，**各自獨立 build**（`PUBLIC_URL` 與 `REACT_APP_MUSIC_GEN_URL` 都是 build 時寫死的環境變數，換平台必須重新 build，不能只搬檔案）：
+
+| 平台 | 網址 | 檔案位置 | 更新方式 |
+|---|---|---|---|
+| weifan-ubuntu | `https://hylove.good-nas.cc/` | `/home/weifan/hylove-build` | 本機 `npm run build` 後放到該路徑，由 `music-gen-nginx-1` 容器唯讀掛載（`root /`，非 `/demo/`） |
+| 台灣 VPS | `http://172.105.230.72/demo/` | `/var/www/hylove-demo` | 見下方「VPS 部署」 |
+| 中國 阿里雲 | `http://8.138.157.218:8080/demo/` | `staging_hylove/current/public/demo/` | 需經 weifan-ubuntu 跳板轉送（本機無金鑰） |
+
+```bash
+# 台灣 VPS
+PUBLIC_URL=/demo REACT_APP_MUSIC_GEN_URL=http://172.105.230.72/api/music-gen npm run build
+# 中國 阿里雲
+PUBLIC_URL=/demo REACT_APP_MUSIC_GEN_URL=http://8.138.157.218:8080/api/music-gen npm run build
+```
+
+⚠️ **台灣 VPS 與阿里雲的網站根目錄是「半伴旅遊」（完全不同的產品），絕對不能覆蓋。** demo 掛在獨立的 `/demo/` 路徑下，靠專屬的 nginx location 提供 SPA fallback；還原方式是刪掉該目錄並移除 nginx 的 `location /demo/`，不影響任何既有檔案。weifan-ubuntu 則是唯一以根路徑（`/`）直接服務 demo 的環境。
+
 ### VPS 部署（正式環境）
 
 ```bash
