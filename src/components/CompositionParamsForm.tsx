@@ -33,6 +33,7 @@ import {
     timeSignatureForMelody,
     MelodyPattern,
     Genre,
+    RhythmOnlyStyle,
 } from '../config/musicCreativeConstants';
 
 export const INSTRUMENTS = [
@@ -128,6 +129,22 @@ export function applyMelody(params: CompositionParams, melodyId: number): Compos
         delete next.genre;
     }
     return next;
+}
+
+/**
+ * Apply a rhythm-only style (samba, bossa nova — no genre in the upstream
+ * enum fits them). Shared by the card grid and the compact dropdown so the
+ * two can't drift apart the way BEAT_TO_PRESET's key mismatch once did for
+ * bossa nova: one path got the fix, the other silently kept the old bug.
+ */
+export function applyRhythmStyle(params: CompositionParams, style: RhythmOnlyStyle): CompositionParams {
+    return {
+        ...applyGenre(params, style.baseGenre),
+        beat: style.beat,
+        // applyGenre set the borrowed genre's tempo; this style's own range is
+        // the right one.
+        bpm: getBpmMidpoint(style.bpmRange),
+    };
 }
 
 export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
@@ -424,8 +441,14 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 
             {compact ? (
                 <div className={fieldCls}>
-                    <select className={selectCls} value={selectedGenre ?? ''}
-                        onChange={(e) => onChange(applyGenre(value, e.target.value))}>
+                    <select className={selectCls}
+                        value={activeStyle ? activeStyle.id : (selectedGenre ?? '')}
+                        onChange={(e) => {
+                            const chosenStyle = RHYTHM_ONLY_STYLES.find((st) => st.id === e.target.value);
+                            onChange(chosenStyle
+                                ? applyRhythmStyle(value, chosenStyle)
+                                : applyGenre(value, e.target.value));
+                        }}>
                         <option value="" disabled>請選擇曲風</option>
                         {GENRES.map((g) => (
                             <option key={g.id} value={g.id}
@@ -437,6 +460,17 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                 {rhythmFor(g.id)?.isNew ? ' ‧ NEW' : ''}
                             </option>
                         ))}
+                        {/* 只有節奏、沒有對應上游曲風的風格——跟卡片版並列同一份清單，
+                            見 applyRhythmStyle 的說明。 */}
+                        {RHYTHM_ONLY_STYLES.map((style) => {
+                            const rhythm = presetForBeat(musicGenPresets, style.beat);
+                            return (
+                                <option key={style.id} value={style.id}>
+                                    {style.nameZh}（BPM {style.bpmRange[0]}~{style.bpmRange[1]}）
+                                    {rhythm?.isNew ? ' ‧ NEW' : ''}
+                                </option>
+                            );
+                        })}
                     </select>
                 </div>
             ) : (
@@ -519,13 +553,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                 className={`card card-compact border-2 text-left transition-all cursor-pointer
                                     ${selected ? 'border-primary bg-primary/10'
                                         : 'border-base-300 hover:border-primary/50'}`}
-                                onClick={() => onChange({
-                                    ...applyGenre(value, style.baseGenre),
-                                    beat: style.beat,
-                                    // applyGenre set the borrowed genre's tempo;
-                                    // this style's own range is the right one.
-                                    bpm: getBpmMidpoint(style.bpmRange),
-                                })}>
+                                onClick={() => onChange(applyRhythmStyle(value, style))}>
                                 <div className="card-body p-3">
                                     <div className="flex items-center gap-1.5">
                                         <span className="font-bold text-sm">{style.nameZh}</span>
