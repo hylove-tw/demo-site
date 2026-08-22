@@ -58,9 +58,12 @@ export const GENRES: Genre[] = [
   { id: 'tango', nameZh: '探戈', nameEn: 'Tango', bpmRange: [60, 100], timeSignature: '4/4', beatPattern: '重-重-輕-輕-重' },
   { id: 'giliba', nameZh: '吉利巴', nameEn: 'Giliba', bpmRange: [80, 120], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重' },
-  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', bpmRange: [90, 120], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', bpmRange: [90, 140], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   { id: 'twist', nameZh: '扭扭', nameEn: 'Twist', bpmRange: [60, 120], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
-  { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', bpmRange: [60, 120], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
+  // bpmRange must match music-gen's presets/popular/reggae.yaml bpm_range —
+  // outside it, the rhythm preset silently clamps the tempo with no warning
+  // (the slider showed a value the render never actually used).
+  { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', bpmRange: [75, 100], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
   { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', bpmRange: [60, 120], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
   { id: 'country', nameZh: '鄉村', nameEn: 'Country', bpmRange: [60, 100], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 120], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
