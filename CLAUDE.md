@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 HyLove Demo is a React TypeScript application for brainwave analysis. It provides a web interface for uploading brainwave data files (CSV/XLSX), running various analysis plugins, and viewing reports. Data is persisted in the browser's localStorage.
 
+## 📚 先查知識庫
+
+**動手前先看 [`docs/knowledge/`](docs/knowledge/)。** 它記錄本專案踩過的坑與設計決策——多數是「症狀看起來像 A、實際是 B」的那種，自己重新推導會很花時間。跟 `music-gen` repo 的 `docs/knowledge/` 是同一種精神，格式輕量一些（一篇一個 Markdown 檔 + 簡單 frontmatter，沒有 JSON-LD）。
+
 ## Commands
 
 ```bash

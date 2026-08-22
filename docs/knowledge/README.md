@@ -1,0 +1,52 @@
+# 知識庫
+
+給 **agent 與新進工程師** 查閱的知識庫，記錄 hylove-demo（前端）踩過的坑
+跟設計決策——性質是「可重複發生、不因時間過期」的知識，不是「這次做了
+什麼」的一次性事件記錄（那些記在對應的 commit message，或
+`~/hylove/coordination/reports/` 裡）。
+
+跟 `music-gen` repo 的 `docs/knowledge/`（另一個 git repo，路徑不在這裡
+底下）是同一種精神，但格式輕量很多：**一篇一個 Markdown 檔 + 簡單的 YAML
+frontmatter**（`title` / `keywords` / `dateModified`），沒有 JSON-LD、
+沒有自動重建索引的腳本——下面這份 README 本身就是索引，新增條目時手動
+加一行。
+
+## 索引
+
+| 條目 | 摘要 |
+|---|---|
+| [`preset-id-key-mismatch`](entries/preset-id-key-mismatch.md) | preset 的 id 字串要跟查表用的 key 完全一致，否則查表落空會靜默 fallback 成別的預設值，沒有任何錯誤訊息——bossa nova 曾經因此整個選不到，只會安靜地播成 `basic_pop`。 |
+| [`bundle-verification-unicode-escaping`](entries/bundle-verification-unicode-escaping.md) | 驗證 CRA build 產物是否對應特定原始碼時，字面 grep 中文字串必然找不到（CRA 把非 ASCII 轉義成 `\uXXXX`），用 diff 的新增行抽驗字串也不可靠；決定性做法是清快取重建後比對 bundle 的 hash/md5。 |
+| [`shared-logic-across-ui-paths`](entries/shared-logic-across-ui-paths.md) | 同一段「選了某選項該套用什麼參數」的邏輯，如果分別寫在兩個平行的 UI 路徑（例如卡片版跟下拉選單版）裡，遲早會 drift——要抽成共用 helper，讓兩邊呼叫同一份實作。 |
+
+## 什麼時候該查這裡
+
+| 情境 | 看哪個條目 |
+|---|---|
+| 新增或修改節奏風格／曲風的對照表（`GENRE_BEAT_MAP`、`BEAT_TO_PRESET` 之類） | `preset-id-key-mismatch` |
+| 懷疑部署的 build 產物是不是舊的，想驗證 bundle 內容 | `bundle-verification-unicode-escaping` |
+| 表單／元件有 `compact` 或其他多種呈現變體，要新增一個選項 | `shared-logic-across-ui-paths` |
+
+## 新增條目時
+
+1. 在 `entries/` 底下新增一個 `.md`，開頭帶 frontmatter：
+   ```yaml
+   ---
+   title: 條目標題
+   keywords: [關鍵字, ...]
+   dateModified: YYYY-MM-DD
+   ---
+   ```
+2. 屬於「踩坑」類的條目，建議沿用 music-gen 那邊驗證有效的
+   「症狀 → 真正原因 → 處理 → 通則」四段式——這類問題最花時間的部分
+   通常是「症狀看起來像 A，實際是 B」，四段式把這個落差寫清楚。
+3. 回來這份 README 的索引表加一行。
+
+## 這裡不放什麼
+
+- 「這次做了什麼、什麼時候、誰決定的」——一次性、會過期的事件記錄，
+  放 commit message 或 `~/hylove/coordination/reports/`。
+- 進度、版本號、待辦——維持用 `milestone.md` / `CHANGELOG.md`。
+- 前端串接 music-gen API 的紀錄——已經有專門的
+  [`../MUSIC_GEN_INTEGRATION_NOTES.md`](../MUSIC_GEN_INTEGRATION_NOTES.md)，
+  不重複開一份。
