@@ -182,8 +182,13 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
         && selectedMelody !== defaultMelodyFor(selectedGenre));
 
     const currentGenre = GENRES.find((g) => g.id === selectedGenre);
-    const bpmMin = currentGenre?.bpmRange[0] ?? 30;
-    const bpmMax = currentGenre?.bpmRange[1] ?? 200;
+    // A rhythm-only style sets the tempo range, not the genre it borrows for
+    // composition: samba needs 150–200, and chacha — the genre it pairs with
+    // because the upstream places no tempo limit on it — displays 60–140.
+    const activeStyle = RHYTHM_ONLY_STYLES.find((st) => st.beat === value.beat);
+    const tempoRange = activeStyle?.bpmRange ?? currentGenre?.bpmRange;
+    const bpmMin = tempoRange?.[0] ?? 30;
+    const bpmMax = tempoRange?.[1] ?? 200;
     const bpm = Math.min(Math.max(value.bpm ?? 60, bpmMin), bpmMax);
 
     const inputCls = compact ? 'input input-bordered input-sm w-full' : 'input input-underline w-full';
@@ -517,6 +522,9 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                 onClick={() => onChange({
                                     ...applyGenre(value, style.baseGenre),
                                     beat: style.beat,
+                                    // applyGenre set the borrowed genre's tempo;
+                                    // this style's own range is the right one.
+                                    bpm: getBpmMidpoint(style.bpmRange),
                                 })}>
                                 <div className="card-body p-3">
                                     <div className="flex items-center gap-1.5">

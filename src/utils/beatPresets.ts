@@ -169,6 +169,19 @@ export const BEAT_PRESETS: BeatPreset[] = [
     },
     subdivisions: 4,
   },
+  {
+    id: 'disco',
+    name: '迪斯可',
+    nameEn: 'Disco',
+    description: '四四拍大鼓（four-on-the-floor），開合鈸落在後半拍',
+    timeSignature: '4/4',
+    pattern: {
+      kick:  [3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
+      snare: [0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+      hihat: [2, 0, 3, 0, 2, 0, 3, 0, 2, 0, 3, 0, 2, 0, 3, 0],
+    },
+    subdivisions: 4,
+  },
 ];
 
 // MIDI 打擊樂器對應的 MusicXML unpitched 音符

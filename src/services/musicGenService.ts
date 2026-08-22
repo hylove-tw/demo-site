@@ -17,7 +17,11 @@ const BEAT_TO_PRESET: Record<string, string> = {
   rock:         'basic_pop',
   rumba:        'rnb',
   tango:        'bossa_nova',
-  'bossa-nova': 'bossa_nova',
+  // The beat preset's id is `bossanova`; this key was hyphenated, so the
+  // lookup missed and every bossa-nova beat fell back to basic_pop —
+  // the bossa_nova preset was unreachable from the picker.
+  bossanova:    'bossa_nova',
+  disco:        'disco',
   waltz:        'compound_ballad',  // waltz API returns 6/8; pipeline auto-falls back to gentle_waltz for 3/4
   country:      'basic_pop',
   jazz:         'rnb',

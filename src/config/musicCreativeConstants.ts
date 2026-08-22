@@ -122,14 +122,25 @@ export interface RhythmOnlyStyle {
 }
 
 export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
+  // 速度是音樂家刻意訂的：森巴慢於 150 就會聽成別的樂風，而他反映森巴與波沙諾瓦
+  // 容易混淆，所以兩者的範圍不重疊。
   {
     id: 'samba',
     nameZh: '森巴',
     nameEn: 'Samba',
     beat: 'samba',
     baseGenre: 'chacha',
-    bpmRange: [95, 135],
+    bpmRange: [150, 200],
     beatPattern: '重-輕-重-輕',
+  },
+  {
+    id: 'bossa_nova',
+    nameZh: '波沙諾瓦',
+    nameEn: 'Bossa Nova',
+    beat: 'bossanova',
+    baseGenre: 'chacha',
+    bpmRange: [100, 150],
+    beatPattern: '重-輕-輕-重-輕',
   },
 ];
 
@@ -143,7 +154,7 @@ export const GENRE_BEAT_MAP: Record<string, string> = {
   tango: 'tango',
   giliba: 'pop',
   rumba: 'rumba',
-  disco: 'pop',
+  disco: 'disco',
   twist: 'rock',
   reggae: 'reggae',
   rock: 'rock',
