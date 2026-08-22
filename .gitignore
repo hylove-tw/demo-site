@@ -26,3 +26,7 @@ yarn-error.log*
 *.htpasswd
 
 tmp_docs
+
+# legacy spec archive (.doc/.docx/.pdf) — lives outside the repo at
+# /home/weifan/hylove-demo-specs-archive, not tracked here
+/specs
