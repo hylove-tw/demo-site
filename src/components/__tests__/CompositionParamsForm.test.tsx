@@ -1,0 +1,37 @@
+// Regression test for a preview-button gap that only hit bossa nova: the
+// card's ▶ button is gated by preview.canPreview(style.id), but for a
+// RHYTHM_ONLY_STYLE the id ('bossa_nova') and the beat id actually used to
+// resolve a server preset ('bossanova') differ. samba's id and beat happen
+// to be the same string, which is why samba's button worked and hid the bug.
+import { render, screen } from '@testing-library/react';
+import { CompositionParamsForm } from '../CompositionParamsForm';
+import type { MusicGenPreset } from '../../services/musicGenService';
+
+jest.mock('../../hooks/useMusicGenPresets', () => {
+    const actual = jest.requireActual('../../hooks/useMusicGenPresets');
+    const preset = (name: string): MusicGenPreset => ({
+        name, displayName: null, credit: '漢克呂', isNew: true,
+        hasAccompaniment: true, previewUrl: `/api/v1/assets/preview/${name}`,
+    });
+    // Deliberately no 'basic_pop' entry: a lookup that falls through to it
+    // (the previous bug's symptom) must find nothing, not a stray previewUrl.
+    return {
+        ...actual,
+        useMusicGenPresets: () => new Map([
+            ['samba', preset('samba')],
+            ['bossa_nova', preset('bossa_nova')],
+        ]),
+    };
+});
+
+describe('CompositionParamsForm rhythm-only style preview buttons', () => {
+    it('shows a preview button for samba', () => {
+        render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
+        expect(screen.getByRole('button', { name: '試聽 森巴 節奏' })).toBeInTheDocument();
+    });
+
+    it('shows a preview button for bossa nova too, even though its id and beat differ', () => {
+        render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
+        expect(screen.getByRole('button', { name: '試聽 波沙諾瓦 節奏' })).toBeInTheDocument();
+    });
+});

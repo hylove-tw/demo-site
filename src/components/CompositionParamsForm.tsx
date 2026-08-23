@@ -560,23 +560,29 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                         {rhythm?.isNew && (
                                             <span className="badge badge-primary badge-xs">NEW</span>
                                         )}
-                                        {preview.canPreview(style.id) && (
+                                        {/* Keyed by style.beat, not style.id: useBeatPreview resolves a
+                                            server preset from a *beat* id (falling back through
+                                            GENRE_BEAT_MAP, which RHYTHM_ONLY_STYLES never appear in).
+                                            samba's id and beat happen to be the same string, which
+                                            hid this when bossa_nova's ('bossa_nova' vs 'bossanova')
+                                            didn't resolve and silently lost its preview button. */}
+                                        {preview.canPreview(style.beat) && (
                                         <span
                                             role="button" tabIndex={0}
                                             aria-label={`試聽 ${style.nameZh} 節奏`}
-                                            title={preview.playing === style.id ? '停止試聽' : '試聽節奏'}
+                                            title={preview.playing === style.beat ? '停止試聽' : '試聽節奏'}
                                             className="ml-auto btn btn-ghost btn-xs px-1"
-                                            onClick={(e) => { e.stopPropagation(); preview.toggle(style.id); }}
+                                            onClick={(e) => { e.stopPropagation(); preview.toggle(style.beat); }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' || e.key === ' ') {
                                                     e.preventDefault(); e.stopPropagation();
-                                                    preview.toggle(style.id);
+                                                    preview.toggle(style.beat);
                                                 }
                                             }}
                                         >
-                                            {preview.loading === style.id
+                                            {preview.loading === style.beat
                                                 ? <span className="loading loading-spinner loading-xs" />
-                                                : preview.playing === style.id ? '■' : '▶'}
+                                                : preview.playing === style.beat ? '■' : '▶'}
                                         </span>
                                         )}
                                     </div>
