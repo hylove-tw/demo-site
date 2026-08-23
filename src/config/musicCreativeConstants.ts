@@ -52,7 +52,10 @@ export interface Genre {
 }
 
 export const GENRES: Genre[] = [
-  { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', bpmRange: [60, 120], timeSignature: '3/4', beatPattern: '重-輕-輕' },
+  // bpmRange aligned to 'gentle_waltz' — only valid after narrowing
+  // GENRE_MELODY_COMPATIBILITY.waltz (removed melody 7) so waltz always
+  // resolves to this one preset instead of switching by melody.
+  { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', bpmRange: [80, 110], timeSignature: '3/4', beatPattern: '重-輕-輕' },
   // bpmRange aligned to the 'ballad' preset it now maps to (see
   // GENRE_BEAT_MAP) — full overlap, but this is a compromise, not a real
   // fix: 30-60 was the actually-intended soul tempo, and ballad's [60,80]
@@ -76,7 +79,10 @@ export const GENRES: Genre[] = [
   { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', bpmRange: [90, 130], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
   // bpmRange aligned to 'basic_pop' (see BEAT_TO_PRESET['country']).
   { id: 'country', nameZh: '鄉村', nameEn: 'Country', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
-  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 120], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
+  // bpmRange aligned to 'compound_ballad' — only valid after narrowing
+  // GENRE_MELODY_COMPATIBILITY.quick_waltz (removed melody 4) so it always
+  // resolves to this one preset instead of switching by melody.
+  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 90], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
   { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [60, 140], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
 ];
 
@@ -181,7 +187,10 @@ export const GENRE_BEAT_MAP: Record<string, string> = {
 // 須與 Rails /api/v2/music 的曲風-主旋律相容規則完全一致，否則送出後端會回 422。
 
 export const GENRE_MELODY_COMPATIBILITY: Record<string, Set<number>> = {
-  waltz:        new Set([3, 4, 6, 7]),
+  // 7（6/8 拍）拿掉：waltz 的 rhythm preset 依主旋律動態切換，melody 7 會
+  // 落到跟 waltz 其餘主旋律不同的 preset，讓 bpmRange 沒有單一交集可言。
+  // 拿掉後 waltz 穩定落在 gentle_waltz，見 GENRES.waltz 的 bpmRange。
+  waltz:        new Set([3, 4, 6]),
   soul:         new Set([1, 2, 3, 4, 8, 9]),
   blues:        new Set([1, 5, 8]),
   tango:        new Set([1, 5]),
@@ -193,7 +202,9 @@ export const GENRE_MELODY_COMPATIBILITY: Record<string, Set<number>> = {
   reggae:       new Set([2, 5, 9]),
   rock:         new Set([5, 9]),
   country:      new Set([2, 4, 5, 7, 8, 9]),
-  quick_waltz:  new Set([4, 7, 8]),
+  // 4（3/8 拍）拿掉：同樣的動態 preset 切換問題，拿掉後 quick_waltz 穩定
+  // 落在 compound_ballad，見 GENRES.quick_waltz 的 bpmRange。
+  quick_waltz:  new Set([7, 8]),
 };
 
 // ── 樂器（英文 value → Rails v2 中文 enum） ──────────────
