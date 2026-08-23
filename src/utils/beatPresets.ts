@@ -91,7 +91,7 @@ export const BEAT_PRESETS: BeatPreset[] = [
   },
   {
     id: 'bossanova',
-    name: '乍古芭',
+    name: '波沙諾瓦',
     nameEn: 'Bossa Nova',
     description: '輕柔巴西節奏',
     timeSignature: '4/4',
