@@ -577,6 +577,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                                         </label>
                                         <select
                                             className="select select-bordered select-sm w-full md:w-1/2"
+                                            aria-label="伴奏方式"
                                             value={editParams.accompaniment ?? 'replace'}
                                             onChange={(e) => handleParamChange('accompaniment', e.target.value)}
                                         >

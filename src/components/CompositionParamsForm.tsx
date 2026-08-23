@@ -369,7 +369,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 
                     {compact ? (
                         <div className={fieldCls}>
-                            <select className={selectCls}
+                            <select className={selectCls} aria-label="曲風"
                                 value={activeStyle ? activeStyle.id : (selectedGenre ?? '')}
                                 onChange={(e) => selectGenre(e.target.value)}>
                                 <option value="" disabled>請選擇曲風</option>
