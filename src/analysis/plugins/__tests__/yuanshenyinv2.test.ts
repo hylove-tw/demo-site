@@ -16,9 +16,11 @@ jest.mock('../../../config/analysisMethods', () => ({
     musicAnalysisCreative: jest.fn(),
     dualMusicAnalysisCreative: jest.fn(),
 }));
+const mockRenderBrainWaveMusicReport = jest.fn();
+const mockRenderDualMusicReportCreative = jest.fn();
 jest.mock('../../../config/analysisRenderers', () => ({
-    renderBrainWaveMusicReport: jest.fn(),
-    renderDualMusicReportCreative: jest.fn(),
+    renderBrainWaveMusicReport: (...args: unknown[]) => mockRenderBrainWaveMusicReport(...args),
+    renderDualMusicReportCreative: (...args: unknown[]) => mockRenderDualMusicReportCreative(...args),
 }));
 
 import '../yuanshenyinv2';
@@ -33,5 +35,26 @@ describe('yuanshenyin-v2 plugin bannerImage', () => {
         expect(plugin?.bannerImage?.title).toBe('元神音創意平台');
         expect(plugin?.bannerImage?.description.length).toBeGreaterThan(0);
         expect(plugin?.bannerImage?.ctaLabel).toBe('開始創作');
+    });
+
+    // Real bug this caught: renderReport was a hand-written wrapper (for the
+    // single/dual branch) that only declared 2 parameters and never forwarded
+    // a 3rd — silently dropping reportKey (used to key the MP3 export cache
+    // across page refreshes) even though every type along the chain declared
+    // it correctly. A direct call through the *plugin's* renderReport, not
+    // the renderer functions themselves, is what catches this — calling
+    // renderBrainWaveMusicReport directly (as other tests do) can't see it.
+    it('forwards reportKey through to the single-player renderer', () => {
+        plugin?.renderReport({ musicXML: '<x/>' }, {}, 'report-42');
+        expect(mockRenderBrainWaveMusicReport).toHaveBeenCalledWith(
+            { musicXML: '<x/>' }, {}, 'report-42'
+        );
+    });
+
+    it('forwards reportKey through to the dual-player renderer', () => {
+        plugin?.renderReport({ musicXML: '<x/>' }, { playerMode: 'dual' }, 'report-43');
+        expect(mockRenderDualMusicReportCreative).toHaveBeenCalledWith(
+            { musicXML: '<x/>' }, { playerMode: 'dual' }, 'report-43'
+        );
     });
 });

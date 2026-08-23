@@ -55,11 +55,11 @@ const plugin: AnalysisPlugin = {
     }
     return musicAnalysisCreative(data, customParams);
   },
-  renderReport: (result: any, customParams?: any) => {
+  renderReport: (result: any, customParams?: any, reportKey?: string) => {
     if (customParams?.playerMode === 'dual') {
-      return renderDualMusicReportCreative(result, customParams);
+      return renderDualMusicReportCreative(result, customParams, reportKey);
     }
-    return renderBrainWaveMusicReport(result, customParams);
+    return renderBrainWaveMusicReport(result, customParams, reportKey);
   },
   customFields: [
     { label: '樂譜標題', fieldName: 'title', type: 'string', defaultValue: '未命名的樂譜' },
