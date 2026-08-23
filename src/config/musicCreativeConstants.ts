@@ -42,6 +42,13 @@ export const MELODY_PATTERNS: MelodyPattern[] = [
 
 // ── 曲風 ────────────────────────────────────────────────
 
+/** 三個聲部（高音部/中音部/低音部）預設樂器 — 值必須是 CompositionParamsForm 的 INSTRUMENTS 之一。 */
+export interface GenreInstruments {
+  p1: string; // 高音部
+  p2: string; // 中音部
+  p3: string; // 低音部
+}
+
 export interface Genre {
   id: string;
   nameZh: string;
@@ -50,13 +57,24 @@ export interface Genre {
   bpmRange: [number, number]; // [min, max]
   timeSignature: string;
   beatPattern: string; // 節拍輕重音說明
+  /**
+   * 選這個曲風時預設帶出的三聲部樂器，取自音樂史上這個曲風的經典編制，
+   * 對應到 app 現有的樂器清單（無法找到對應樂器時取最接近的替代，見各項
+   * 註解）。之前不管選哪個曲風都是同一組 flute/piano/cello（
+   * INSTRUMENT_DEFAULTS 的通用預設），跟大部分曲風的真實聲響搭不起來。
+   */
+  defaultInstruments: GenreInstruments;
 }
 
 export const GENRES: Genre[] = [
   // bpmRange aligned to 'gentle_waltz' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.waltz (removed melody 7) so waltz always
   // resolves to this one preset instead of switching by melody.
-  { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', description: '優雅三拍子社交舞，重音在第一拍', bpmRange: [80, 110], timeSignature: '3/4', beatPattern: '重-輕-輕' },
+  //
+  // defaultInstruments：華爾滋管弦樂團以小提琴領奏（"the heartbeat of the
+  // waltz"），大提琴/低音提琴墊底；鋼琴獨奏華爾滋（蕭邦等）本身也是經典
+  // 形式，中音部用鋼琴有直接先例。
+  { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', description: '優雅三拍子社交舞，重音在第一拍', bpmRange: [80, 110], timeSignature: '3/4', beatPattern: '重-輕-輕', defaultInstruments: { p1: 'violin', p2: 'piano', p3: 'cello' } },
   // bpmRange aligned to the 'ballad' preset it now maps to (see
   // GENRE_BEAT_MAP) — full overlap, but this is a compromise, not a real
   // fix: 30-60 was the actually-intended soul tempo, and ballad's [60,80]
@@ -66,10 +84,21 @@ export const GENRES: Genre[] = [
   // nameZh 從「靈魂」改成「靈魂樂」：台灣的用法（zh-tw 維基百科詞條即為
   // 「靈魂樂」）一律帶「樂」字，光說「靈魂」在中文裡是通用詞、容易誤解成
   // 別的意思，不像恰恰／倫巴這類純音譯詞沒有這個問題。
-  { id: 'soul', nameZh: '靈魂樂', nameEn: 'Soul', description: '福音與藍調融合，唱腔濃烈有感染力', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
+  //
+  // defaultInstruments：經典靈魂樂編制是管樂（小號/薩克斯風/長號）+
+  // 鋼琴/電風琴 + 貝斯，清單裡沒有銅管或電風琴，薩克斯風是最接近的管樂
+  // 替代。人聲也是合理選項（靈魂樂本質是主唱帶動），但這裡優先選有明確
+  // 樂器編制證據的薩克斯風。
+  { id: 'soul', nameZh: '靈魂樂', nameEn: 'Soul', description: '福音與藍調融合，唱腔濃烈有感染力', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
   // bpmRange aligned to the 'lofi' preset (see BEAT_TO_PRESET['jazz']).
-  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', description: '慢板社交舞曲，深情內斂的擁舞節奏', bpmRange: [70, 90], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
-  { id: 'tango', nameZh: '探戈', nameEn: 'Tango', description: '阿根廷激情舞曲，頓挫分明、乾淨俐落', bpmRange: [60, 100], timeSignature: '4/4', beatPattern: '重-重-輕-輕-重' },
+  //
+  // defaultInstruments：經典藍調是吉他/口琴領奏、鋼琴、貝斯；清單沒有口琴，
+  // 吉他本身就是藍調另一個主奏聲部，直接頂上。
+  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', description: '慢板社交舞曲，深情內斂的擁舞節奏', bpmRange: [70, 90], timeSignature: '4/4', beatPattern: '重-輕-輕-輕', defaultInstruments: { p1: 'guitar', p2: 'piano', p3: 'bass' } },
+  // defaultInstruments：探戈管絃樂團（orquesta típica）以班多鈕手風琴
+  // 領奏，清單沒有這項樂器，小提琴是編制裡另一個主奏聲部，直接頂上；
+  // 鋼琴、貝斯都是原編制直接有的樂器。
+  { id: 'tango', nameZh: '探戈', nameEn: 'Tango', description: '阿根廷激情舞曲，頓挫分明、乾淨俐落', bpmRange: [60, 100], timeSignature: '4/4', beatPattern: '重-重-輕-輕-重', defaultInstruments: { p1: 'violin', p2: 'piano', p3: 'bass' } },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.giliba -> 'pop').
   //
   // nameZh/nameEn 從「吉利巴」/「Giliba」改成「吉魯巴」/「Jitterbug」：
@@ -77,32 +106,64 @@ export const GENRES: Genre[] = [
   // 舞」，吉魯巴是源自英文 jitterbug（經日文ジルバ轉譯）的標準台灣用詞，
   // 「吉利巴」應是這個詞的誤植/誤譯。id 保留 'giliba' 不動，只改顯示字串
   // ——id 是 GENRE_BEAT_MAP 等對照表的查表 key，跟顯示名稱無關。
-  { id: 'giliba', nameZh: '吉魯巴', nameEn: 'Jitterbug', description: '台灣社交舞快舞代表，源自搖擺舞吉特巴', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
-  { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', description: '「愛情之舞」，慢板古巴律動、浪漫搖擺', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重' },
-  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', description: '70 年代舞廳勁曲，四四拍強烈律動', bpmRange: [90, 140], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  //
+  // defaultInstruments：吉魯巴源自搖擺樂（big band swing），編制是薩克斯
+  // 風/銅管領奏 + 吉他/鋼琴/貝斯節奏組——薩克斯風、鋼琴、貝斯都是原編制
+  // 直接有的樂器。
+  { id: 'giliba', nameZh: '吉魯巴', nameEn: 'Jitterbug', description: '台灣社交舞快舞代表，源自搖擺舞吉特巴', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
+  // defaultInstruments：社交舞倫巴的樂團編制融合大樂團銅管（小號/薩克斯風/
+  // 長號）與古巴節奏組，薩克斯風是清單裡最接近的管樂，鋼琴、貝斯直接對應。
+  { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', description: '「愛情之舞」，慢板古巴律動、浪漫搖擺', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
+  // defaultInstruments：迪斯可經典聲響是管樂/弦樂鋪底 + 電吉他節奏刷弦 +
+  // 貝斯（常是整首歌最搶戲的聲部）；薩克斯風代表管樂層，電吉他明確對應
+  // 節奏吉他，貝斯直接對應。
+  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', description: '70 年代舞廳勁曲，四四拍強烈律動', bpmRange: [90, 140], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'electric guitar', p3: 'bass' } },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.twist -> 'rock').
-  { id: 'twist', nameZh: '扭扭', nameEn: 'Twist', description: '60 年代扭腰舞潮，輕快活潑好上手', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
+  //
+  // defaultInstruments：1960 年代扭扭舞金曲（如 Chubby Checker〈The
+  // Twist〉）的原版樂譜多以薩克斯風擔任主奏旋律，鋼琴/貝斯是當時搖滾節奏組
+  // 的標準配置。
+  { id: 'twist', nameZh: '扭扭', nameEn: 'Twist', description: '60 年代扭腰舞潮，輕快活潑好上手', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
   // bpmRange must match music-gen's presets/popular/reggae.yaml bpm_range —
   // outside it, the rhythm preset silently clamps the tempo with no warning
   // (the slider showed a value the render never actually used).
-  { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', description: '牙買加節奏，切分後拍營造慵懶律動', bpmRange: [75, 100], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
+  //
+  // defaultInstruments：雷鬼的招牌是電吉他反拍刷弦（skank）+ 電風琴「冒泡」
+  // 音色 + 旋律感很強的貝斯線；清單沒有電風琴，鋼琴頂上，電吉他、貝斯直接
+  // 對應。
+  { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', description: '牙買加節奏，切分後拍營造慵懶律動', bpmRange: [75, 100], timeSignature: '4/4', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'electric guitar', p2: 'piano', p3: 'bass' } },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.rock).
-  { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', description: '強勁鼓點與電吉他，熱血奔放', bpmRange: [90, 130], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
+  //
+  // defaultInstruments：經典搖滾四件式編制是主奏/節奏電吉他 + 貝斯 + 鼓，
+  // 鍵盤/風琴是常見加入的第四聲部；電吉他、鋼琴（代鍵盤）、貝斯都直接對應。
+  { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', description: '強勁鼓點與電吉他，熱血奔放', bpmRange: [90, 130], timeSignature: '2/4', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'electric guitar', p2: 'piano', p3: 'bass' } },
   // bpmRange aligned to 'basic_pop' (see BEAT_TO_PRESET['country']).
-  { id: 'country', nameZh: '鄉村', nameEn: 'Country', description: '美式鄉村曲風，樸實敘事、輕快自在', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  //
+  // defaultInstruments：鄉村樂的旋律聲部經典上是小提琴（鄉村小提琴/fiddle）
+  // ，木吉他是節奏與和聲的基礎聲部，貝斯（原本常是低音提琴）墊底——三個都
+  // 是清單裡的樂器直接對應，不用替代。班鳩琴/踏板鋼棒吉他清單沒有，是唯一
+  // 真正缺席的部分。
+  { id: 'country', nameZh: '鄉村', nameEn: 'Country', description: '美式鄉村曲風，樸實敘事、輕快自在', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'violin', p2: 'guitar', p3: 'bass' } },
   // bpmRange aligned to 'compound_ballad' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.quick_waltz (removed melody 4) so it always
   // resolves to this one preset instead of switching by melody.
   //
   // 圓舞曲跟華爾滋不是同一件事的兩種寫法：圓舞曲專指維也納快三步，華爾滋
   // 是節奏較慢的標準三拍子舞曲，台灣用法上兩者是並列、不互相取代的曲風。
-  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', description: '維也納快三步，旋轉流暢、速度輕快', bpmRange: [60, 90], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
+  //
+  // defaultInstruments：維也納華爾滋管弦樂團傳統跟一般華爾滋同源（小提琴
+  // 領奏、大提琴墊底），只是速度更快，樂器編制沒有理由不同，故意跟華爾滋
+  // 用同一組，不強行做出人為差異。
+  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', description: '維也納快三步，旋轉流暢、速度輕快', bpmRange: [60, 90], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕', defaultInstruments: { p1: 'violin', p2: 'piano', p3: 'cello' } },
   // bpmRange aligned to 'basic_pop' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.chacha (removed melodies 3,4,6,7,8) so it
   // always resolves to this one preset instead of switching by melody
   // (chacha -> pop -> basic_pop/gentle_waltz/compound_ballad depending on
   // the melody's actual time signature, before this fix).
-  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', description: '俏皮拉丁舞曲，三個快步的招牌墊步', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
+  //
+  // defaultInstruments：恰恰源自古巴 charanga 樂團，招牌編制正是長笛
+  // 領奏 + 小提琴，兩者都直接對應清單裡的樂器，貝斯墊底。
+  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', description: '俏皮拉丁舞曲，三個快步的招牌墊步', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '輕-輕-重-輕', defaultInstruments: { p1: 'flute', p2: 'violin', p3: 'bass' } },
 ];
 
 // ── 拍號推導 ────────────────────────────────────────────
@@ -158,6 +219,7 @@ export interface RhythmOnlyStyle {
   baseGenre: string;
   bpmRange: [number, number];
   beatPattern: string;
+  defaultInstruments: GenreInstruments;
   /**
    * Melodies guaranteed to hit this style's arranged music-gen preset rather
    * than being silently swapped for a generic one (see SAFE_ARRANGED_MELODIES
@@ -180,6 +242,12 @@ export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
     baseGenre: 'chacha',
     bpmRange: [150, 200],
     beatPattern: '重-輕-重-輕',
+    // 森巴的旋律-和聲層經典上是 cavaquinho（四弦小吉他）+ 吉他 + 貝斯，
+    // 真正的聲音大多在打擊樂（surdo/pandeiro/cuíca，由鼓聲部另外處理）。
+    // 清單沒有 cavaquinho，吉他是最接近的替代（同樣是撥弦、刷奏為主的
+    // 樂器）；鋼琴頂中音部是清單裡最弱的一個替代，cavaquinho 的音色跟
+    // 鋼琴差距較大，暫無更好選項。
+    defaultInstruments: { p1: 'guitar', p2: 'piano', p3: 'bass' },
     // chacha (the borrowed baseGenre) restricts nothing, so without this the
     // full 9-melody set would be offered — but melodies 3/4/6/7/8 (3/8, 3/4,
     // 6/8, 12/16) produce a time signature that doesn't match samba's own 4/4
@@ -202,6 +270,10 @@ export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
     baseGenre: 'chacha',
     bpmRange: [100, 150],
     beatPattern: '重-輕-輕-重-輕',
+    // 巴薩諾瓦的招牌是尼龍弦吉他（同時是主要和聲樂器，直接對應清單的
+    // 吉他）+ 長笛或薩克斯風領奏（這裡選長笛）+ 貝斯，三個都是原編制
+    // 直接有的樂器，不用替代。
+    defaultInstruments: { p1: 'flute', p2: 'guitar', p3: 'bass' },
     // Same issue as samba above — same borrowed baseGenre, same fix.
     safeMelodies: new Set([1, 2, 5, 9]),
   },

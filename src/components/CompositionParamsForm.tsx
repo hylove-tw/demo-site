@@ -37,6 +37,7 @@ import {
     timeSignatureForMelody,
     Genre,
     RhythmOnlyStyle,
+    GenreInstruments,
 } from '../config/musicCreativeConstants';
 
 /**
@@ -108,6 +109,23 @@ export interface CompositionParamsFormProps {
 }
 
 /**
+ * Write a genre/style's classic instrument set onto whichever fields are
+ * actually in play — p1/p2/p3 in single-player mode, both players' fields in
+ * dual mode (琴瑟合 gives both players the same genre-authentic voicing
+ * rather than inventing a second, unresearched combination for player two).
+ */
+function applyInstrumentDefaults(params: CompositionParams, instruments: GenreInstruments): CompositionParams {
+    if (params.playerMode === 'dual') {
+        return {
+            ...params,
+            first_p1: instruments.p1, first_p2: instruments.p2, first_p3: instruments.p3,
+            second_p1: instruments.p1, second_p2: instruments.p2, second_p3: instruments.p3,
+        };
+    }
+    return { ...params, p1: instruments.p1, p2: instruments.p2, p3: instruments.p3 };
+}
+
+/**
  * Apply a genre choice, keeping the rest of the parameters consistent with it.
  *
  * Exported because both the form and any programmatic caller (sample data,
@@ -120,12 +138,15 @@ export function applyGenre(params: CompositionParams, genreId: string): Composit
 
     // Choosing a genre settles the melody outright, including when the same
     // genre is picked again — that is the way back from a custom combination.
-    return {
+    // It settles the instruments the same way, for the same reason — see
+    // Genre.defaultInstruments in musicCreativeConstants.ts for how each
+    // genre's combo was chosen.
+    return applyInstrumentDefaults({
         ...params,
         genre: genreId,
         bpm: getBpmMidpoint(genre.bpmRange),
         melodyPattern: defaultMelodyFor(genreId),
-    };
+    }, genre.defaultInstruments);
 }
 
 /**
@@ -167,13 +188,14 @@ export function applyMelody(params: CompositionParams, melodyId: number): Compos
  * bossa nova: one path got the fix, the other silently kept the old bug.
  */
 export function applyRhythmStyle(params: CompositionParams, style: RhythmOnlyStyle): CompositionParams {
-    return {
+    return applyInstrumentDefaults({
         ...applyGenre(params, style.baseGenre),
         beat: style.beat,
         // applyGenre set the borrowed genre's tempo; this style's own range is
-        // the right one.
+        // the right one. Same for instruments just below — applyGenre already
+        // set chacha's (the borrowed baseGenre's), this style has its own.
         bpm: getBpmMidpoint(style.bpmRange),
-    };
+    }, style.defaultInstruments);
 }
 
 export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
