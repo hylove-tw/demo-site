@@ -168,19 +168,35 @@ const AnalysisPage: React.FC = () => {
                 <Link
                   key={plugin.id}
                   to={`/analysis/${plugin.id}`}
-                  className="block p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors"
+                  className={`relative overflow-hidden block p-4 rounded-lg transition-colors ${
+                    plugin.bannerImage ? 'hover:brightness-[0.97]' : 'bg-base-200 hover:bg-base-300'
+                  }`}
+                  style={plugin.bannerImage ? { backgroundColor: '#f9ecd8' } : undefined}
                 >
-                  <p className="font-medium">
-                    {plugin.name}
-                    {plugin.badge && (
-                      <span className={`badge badge-sm ${plugin.badge.color} ml-2`}>
-                        {plugin.badge.text}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-sm text-base-content/60 mt-1">
-                    {plugin.shortDescription || plugin.description}
-                  </p>
+                  {/* 有 hero banner 的主打功能，清單卡片背景用同一張插畫，
+                      淡化到只是質感、不搶文字——呼應上面 hero 用的插畫，
+                      但這裡只是清單裡的一項，不需要跟 hero 一樣搶眼。 */}
+                  {plugin.bannerImage && (
+                    <img
+                      src={plugin.bannerImage.image}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover object-[70%_center] opacity-20"
+                    />
+                  )}
+                  <div className="relative z-10">
+                    <p className="font-medium">
+                      {plugin.name}
+                      {plugin.badge && (
+                        <span className={`badge badge-sm ${plugin.badge.color} ml-2`}>
+                          {plugin.badge.text}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-sm text-base-content/60 mt-1">
+                      {plugin.shortDescription || plugin.description}
+                    </p>
+                  </div>
                 </Link>
               ))}
             </div>
