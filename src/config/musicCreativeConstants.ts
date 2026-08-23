@@ -46,6 +46,7 @@ export interface Genre {
   id: string;
   nameZh: string;
   nameEn: string;
+  description: string; // 一句話風格介紹，台灣用詞
   bpmRange: [number, number]; // [min, max]
   timeSignature: string;
   beatPattern: string; // 節拍輕重音說明
@@ -55,40 +56,53 @@ export const GENRES: Genre[] = [
   // bpmRange aligned to 'gentle_waltz' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.waltz (removed melody 7) so waltz always
   // resolves to this one preset instead of switching by melody.
-  { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', bpmRange: [80, 110], timeSignature: '3/4', beatPattern: '重-輕-輕' },
+  { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', description: '優雅三拍子社交舞，重音在第一拍', bpmRange: [80, 110], timeSignature: '3/4', beatPattern: '重-輕-輕' },
   // bpmRange aligned to the 'ballad' preset it now maps to (see
   // GENRE_BEAT_MAP) — full overlap, but this is a compromise, not a real
   // fix: 30-60 was the actually-intended soul tempo, and ballad's [60,80]
   // is the closest existing preset, not a soul-tuned one. See
   // docs/knowledge/preset-bpm-range-mismatch.md for why.
-  { id: 'soul', nameZh: '靈魂', nameEn: 'Soul', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
+  //
+  // nameZh 從「靈魂」改成「靈魂樂」：台灣的用法（zh-tw 維基百科詞條即為
+  // 「靈魂樂」）一律帶「樂」字，光說「靈魂」在中文裡是通用詞、容易誤解成
+  // 別的意思，不像恰恰／倫巴這類純音譯詞沒有這個問題。
+  { id: 'soul', nameZh: '靈魂樂', nameEn: 'Soul', description: '福音與藍調融合，唱腔濃烈有感染力', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
   // bpmRange aligned to the 'lofi' preset (see BEAT_TO_PRESET['jazz']).
-  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', bpmRange: [70, 90], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
-  { id: 'tango', nameZh: '探戈', nameEn: 'Tango', bpmRange: [60, 100], timeSignature: '4/4', beatPattern: '重-重-輕-輕-重' },
+  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', description: '慢板社交舞曲，深情內斂的擁舞節奏', bpmRange: [70, 90], timeSignature: '4/4', beatPattern: '重-輕-輕-輕' },
+  { id: 'tango', nameZh: '探戈', nameEn: 'Tango', description: '阿根廷激情舞曲，頓挫分明、乾淨俐落', bpmRange: [60, 100], timeSignature: '4/4', beatPattern: '重-重-輕-輕-重' },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.giliba -> 'pop').
-  { id: 'giliba', nameZh: '吉利巴', nameEn: 'Giliba', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
-  { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重' },
-  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', bpmRange: [90, 140], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  //
+  // nameZh/nameEn 從「吉利巴」/「Giliba」改成「吉魯巴」/「Jitterbug」：
+  // 「Giliba」不是英文單字；台灣社交舞界把恰恰／迪斯可／吉魯巴歸類為「快
+  // 舞」，吉魯巴是源自英文 jitterbug（經日文ジルバ轉譯）的標準台灣用詞，
+  // 「吉利巴」應是這個詞的誤植/誤譯。id 保留 'giliba' 不動，只改顯示字串
+  // ——id 是 GENRE_BEAT_MAP 等對照表的查表 key，跟顯示名稱無關。
+  { id: 'giliba', nameZh: '吉魯巴', nameEn: 'Jitterbug', description: '台灣社交舞快舞代表，源自搖擺舞吉特巴', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', description: '「愛情之舞」，慢板古巴律動、浪漫搖擺', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重' },
+  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', description: '70 年代舞廳勁曲，四四拍強烈律動', bpmRange: [90, 140], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.twist -> 'rock').
-  { id: 'twist', nameZh: '扭扭', nameEn: 'Twist', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
+  { id: 'twist', nameZh: '扭扭', nameEn: 'Twist', description: '60 年代扭腰舞潮，輕快活潑好上手', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
   // bpmRange must match music-gen's presets/popular/reggae.yaml bpm_range —
   // outside it, the rhythm preset silently clamps the tempo with no warning
   // (the slider showed a value the render never actually used).
-  { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', bpmRange: [75, 100], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
+  { id: 'reggae', nameZh: '雷鬼', nameEn: 'Reggae', description: '牙買加節奏，切分後拍營造慵懶律動', bpmRange: [75, 100], timeSignature: '4/4', beatPattern: '重-輕-重-輕' },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.rock).
-  { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', bpmRange: [90, 130], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
+  { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', description: '強勁鼓點與電吉他，熱血奔放', bpmRange: [90, 130], timeSignature: '2/4', beatPattern: '重-輕-重-輕' },
   // bpmRange aligned to 'basic_pop' (see BEAT_TO_PRESET['country']).
-  { id: 'country', nameZh: '鄉村', nameEn: 'Country', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
+  { id: 'country', nameZh: '鄉村', nameEn: 'Country', description: '美式鄉村曲風，樸實敘事、輕快自在', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕' },
   // bpmRange aligned to 'compound_ballad' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.quick_waltz (removed melody 4) so it always
   // resolves to this one preset instead of switching by melody.
-  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 90], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
+  //
+  // 圓舞曲跟華爾滋不是同一件事的兩種寫法：圓舞曲專指維也納快三步，華爾滋
+  // 是節奏較慢的標準三拍子舞曲，台灣用法上兩者是並列、不互相取代的曲風。
+  { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', description: '維也納快三步，旋轉流暢、速度輕快', bpmRange: [60, 90], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
   // bpmRange aligned to 'basic_pop' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.chacha (removed melodies 3,4,6,7,8) so it
   // always resolves to this one preset instead of switching by melody
   // (chacha -> pop -> basic_pop/gentle_waltz/compound_ballad depending on
   // the melody's actual time signature, before this fix).
-  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
+  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', description: '俏皮拉丁舞曲，三個快步的招牌墊步', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
 ];
 
 // ── 拍號推導 ────────────────────────────────────────────
@@ -139,6 +153,7 @@ export interface RhythmOnlyStyle {
   id: string;
   nameZh: string;
   nameEn: string;
+  description: string; // 一句話風格介紹，台灣用詞
   beat: string;
   baseGenre: string;
   bpmRange: [number, number];
@@ -154,12 +169,13 @@ export interface RhythmOnlyStyle {
 }
 
 export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
-  // 速度是音樂家刻意訂的：森巴慢於 150 就會聽成別的樂風，而他反映森巴與波沙諾瓦
+  // 速度是音樂家刻意訂的：森巴慢於 150 就會聽成別的樂風，而他反映森巴與巴薩諾瓦
   // 容易混淆，所以兩者的範圍不重疊。
   {
     id: 'samba',
     nameZh: '森巴',
     nameEn: 'Samba',
+    description: '巴西嘉年華靈魂，跳動鼓點、熱情奔放',
     beat: 'samba',
     baseGenre: 'chacha',
     bpmRange: [150, 200],
@@ -175,8 +191,13 @@ export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
   },
   {
     id: 'bossa_nova',
-    nameZh: '波沙諾瓦',
+    // 「波沙諾瓦」改成「巴薩諾瓦」：zh-tw 維基百科詞條與台灣烏克麗麗/音樂
+    // 教學站台（如 ukuleletaiwan.com）多用「巴薩諾瓦」，搜尋中沒有找到台灣
+    // 來源使用「波沙諾瓦」——id/beat 保留 'bossa_nova'/'bossanova' 不動，
+    // 只改顯示字串。
+    nameZh: '巴薩諾瓦',
     nameEn: 'Bossa Nova',
+    description: '巴西森巴融合酷派爵士，慵懶輕鬆',
     beat: 'bossanova',
     baseGenre: 'chacha',
     bpmRange: [100, 150],

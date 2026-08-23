@@ -8,8 +8,8 @@ dateModified: 2026-08-23
 
 ## 症狀
 
-波沙諾瓦（Bossa Nova）這個節奏風格從卡片網格點下去，實際生成的音樂卻是
-`basic_pop`（一般流行樂節奏），聽起來完全不像波沙諾瓦。沒有任何錯誤訊息、
+巴薩諾瓦（Bossa Nova）這個節奏風格從卡片網格點下去，實際生成的音樂卻是
+`basic_pop`（一般流行樂節奏），聽起來完全不像巴薩諾瓦。沒有任何錯誤訊息、
 沒有 API warning——一切「看起來」都正常執行完畢。
 
 ## 真正原因
@@ -51,10 +51,10 @@ key），只要其中一邊改了拼法、加了字、或用了不同的連字�
 - 幫每個對照表加一條測試，斷言「表裡列出的每一種可能輸入，都能查到一個
   非 fallback 的真實值」，而不是只測試幾個正常案例。
 
-## 第三次發作（2026-08-23）：試聽按鈕只有波沙諾瓦沒出現
+## 第三次發作（2026-08-23）：試聽按鈕只有巴薩諾瓦沒出現
 
-使用者截圖：迪斯可、雷鬼、森巴的卡片都有 ▶ 試聽按鈕，只有波沙諾瓦沒有，
-但波沙諾瓦的 NEW badge 跟「節奏由 漢克呂 調校」都正常顯示——**後端資料
+使用者截圖：迪斯可、雷鬼、森巴的卡片都有 ▶ 試聽按鈕，只有巴薩諾瓦沒有，
+但巴薩諾瓦的 NEW badge 跟「節奏由 漢克呂 調校」都正常顯示——**後端資料
 沒問題**（直接 curl `/api/v1/assets/preview/bossa_nova` 是 200，正常
 播放），問題在前端。
 
@@ -69,10 +69,10 @@ key），只要其中一邊改了拼法、加了字、或用了不同的連字�
 | style | `id` | `beat` |
 |---|---|---|
 | 森巴 | `samba` | `samba`（兩者相同） |
-| 波沙諾瓦 | `bossa_nova` | `bossanova`（兩者不同！） |
+| 巴薩諾瓦 | `bossa_nova` | `bossanova`（兩者不同！） |
 
 森巴的 `id` 跟 `beat` 剛好是同一個字串，所以就算程式碼傳錯欄位
-（`style.id`），查表結果剛好還是對的，**巧合掩蓋了 bug**。波沙諾瓦的
+（`style.id`），查表結果剛好還是對的，**巧合掩蓋了 bug**。巴薩諾瓦的
 `id`（`bossa_nova`，底線）跟 `beat`（`bossanova`，無底線）不一樣，
 `GENRE_BEAT_MAP['bossa_nova']` 查無此鍵、`BEAT_TO_PRESET['bossa_nova']`
 也查無此鍵，兩層都 fallback，最後落到 `basic_pop`——而 `basic_pop`
@@ -89,8 +89,8 @@ for styles that have no upstream genre（森巴）, a beat id directly」
 先寫了一個會在修復前失敗的測試
 （`src/components/__tests__/CompositionParamsForm.test.tsx`）：
 mock `useMusicGenPresets` 回傳的 `Map` 裡刻意不放 `basic_pop`，斷言
-「森巴」跟「波沙諾瓦」都要能找到試聽按鈕。修復前只有森巴那條過、波沙
-諾瓦那條如預期失敗（`Unable to find role="button" ... 試聽 波沙諾瓦
+「森巴」跟「巴薩諾瓦」都要能找到試聽按鈕。修復前只有森巴那條過、波沙
+諾瓦那條如預期失敗（`Unable to find role="button" ... 試聽 巴薩諾瓦
 節奏`），修復後兩條都過。
 
 **這是本篇「preset id 要跟查表 key 一致」通則的第三次真實案例**，前兩次

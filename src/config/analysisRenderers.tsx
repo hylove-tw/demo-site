@@ -20,7 +20,7 @@ export interface MusicReportCustomParams {
     keyType?: string;         // 'major' | 'minor'
     melodyPattern?: number;   // 1-9
     genre?: string;           // 'waltz', 'soul', ...
-    /** Rhythm-only styles (森巴/波沙諾瓦) and manual overrides set this
+    /** Rhythm-only styles (森巴/巴薩諾瓦) and manual overrides set this
      * explicitly and it can diverge from GENRE_BEAT_MAP[genre] — dropping it
      * here made the report silently re-derive the wrong preset by genre
      * alone (samba, borrowing chacha as its genre, showed up as "流行"). */

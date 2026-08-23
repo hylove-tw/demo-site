@@ -33,7 +33,7 @@ describe('CompositionParamsForm rhythm-only style preview buttons', () => {
 
     it('shows a preview button for bossa nova too, even though its id and beat differ', () => {
         render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
-        expect(screen.getByRole('button', { name: '試聽 波沙諾瓦 節奏' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '試聽 巴薩諾瓦 節奏' })).toBeInTheDocument();
     });
 });
 

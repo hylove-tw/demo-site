@@ -10,16 +10,16 @@ dateModified: 2026-08-22
 
 兩個各自獨立的 bug，實際上是同一個根因的兩次發作：
 
-1. 波沙諾瓦（Bossa Nova）從曲風卡片網格點下去，聲音是錯的
+1. 巴薩諾瓦（Bossa Nova）從曲風卡片網格點下去，聲音是錯的
    （見 [preset-id-key-mismatch](preset-id-key-mismatch.md)）。
 2. 表單切到 `variant="compact"`（報告編輯器用的下拉選單模式）時，
-   森巴、波沙諾瓦這兩個節奏風格**完全不在選單裡**，選不到——即使
+   森巴、巴薩諾瓦這兩個節奏風格**完全不在選單裡**，選不到——即使
    BEAT_TO_PRESET 的 key 已經修好了也一樣，因為這個模式的 `<select>`
    壓根沒有列出它們的 `<option>`。
 
 ## 真正原因
 
-`CompositionParamsForm.tsx` 對「選了某個節奏風格（森巴／波沙諾瓦）該
+`CompositionParamsForm.tsx` 對「選了某個節奏風格（森巴／巴薩諾瓦）該
 套用哪些參數」這件事，原本有**兩份各自獨立的實作**：
 
 - 卡片網格（`variant="full"`）的 `onClick`：內嵌一段

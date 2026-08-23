@@ -441,6 +441,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                                 )}
                                             </div>
                                             <div className="text-xs opacity-60">{genre.nameEn}</div>
+                                            <div className="text-xs opacity-70 mt-0.5">{genre.description}</div>
                                             {rhythmFor(genre.id)?.credit && (
                                                 <div className="text-xs text-primary/80 mt-0.5">
                                                     節奏由 {rhythmFor(genre.id)!.credit} 調校
@@ -511,6 +512,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                                 )}
                                             </div>
                                             <div className="text-xs opacity-60">{style.nameEn}</div>
+                                            <div className="text-xs opacity-70 mt-0.5">{style.description}</div>
                                             {rhythm?.credit && (
                                                 <div className="text-xs text-primary/80 mt-0.5">
                                                     節奏由 {rhythm.credit} 調校
