@@ -52,4 +52,25 @@ describe('custom genre reveal', () => {
         expect(screen.getByText('樂譜標題')).toBeInTheDocument();
         expect(screen.queryByText('曲風')).not.toBeInTheDocument();
     });
+
+    // A rhythm-only style (samba) sets `beat` directly; picking a plain genre
+    // afterwards has to clear it, or the leftover `beat` keeps matching
+    // RHYTHM_ONLY_STYLES by beat alone and the picker (and the
+    // hasAccompaniment-gated section it drives in the editors) keeps showing
+    // samba instead of the genre just chosen.
+    it('picking a plain genre clears a beat left behind by a rhythm-only style', () => {
+        const onChange = jest.fn();
+        render(
+            <CompositionParamsForm
+                value={{ genre: 'chacha', beat: 'samba', bpm: 175 }}
+                onChange={onChange}
+                variant="compact"
+            />
+        );
+        openMusicTab();
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: 'reggae' } });
+        expect(onChange).toHaveBeenCalledWith(
+            expect.objectContaining({ genre: 'reggae', beat: undefined })
+        );
+    });
 });

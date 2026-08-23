@@ -237,7 +237,14 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
             return;
         }
         const chosenStyle = RHYTHM_ONLY_STYLES.find((st) => st.id === genreId);
-        onChange(chosenStyle ? applyRhythmStyle(value, chosenStyle) : applyGenre(value, genreId));
+        // A plain genre follows GENRE_BEAT_MAP on its own — it must clear any
+        // `beat` a previous rhythm-only style (or 自訂 pick) left behind, or
+        // that leftover keeps matching `activeStyle` below by beat alone and
+        // the picker (and the accompaniment section it drives) keeps showing
+        // the old style instead of the genre just chosen.
+        onChange(chosenStyle
+            ? applyRhythmStyle(value, chosenStyle)
+            : { ...applyGenre(value, genreId), beat: undefined });
     };
 
     const inputCls = compact ? 'input input-bordered input-sm w-full' : 'input input-underline w-full';
