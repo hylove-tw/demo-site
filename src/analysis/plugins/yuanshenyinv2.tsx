@@ -7,6 +7,7 @@ import {
   SINGLE_INSTRUMENT_FIELDS,
   DUAL_INSTRUMENT_FIELDS,
 } from '../../components/CompositionParamsForm';
+import bannerIllustration from '../../assets/banners/yuanshenyin-banner-illustration-only.webp';
 
 // The composition parameters live in CompositionParamsForm so that this form and
 // the post-analysis editor offer exactly the same decisions under exactly the
@@ -36,6 +37,14 @@ const plugin: AnalysisPlugin = {
   shortDescription: '進階腦波音樂創作，支援單人與雙人模式，自訂曲風、主旋律與音中心',
   description:
     '元神音創意平台提供完整的音樂創作選項流程，可自選單人或雙人（琴瑟合）模式、情緒/心靈音樂類型、調性（大調/小調）、9 種主旋律、12 種曲風、BPM 及樂器配置，生成專屬的腦波音樂五線譜；生成完成後可用混音器即時調整腦波背景頻率與自然音效。',
+  bannerImage: {
+    image: bannerIllustration,
+    eyebrow: 'BRAINWAVE TO MUSIC',
+    title: '元神音創意平台',
+    description: '把腦波轉譯為旋律，自由配置曲風、BPM、樂器與自然聲景',
+    tags: ['單人／雙人', '情緒／心靈', '9 種主旋律', '12 種曲風', '即時混音器'],
+    ctaLabel: '開始創作',
+  },
   requiredFiles: [
     { verbose_name: '腦波資料一', name: 'data1' },
     { verbose_name: '腦波資料二', name: 'data2' },

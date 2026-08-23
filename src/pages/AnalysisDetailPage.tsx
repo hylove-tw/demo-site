@@ -1,5 +1,5 @@
 // src/pages/AnalysisDetailPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getPlugins, AnalysisPlugin } from '../analysis/registry';
 import { useFileManager, UploadedFile } from '../hooks/useFileManager';
@@ -25,6 +25,9 @@ const AnalysisDetailPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+  const fileSelectionRef = useRef<HTMLDivElement | null>(null);
+  const scrollToFileSelection = () =>
+    fileSelectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   // 篩選出屬於當前分析功能的歷史紀錄
   const pluginHistory = history.filter((record) => record.analysisId === id);
@@ -145,6 +148,32 @@ const AnalysisDetailPage: React.FC = () => {
     );
   }
 
+  const historyButton = (
+    <button
+      onClick={() => setShowHistoryModal(true)}
+      className="btn btn-ghost btn-sm gap-2 shrink-0"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      歷史紀錄
+      <span className="badge badge-primary badge-sm">
+        {pluginHistory.filter(r => r.status === Status.Success).length}
+      </span>
+    </button>
+  );
+
+  const groupBadge = plugin.group && (
+    <div className="flex items-center gap-2">
+      <span className={`badge badge-sm ${groupMeta[plugin.group]?.badgeClass || 'badge-ghost'}`}>
+        {plugin.group}
+      </span>
+      <span className="text-sm text-base-content/60">
+        {groupMeta[plugin.group]?.description || ''}
+      </span>
+    </div>
+  );
+
   return (
     <div className="container mx-auto max-w-3xl">
       {/* 麵包屑 */}
@@ -158,45 +187,87 @@ const AnalysisDetailPage: React.FC = () => {
         </ul>
       </div>
 
-      {/* 頁面標題 */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          {plugin.group && (
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`badge badge-sm ${groupMeta[plugin.group]?.badgeClass || 'badge-ghost'}`}>
-                {plugin.group}
-              </span>
-              <span className="text-sm text-base-content/60">
-                {groupMeta[plugin.group]?.description || ''}
-              </span>
-            </div>
-          )}
-          <h1 className="text-2xl font-bold mb-2">
-            {plugin.name}
-            {plugin.badge && (
-              <span className={`badge badge-sm ${plugin.badge.color} ml-2 align-middle`}>
-                {plugin.badge.text}
-              </span>
-            )}
-          </h1>
-          <p className="text-base-content/70">{plugin.description}</p>
-        </div>
-        <button
-          onClick={() => setShowHistoryModal(true)}
-          className="btn btn-ghost gap-2"
+      {plugin.bannerImage ? (
+        /* 插畫式 hero banner——插畫本身沒有文字，標題/描述/CTA 都是真正的
+           DOM 文字疊上去（不是圖片裡固定的字），才能維持可及性、跟頁面
+           一致的字體與主題，也不用為了改一個字重新出圖。 */
+        <div
+          className="relative overflow-hidden rounded-2xl mb-6"
+          style={{ backgroundColor: '#f9ecd8' }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          歷史紀錄
-          <span className="badge badge-primary badge-sm">
-            {pluginHistory.filter(r => r.status === Status.Success).length}
-          </span>
-        </button>
-      </div>
+          <img
+            src={plugin.bannerImage.image}
+            alt=""
+            aria-hidden="true"
+            // 插畫的視覺重心（腦波圓形/波形/推桿/五線譜）落在圖片右側
+            // 六成左右，左側大多是留白紙紋——用 object-position 把可視窗口
+            // 錨定在偏右的位置，手機版窄版面才不會只看到空白。容器背景色
+            // 跟插畫本身的底色完全一致（見上方 backgroundColor），裁切到
+            // 哪裡都不會露出接縫。
+            className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-[62%_center]"
+          />
+          {/* 手機版文字滿版疊在插畫上，跟插畫本身的圖案（腦波圓形等）直接
+              重疊會看不清楚；桌機版文字欄較窄、插畫的視覺重心留在文字欄
+              右邊，不需要這層。用跟插畫同色的柔和遮罩，維持色調一致但保住
+              可讀性。 */}
+          <div className="absolute inset-0 bg-[#f9ecd8]/80 md:hidden" />
+          <div className="relative z-10 px-6 py-8 md:py-10 md:max-w-[26rem]">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              {groupBadge}
+              {historyButton}
+            </div>
+            {plugin.bannerImage.eyebrow && (
+              <div className="text-xs font-medium tracking-widest text-base-content/50 mb-2">
+                {plugin.bannerImage.eyebrow}
+              </div>
+            )}
+            <h1 className="text-3xl font-bold mb-2">
+              {plugin.bannerImage.title}
+              {plugin.badge && (
+                <span className={`badge badge-sm ${plugin.badge.color} ml-2 align-middle`}>
+                  {plugin.badge.text}
+                </span>
+              )}
+            </h1>
+            <p className="text-base-content/70 mb-4">{plugin.bannerImage.description}</p>
+            {plugin.bannerImage.tags && plugin.bannerImage.tags.length > 0 && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-base-content/50 mb-5">
+                {plugin.bannerImage.tags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                ))}
+              </div>
+            )}
+            {plugin.bannerImage.ctaLabel && (
+              <button onClick={scrollToFileSelection} className="btn btn-primary btn-sm gap-1">
+                {plugin.bannerImage.ctaLabel}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* 頁面標題（沒有 banner 的一般 plugin 維持原本樣式） */
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            {groupBadge && <div className="mb-1">{groupBadge}</div>}
+            <h1 className="text-2xl font-bold mb-2">
+              {plugin.name}
+              {plugin.badge && (
+                <span className={`badge badge-sm ${plugin.badge.color} ml-2 align-middle`}>
+                  {plugin.badge.text}
+                </span>
+              )}
+            </h1>
+            <p className="text-base-content/70">{plugin.description}</p>
+          </div>
+          {historyButton}
+        </div>
+      )}
 
       {/* 設定卡片 */}
-      <div className="card bg-base-100 shadow-md">
+      <div ref={fileSelectionRef} className="card bg-base-100 shadow-md">
         <div className="card-body">
           <h2 className="card-title mb-4">分析設定</h2>
 
