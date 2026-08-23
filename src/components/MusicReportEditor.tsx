@@ -3,8 +3,8 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { exportMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, StemVolumes } from '../services/musicGenService';
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
-import { BEAT_PRESETS, getPresetsForTimeSignature } from '../utils/beatPresets';
-import { useMusicGenPresets, beatOptionLabel, beatCredit, presetForBeat } from '../hooks/useMusicGenPresets';
+import { BEAT_PRESETS } from '../utils/beatPresets';
+import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS, timeSignatureForMelody } from '../config/musicCreativeConstants';
 import { CompositionParamsForm, SINGLE_INSTRUMENT_FIELDS } from './CompositionParamsForm';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
@@ -474,10 +474,6 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     // 根據拍號過濾可用的節奏預設
     const musicGenPresets = useMusicGenPresets();
 
-    const availableBeatPresets = useMemo(() => {
-        return getPresetsForTimeSignature(timeSignatureForMelody(editParams.melodyPattern));
-    }, [editParams.melodyPattern]);
-
     // 取得節奏預設名稱
     const getBeatPresetName = (beatId: string | undefined) => {
         if (!beatId || beatId === 'none') return '無';
@@ -515,7 +511,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
             {/* 設定資訊區塊 */}
             <div className="mb-6 p-4 bg-base-200 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">樂譜設定</h3>
+                    <h3 className="font-semibold">生成設定</h3>
                     {!isEditing && (
                         <button
                             onClick={handleStartEdit}
@@ -533,150 +529,70 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                     /* 編輯模式 */
                     <div className="space-y-4">
                         {/* 作曲參數：與分析前使用同一個元件，確保兩邊提供一樣的選項
-                            與一樣的相容性規則。重新產生樂譜的成本低，所以分析後也能改。 */}
+                            與一樣的相容性規則。重新產生樂譜的成本低，所以分析後也能改。
+
+                            音量／腦波背景頻率／自然音效不在這裡設定——生成完成後畫面
+                            下方的混音器已經涵蓋，這裡再放一份只會變成兩份會漂移的設定。
+
+                            節奏（beat）只能透過曲風或「自訂」設定，不再開放獨立覆寫：
+                            過去 editParams.beat 可以被下面這個獨立選單直接改掉、卻不影響
+                            曲風欄位，兩者一旦不同步（例如選了曲風又手動改節奏）就會出現
+                            「顯示的曲風」與「實際節奏」對不起來的回報。 */}
                         <CompositionParamsForm
                             value={editParams}
-                            onChange={(next) => setEditParams(next as MusicReportParams)}
+                            onChange={(next) => {
+                                const typed = next as MusicReportParams;
+                                // 曲風／節奏一變，舊的伴奏方式可能已經不適用（甚至該
+                                // 節奏根本不支援伴奏）——回到預設，避免殘留上一個節奏
+                                // 的伴奏設定悄悄套用到新節奏上。
+                                setEditParams(prev => (
+                                    typed.beat !== prev.beat
+                                        ? { ...typed, accompaniment: 'replace' }
+                                        : typed
+                                ));
+                            }}
                             variant="compact"
                             instrumentFields={SINGLE_INSTRUMENT_FIELDS}
-                        />
-
-                        {/* 音量設定 */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
-                            <div className="form-control">
-                                <label className="label py-0">
-                                    <span className="label-text text-xs">P1 音量</span>
-                                    <span className="label-text-alt text-xs">{editParams.p1_volume ?? 80}%</span>
-                                </label>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={100}
-                                    value={editParams.p1_volume ?? 80}
-                                    onChange={(e) => handleParamChange('p1_volume', parseInt(e.target.value))}
-                                    className="range range-xs range-primary"
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label py-0">
-                                    <span className="label-text text-xs">P2 音量</span>
-                                    <span className="label-text-alt text-xs">{editParams.p2_volume ?? 80}%</span>
-                                </label>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={100}
-                                    value={editParams.p2_volume ?? 80}
-                                    onChange={(e) => handleParamChange('p2_volume', parseInt(e.target.value))}
-                                    className="range range-xs range-primary"
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label py-0">
-                                    <span className="label-text text-xs">P3 音量</span>
-                                    <span className="label-text-alt text-xs">{editParams.p3_volume ?? 80}%</span>
-                                </label>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={100}
-                                    value={editParams.p3_volume ?? 80}
-                                    onChange={(e) => handleParamChange('p3_volume', parseInt(e.target.value))}
-                                    className="range range-xs range-primary"
-                                />
-                            </div>
-                            <div className="form-control">
-                                <label className="label py-0">
-                                    <span className="label-text text-xs">鼓聲音量</span>
-                                    <span className="label-text-alt text-xs">{editParams.drum_volume ?? 80}%</span>
-                                </label>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={100}
-                                    value={editParams.drum_volume ?? 80}
-                                    onChange={(e) => handleParamChange('drum_volume', parseInt(e.target.value))}
-                                    className="range range-xs range-secondary"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="divider my-2 text-xs text-base-content/50">節奏設定</div>
-
-                        {/* 伴奏模式：只有含伴奏 pattern 的節奏才有作用，其餘 preset
-                            送了也不會生效（API 會在 warnings 回報），所以不顯示。 */}
-                        {presetForBeat(musicGenPresets, editParams.beat)?.hasAccompaniment && (
-                            <div className="form-control">
-                                <label className="label py-1">
-                                    <span className="label-text text-xs">伴奏方式</span>
-                                </label>
-                                <select
-                                    className="select select-bordered select-sm w-full md:w-1/2"
-                                    value={editParams.accompaniment ?? 'replace'}
-                                    onChange={(e) => handleParamChange('accompaniment', e.target.value)}
-                                >
-                                    <option value="replace">取代中低音部（建議）</option>
-                                    <option value="layer">疊加在原聲部之上</option>
-                                    <option value="off">不使用伴奏</option>
-                                </select>
-                                <label className="label py-1">
-                                    <span className="label-text-alt text-base-content/50">
-                                        這類樂風的律動來自留白，「疊加」會把空隙填滿而蓋掉樂風感。
-                                    </span>
-                                </label>
-                            </div>
-                        )}
-
-                        {/* 節奏預設 */}
-                        <div className="form-control">
-                            <label className="label py-1">
-                                <span className="label-text text-xs">節奏風格</span>
-                            </label>
-                            <select
-                                className="select select-bordered select-sm w-full md:w-1/3"
-                                value={editParams.beat ?? 'none'}
-                                onChange={(e) => handleParamChange('beat', e.target.value)}
-                            >
-                                {availableBeatPresets.map((preset) => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {beatOptionLabel(musicGenPresets, preset)}
-                                    </option>
-                                ))}
-                            </select>
-                            {editParams.beat && editParams.beat !== 'none' && (
-                                <label className="label py-1 flex-col items-start gap-1">
-                                    <span className="label-text-alt text-base-content/50">
-                                        {BEAT_PRESETS.find(b => b.id === editParams.beat)?.description}
-                                    </span>
-                                    {beatCredit(musicGenPresets, editParams.beat) && (
-                                        <span className="label-text-alt flex items-center gap-1.5">
-                                            {presetForBeat(musicGenPresets, editParams.beat)?.isNew && (
-                                                <span className="badge badge-primary badge-sm">NEW</span>
-                                            )}
-                                            <span className="text-base-content/70">
-                                                {beatCredit(musicGenPresets, editParams.beat)}
+                            basicTabExtra={
+                                <div className="form-control">
+                                    <label className="label cursor-pointer justify-start gap-3 py-1">
+                                        <input
+                                            type="checkbox"
+                                            className="checkbox checkbox-sm checkbox-primary"
+                                            checked={editParams.auto_beam ?? false}
+                                            onChange={(e) => handleParamChange('auto_beam', e.target.checked)}
+                                        />
+                                        <span className="label-text">自動連結音符</span>
+                                        <span className="label-text-alt text-base-content/50">（八分音符及更短的音符會自動以橫線連結）</span>
+                                    </label>
+                                </div>
+                            }
+                            musicTabExtra={
+                                // 伴奏模式：只有含伴奏 pattern 的節奏才有作用，其餘 preset
+                                // 送了也不會生效（API 會在 warnings 回報），所以不顯示。
+                                presetForBeat(musicGenPresets, editParams.beat)?.hasAccompaniment ? (
+                                    <div className="form-control">
+                                        <label className="label py-1">
+                                            <span className="label-text text-xs">伴奏方式</span>
+                                        </label>
+                                        <select
+                                            className="select select-bordered select-sm w-full md:w-1/2"
+                                            value={editParams.accompaniment ?? 'replace'}
+                                            onChange={(e) => handleParamChange('accompaniment', e.target.value)}
+                                        >
+                                            <option value="replace">取代中低音部（建議）</option>
+                                            <option value="layer">疊加在原聲部之上</option>
+                                            <option value="off">不使用伴奏</option>
+                                        </select>
+                                        <label className="label py-1">
+                                            <span className="label-text-alt text-base-content/50">
+                                                這類樂風的律動來自留白，「疊加」會把空隙填滿而蓋掉樂風感。
                                             </span>
-                                        </span>
-                                    )}
-                                </label>
-                            )}
-                        </div>
-
-                        <div className="divider my-2 text-xs text-base-content/50">顯示設定</div>
-
-                        {/* 自動連結音符 */}
-                        <div className="form-control">
-                            <label className="label cursor-pointer justify-start gap-3 py-1">
-                                <input
-                                    type="checkbox"
-                                    className="checkbox checkbox-sm checkbox-primary"
-                                    checked={editParams.auto_beam ?? false}
-                                    onChange={(e) => handleParamChange('auto_beam', e.target.checked)}
-                                />
-                                <span className="label-text">自動連結音符</span>
-                                <span className="label-text-alt text-base-content/50">（八分音符及更短的音符會自動以橫線連結）</span>
-                            </label>
-                        </div>
+                                        </label>
+                                    </div>
+                                ) : undefined
+                            }
+                        />
 
                         {/* 按鈕 */}
                         <div className="flex justify-end gap-2 mt-4">
@@ -759,26 +675,8 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                                             </span>
                                         </div>
                                     )}
-                                    <div>
-                                        <span className="text-base-content/60">腦波背景頻率：</span>
-                                        <span className="font-medium">
-                                            {(() => {
-                                                if (appliedParams.brainwaveFrequency == null) return '不使用';
-                                                const bf = BRAINWAVE_FREQUENCIES.find(b => b.value === appliedParams.brainwaveFrequency);
-                                                return bf ? `${bf.label}（${bf.description}）` : `${appliedParams.brainwaveFrequency} Hz`;
-                                            })()}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span className="text-base-content/60">自然音效：</span>
-                                        <span className="font-medium">
-                                            {(() => {
-                                                if (!appliedParams.natureSound) return '不使用';
-                                                const ns = NATURE_SOUNDS.find(n => n.value === appliedParams.natureSound);
-                                                return ns?.label || appliedParams.natureSound;
-                                            })()}
-                                        </span>
-                                    </div>
+                                    {/* 腦波背景頻率／自然音效不在此重複顯示——下方混音器
+                                        隨時看得到目前值，這裡再列一份只會兩邊不同步。 */}
                                 </div>
                             </>
                         )}

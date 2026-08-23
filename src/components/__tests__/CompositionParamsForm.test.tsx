@@ -3,10 +3,14 @@
 // RHYTHM_ONLY_STYLE the id ('bossa_nova') and the beat id actually used to
 // resolve a server preset ('bossanova') differ. samba's id and beat happen
 // to be the same string, which is why samba's button worked and hid the bug.
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { CompositionParamsForm, applyRhythmStyle } from '../CompositionParamsForm';
 import { RHYTHM_ONLY_STYLES, getBpmMidpoint } from '../../config/musicCreativeConstants';
 import type { MusicGenPreset } from '../../services/musicGenService';
+
+// Genre/BPM live under the 音樂設定 tab, which isn't active by default —
+// the panel opens on 基本設定 (title, recording time, key).
+const openMusicTab = () => fireEvent.click(screen.getByText('音樂設定'));
 
 jest.mock('../../hooks/useMusicGenPresets', () => {
     const actual = jest.requireActual('../../hooks/useMusicGenPresets');
@@ -28,11 +32,13 @@ jest.mock('../../hooks/useMusicGenPresets', () => {
 describe('CompositionParamsForm rhythm-only style preview buttons', () => {
     it('shows a preview button for samba', () => {
         render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
+        openMusicTab();
         expect(screen.getByRole('button', { name: '試聽 森巴 節奏' })).toBeInTheDocument();
     });
 
     it('shows a preview button for bossa nova too, even though its id and beat differ', () => {
         render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
+        openMusicTab();
         expect(screen.getByRole('button', { name: '試聽 波沙諾瓦 節奏' })).toBeInTheDocument();
     });
 });
@@ -48,6 +54,7 @@ describe('BPM suggestion label', () => {
         const samba = RHYTHM_ONLY_STYLES.find((s) => s.id === 'samba')!;
         const value = applyRhythmStyle({}, samba);
         render(<CompositionParamsForm value={value} onChange={jest.fn()} />);
+        openMusicTab();
         const sambaMidpoint = getBpmMidpoint(samba.bpmRange);
         expect(screen.getByText(`建議 ${sambaMidpoint}`)).toBeInTheDocument();
     });
