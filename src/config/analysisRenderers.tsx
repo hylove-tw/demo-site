@@ -20,6 +20,11 @@ export interface MusicReportCustomParams {
     keyType?: string;         // 'major' | 'minor'
     melodyPattern?: number;   // 1-9
     genre?: string;           // 'waltz', 'soul', ...
+    /** Rhythm-only styles (森巴/波沙諾瓦) and manual overrides set this
+     * explicitly and it can diverge from GENRE_BEAT_MAP[genre] — dropping it
+     * here made the report silently re-derive the wrong preset by genre
+     * alone (samba, borrowing chacha as its genre, showed up as "流行"). */
+    beat?: string;
     brainwaveFrequency?: number | null;
     natureSound?: string;
 }
@@ -52,6 +57,9 @@ export const renderBrainWaveMusicReport = (
         keyType: customParams?.keyType,
         melodyPattern: customParams?.melodyPattern,
         genre: customParams?.genre,
+        // The style actually chosen (e.g. samba/bossa_nova, or a manual
+        // override) — must win over any genre-based guess below.
+        beat: customParams?.beat,
         brainwaveFrequency: customParams?.brainwaveFrequency,
         natureSound: customParams?.natureSound,
     };
@@ -142,6 +150,7 @@ export const renderDualMusicReportCreative = (
         keyType: customParams?.keyType,
         melodyPattern: customParams?.melodyPattern,
         genre: customParams?.genre,
+        beat: customParams?.beat,
         brainwaveFrequency: customParams?.brainwaveFrequency,
         natureSound: customParams?.natureSound,
     };
