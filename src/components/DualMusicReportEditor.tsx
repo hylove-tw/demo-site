@@ -4,6 +4,7 @@ import { exportDualMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, fe
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
 import { readCachedTaskId, writeCachedTaskId } from '../utils/musicExportCache';
+import { readCachedScorePages, writeCachedScorePages } from '../utils/musicScoreCache';
 import { BEAT_PRESETS } from '../utils/beatPresets';
 import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
@@ -460,6 +461,16 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
         setScoreLoading(true);
         const timer = setTimeout(async () => {
             try {
+                // A task's rendered score is immutable — if this is the same
+                // task a page-load export cache-hit already reused (see
+                // musicExportCache.ts), the render-score round trip below is
+                // exactly as redundant as resynthesizing the MP3 was.
+                const cachedPages = exportState.taskId ? readCachedScorePages(exportState.taskId) : undefined;
+                if (cachedPages) {
+                    setScorePages(cachedPages);
+                    return;
+                }
+
                 const beatPreset = resolveRhythmPreset(appliedParams.beat, timeSignatureForMelody(appliedParams.melodyPattern));
                 // Prefer the score the server actually rendered. With an
                 // accompaniment preset the sounding p2/p3 are not the upstream
@@ -471,6 +482,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                 const pages = await renderScore(rendered ?? processedXML,
                     { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
                 setScorePages(pages);
+                if (exportState.taskId) writeCachedScorePages(exportState.taskId, pages);
             } catch (err: any) {
                 if (err?.name !== 'AbortError') setScorePages(null);
             } finally {
