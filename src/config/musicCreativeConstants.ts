@@ -138,6 +138,14 @@ export interface RhythmOnlyStyle {
   baseGenre: string;
   bpmRange: [number, number];
   beatPattern: string;
+  /**
+   * Melodies guaranteed to hit this style's arranged music-gen preset rather
+   * than being silently swapped for a generic one (see SAFE_ARRANGED_MELODIES
+   * below — this is the same concept, just carried per-style because samba
+   * and bossa_nova borrow chacha's full, unrestricted melody set for
+   * composition purposes and would otherwise have no restriction here at all).
+   */
+  safeMelodies?: Set<number>;
 }
 
 export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
@@ -151,6 +159,14 @@ export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
     baseGenre: 'chacha',
     bpmRange: [150, 200],
     beatPattern: '重-輕-重-輕',
+    // chacha (the borrowed baseGenre) restricts nothing, so without this the
+    // full 9-melody set would be offered — but melodies 3/4/6/7/8 (3/8, 3/4,
+    // 6/8, 12/16) produce a time signature that doesn't match samba's own 4/4
+    // preset declaration, and music-gen's _resolve_preset_or_fallback()
+    // silently swaps in a generic rhythm when that happens. Verified against
+    // real requests by musicgen 2026-08-23; see
+    // ~/hylove/coordination/knowledge/entries/genre-to-preset-pipeline.md.
+    safeMelodies: new Set([1, 2, 5, 9]),
   },
   {
     id: 'bossa_nova',
@@ -160,8 +176,24 @@ export const RHYTHM_ONLY_STYLES: RhythmOnlyStyle[] = [
     baseGenre: 'chacha',
     bpmRange: [100, 150],
     beatPattern: '重-輕-輕-重-輕',
+    // Same issue as samba above — same borrowed baseGenre, same fix.
+    safeMelodies: new Set([1, 2, 5, 9]),
   },
 ];
+
+// ── 有音樂家編排的旗艦 preset：安全的主旋律子集合 ──────────
+// GENRE_MELODY_COMPATIBILITY 是 Rails 相容性清單（決定 422 與否），跟這裡
+// 完全是兩件事：一個曲風可能對 Rails 合法，但選到的主旋律拍號跟 music-gen
+// 這個曲風實際掛的節奏 preset 宣告的拍號對不上時，_resolve_preset_or_
+// fallback() 會靜默把整個 preset 換成沒有音樂家編排的通用節奏，沒有任何
+// warning。只有這幾個有專屬（漢克呂調校）preset 的曲風才有這個風險——其餘
+// 曲風背後是共用的通用 preset，本來就沒有「編排會不見」這回事，不需要這層
+// 限制。數字來源：musicgen 2026-08-23 用真實請求驗證，見
+// ~/hylove/coordination/knowledge/entries/genre-to-preset-pipeline.md。
+export const SAFE_ARRANGED_MELODIES: Record<string, Set<number>> = {
+  reggae: new Set([2, 5]),  // 拿掉 9（8/16，宣告 4/4 仍觸發靜默替換）
+  disco:  new Set([5]),     // 拿掉 9（同上）
+};
 
 // ── 曲風→節拍預設映射 ──────────────────────────────────
 // 將每個曲風 ID 映射到最接近的節拍預設 ID（beatPresets.ts）

@@ -2,8 +2,10 @@ import {
     GENRES,
     GENRE_BEAT_MAP,
     RHYTHM_ONLY_STYLES,
+    SAFE_ARRANGED_MELODIES,
     getBpmMidpoint,
 } from '../musicCreativeConstants';
+import { defaultMelodyFor, safeMelodiesFor } from '../../components/CompositionParamsForm';
 import { BEAT_PRESETS } from '../../utils/beatPresets';
 import { presetNameForBeat } from '../../services/musicGenService';
 
@@ -69,5 +71,54 @@ describe('genre beat mapping', () => {
         // It was spelled 'bossa-nova' in the map and 'bossanova' in the presets,
         // so it resolved to basic_pop instead.
         expect(presetNameForBeat('bossanova')).toBe('bossa_nova');
+    });
+});
+
+// music-gen verified these against real requests on 2026-08-23: picking one of
+// these melodies makes _resolve_preset_or_fallback() silently swap the
+// musician's arranged preset for a generic one, because the melody's time
+// signature doesn't match what the preset declares. Encoded here as data so
+// the two repos can't drift the way GENRE_BEAT_MAP/BEAT_TO_PRESET's spelling
+// once did — this list changing on the backend without this test noticing is
+// exactly that failure shape again, just for a range instead of a string.
+const KNOWN_UNSAFE_MELODIES: Record<string, number[]> = {
+    reggae: [9],
+    disco: [9],
+    samba: [3, 4, 6, 7, 8],
+    bossa_nova: [3, 4, 6, 7, 8],
+};
+
+describe('safe-melody / arranged-preset protection', () => {
+    it.each(Object.entries(KNOWN_UNSAFE_MELODIES))(
+        '%s: the safe list excludes every melody musicgen found unsafe', (id, unsafe) => {
+            const style = RHYTHM_ONLY_STYLES.find((s) => s.id === id);
+            const safe = style?.safeMelodies ?? SAFE_ARRANGED_MELODIES[id];
+            expect(safe).toBeDefined();
+            for (const melody of unsafe) {
+                expect(safe!.has(melody)).toBe(false);
+            }
+        });
+
+    it.each(['reggae', 'disco'])(
+        "%s's default melody (no manual override) is in its own safe list", (genreId) => {
+            const safe = SAFE_ARRANGED_MELODIES[genreId];
+            expect(safe.has(defaultMelodyFor(genreId)!)).toBe(true);
+        });
+
+    it.each(RHYTHM_ONLY_STYLES.map((s) => [s.id, s.nameZh]))(
+        "%s (%s)'s default melody (via its chacha baseGenre) is in its own safe list", (id) => {
+            const style = RHYTHM_ONLY_STYLES.find((s) => s.id === id)!;
+            const chachaDefault = defaultMelodyFor(style.baseGenre);
+            expect(style.safeMelodies?.has(chachaDefault!)).toBe(true);
+        });
+
+    it('samba/bossa_nova draw their safe list from safeMelodiesFor, not chacha directly', () => {
+        // chacha itself is intentionally unrestricted (GENRE_MELODY_COMPATIBILITY
+        // has no melody chacha rejects) — RHYTHM_ONLY_STYLES borrowing that as
+        // their compatibility set is exactly what caused this bug, so the fix
+        // must come from each style's own safeMelodies, not from chacha's set.
+        const samba = RHYTHM_ONLY_STYLES.find((s) => s.id === 'samba')!;
+        expect(safeMelodiesFor('chacha', undefined)).toBeUndefined();
+        expect(safeMelodiesFor(undefined, samba)).toEqual(samba.safeMelodies);
     });
 });

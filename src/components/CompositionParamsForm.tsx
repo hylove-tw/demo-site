@@ -22,6 +22,7 @@ import { BeatPatternStaff } from './BeatPatternStaff';
 import {
     GENRE_BEAT_MAP,
     RHYTHM_ONLY_STYLES,
+    SAFE_ARRANGED_MELODIES,
     KEY_CENTERS,
     MELODY_PATTERNS,
     GENRES,
@@ -35,6 +36,22 @@ import {
     Genre,
     RhythmOnlyStyle,
 } from '../config/musicCreativeConstants';
+
+/**
+ * Melodies guaranteed to hit the current selection's arranged music-gen
+ * preset, or undefined when the selection has no such restriction (most
+ * genres — only reggae/disco/samba/bossa_nova have a musician-arranged
+ * preset that a mismatched time signature can silently fall through.
+ *
+ * Shared by the card grid and the compact dropdown so the two can't drift
+ * apart the way the RHYTHM_ONLY_STYLES preview button once did between them.
+ */
+export function safeMelodiesFor(
+    genreId: string | undefined,
+    activeStyle: RhythmOnlyStyle | undefined,
+): Set<number> | undefined {
+    return activeStyle?.safeMelodies ?? (genreId ? SAFE_ARRANGED_MELODIES[genreId] : undefined);
+}
 
 export const INSTRUMENTS = [
     { value: 'piano', label: '鋼琴' },
@@ -177,9 +194,24 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     const keyType = (value.keyType ?? 'major') as 'major' | 'minor';
     const selectedMelody = value.melodyPattern as number | undefined;
     const selectedGenre = value.genre as string | undefined;
+    const activeStyle = RHYTHM_ONLY_STYLES.find((st) => st.beat === value.beat);
 
-    const availableMelodies: MelodyPattern[] =
+    // Melodies that won't silently lose the musician's arrangement (see
+    // safeMelodiesFor above). undefined for every genre/style that has no
+    // such preset to lose — the normal, unrestricted case.
+    const safeMelodies = safeMelodiesFor(selectedGenre, activeStyle);
+    // Defaults open once a melody outside the safe set is already in play —
+    // same pattern as `advancedOpen` below: derive once, then leave it to the
+    // user so toggling it off doesn't immediately reopen on the next render.
+    const [showAllMelodies, setShowAllMelodies] = useState(
+        Boolean(safeMelodies && selectedMelody !== undefined && !safeMelodies.has(selectedMelody)));
+
+    const rawAvailableMelodies: MelodyPattern[] =
         selectedGenre ? getCompatibleMelodies(selectedGenre) : MELODY_PATTERNS;
+    const availableMelodies: MelodyPattern[] =
+        (safeMelodies && !showAllMelodies)
+            ? rawAvailableMelodies.filter((m) => safeMelodies.has(m.id))
+            : rawAvailableMelodies;
     const availableGenres: Genre[] =
         selectedMelody ? getCompatibleGenres(selectedMelody) : GENRES;
 
@@ -197,12 +229,16 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     const isCustomGenre = Boolean(
         selectedGenre && selectedMelody
         && selectedMelody !== defaultMelodyFor(selectedGenre));
+    // A custom melody that also falls outside the safe set doesn't just make
+    // this a different combination than the genre's default — it risks
+    // music-gen silently dropping the musician's arrangement entirely.
+    const isRiskyMelody = Boolean(
+        safeMelodies && selectedMelody !== undefined && !safeMelodies.has(selectedMelody));
 
     const currentGenre = GENRES.find((g) => g.id === selectedGenre);
     // A rhythm-only style sets the tempo range, not the genre it borrows for
     // composition: samba needs 150–200, and chacha — the genre it pairs with
     // because the upstream places no tempo limit on it — displays 60–140.
-    const activeStyle = RHYTHM_ONLY_STYLES.find((st) => st.beat === value.beat);
     const tempoRange = activeStyle?.bpmRange ?? currentGenre?.bpmRange;
     const bpmMin = tempoRange?.[0] ?? 30;
     const bpmMax = tempoRange?.[1] ?? 200;
@@ -330,6 +366,16 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                         <span className="font-medium">選擇曲風時會自動帶出對應的主旋律</span>，
                         在此改動會讓曲風變成「自訂曲風」。
                     </p>
+                {safeMelodies && (
+                    <label className="label cursor-pointer justify-start gap-2 py-1 -mt-1 mb-2">
+                        <input type="checkbox" className="checkbox checkbox-xs"
+                            checked={showAllMelodies}
+                            onChange={(e) => setShowAllMelodies(e.target.checked)} />
+                        <span className="label-text-alt">
+                            顯示更多組合（可能無法套用音樂家編排的節奏）
+                        </span>
+                    </label>
+                )}
                 {compact ? (
                     <div className={fieldCls}>
                         <select className={selectCls} value={selectedMelody ?? ''}
@@ -339,6 +385,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                 <option key={m.id} value={m.id}
                                     disabled={!availableMelodies.some((a) => a.id === m.id)}>
                                     主旋律 {m.id}（{m.timeSignature}）
+                                    {safeMelodies && !safeMelodies.has(m.id) ? ' ‧ 可能無編排' : ''}
                                 </option>
                             ))}
                         </select>
@@ -354,6 +401,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                             const available = availableMelodies.some((m) => m.id === melody.id);
                             const recommended = musicType === 'spiritual' && melody.id <= 3;
                             const selected = selectedMelody === melody.id;
+                            const risky = Boolean(safeMelodies && !safeMelodies.has(melody.id));
                             return (
                                 <button key={melody.id} type="button" disabled={!available}
                                     className={`card card-compact border-2 text-left transition-all cursor-pointer
@@ -366,6 +414,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                             <span className="font-bold text-sm">主旋律 {melody.id}</span>
                                             <div className="flex gap-1">
                                                 {recommended && <span className="badge badge-success badge-xs">推薦</span>}
+                                                {risky && <span className="badge badge-warning badge-xs">可能無編排</span>}
                                                 <span className="badge badge-outline badge-xs">{melody.timeSignature}</span>
                                             </div>
                                         </div>
@@ -429,12 +478,23 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
             <Divider>{isCustomGenre ? '曲風（自訂）' : '曲風'}</Divider>
 
             {isCustomGenre && (
-                <div className="alert alert-info py-2 text-xs">
+                <div className={`alert ${isRiskyMelody ? 'alert-warning' : 'alert-info'} py-2 text-xs`}>
                     <span>
-                        目前是<span className="font-medium">自訂曲風</span>：主旋律已改為
-                        {` ${selectedMelody}`}，與「{currentGenre?.nameZh}」預設的
-                        {` ${defaultMelodyFor(selectedGenre!)}`} 不同。
-                        重新點選曲風即可回到預設組合。
+                        {isRiskyMelody ? (
+                            <>
+                                <span className="font-medium">⚠️ 這個組合可能無法套用音樂家編排的節奏</span>：
+                                主旋律 {selectedMelody} 的拍號跟「{activeStyle?.nameZh ?? currentGenre?.nameZh}」
+                                目前的節奏對不上，music-gen 可能會靜默改用通用節奏，
+                                成品聽起來會跟卡片上顯示的不一樣。
+                            </>
+                        ) : (
+                            <>
+                                目前是<span className="font-medium">自訂曲風</span>：主旋律已改為
+                                {` ${selectedMelody}`}，與「{activeStyle?.nameZh ?? currentGenre?.nameZh}」預設的
+                                {` ${defaultMelodyFor(selectedGenre!)}`} 不同。
+                            </>
+                        )}
+                        {' '}重新點選曲風即可回到預設組合。
                     </span>
                 </div>
             )}
