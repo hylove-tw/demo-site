@@ -685,7 +685,11 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 </div>
                 <div className="flex justify-between text-xs opacity-50 mt-1 px-1">
                     <span>{bpmMin}</span>
-                    {currentGenre && <span>建議 {getBpmMidpoint(currentGenre.bpmRange)}</span>}
+                    {/* tempoRange already prefers activeStyle over the borrowed
+                        baseGenre (same as bpmMin/bpmMax above) — reading
+                        currentGenre.bpmRange directly here showed chacha's
+                        midpoint while a rhythm-only style was active. */}
+                    {tempoRange && <span>建議 {getBpmMidpoint(tempoRange)}</span>}
                     <span>{bpmMax}</span>
                 </div>
             </div>

@@ -4,7 +4,8 @@
 // resolve a server preset ('bossanova') differ. samba's id and beat happen
 // to be the same string, which is why samba's button worked and hid the bug.
 import { render, screen } from '@testing-library/react';
-import { CompositionParamsForm } from '../CompositionParamsForm';
+import { CompositionParamsForm, applyRhythmStyle } from '../CompositionParamsForm';
+import { RHYTHM_ONLY_STYLES, getBpmMidpoint } from '../../config/musicCreativeConstants';
 import type { MusicGenPreset } from '../../services/musicGenService';
 
 jest.mock('../../hooks/useMusicGenPresets', () => {
@@ -33,5 +34,21 @@ describe('CompositionParamsForm rhythm-only style preview buttons', () => {
     it('shows a preview button for bossa nova too, even though its id and beat differ', () => {
         render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
         expect(screen.getByRole('button', { name: '試聽 波沙諾瓦 節奏' })).toBeInTheDocument();
+    });
+});
+
+// User-reported: the BPM slider itself correctly showed samba's 150-200
+// range, but the "建議" (suggested) label below it showed 100 — chacha's
+// borrowed-baseGenre midpoint, not samba's. The suggestion text reads
+// currentGenre.bpmRange directly instead of the same `tempoRange` the
+// slider's own min/max already derive from (which does prefer the active
+// RHYTHM_ONLY_STYLE's range over the borrowed genre's).
+describe('BPM suggestion label', () => {
+    it("shows the active rhythm-only style's own midpoint, not the borrowed genre's", () => {
+        const samba = RHYTHM_ONLY_STYLES.find((s) => s.id === 'samba')!;
+        const value = applyRhythmStyle({}, samba);
+        render(<CompositionParamsForm value={value} onChange={jest.fn()} />);
+        const sambaMidpoint = getBpmMidpoint(samba.bpmRange);
+        expect(screen.getByText(`建議 ${sambaMidpoint}`)).toBeInTheDocument();
     });
 });
