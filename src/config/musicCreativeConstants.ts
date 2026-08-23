@@ -83,7 +83,12 @@ export const GENRES: Genre[] = [
   // GENRE_MELODY_COMPATIBILITY.quick_waltz (removed melody 4) so it always
   // resolves to this one preset instead of switching by melody.
   { id: 'quick_waltz', nameZh: '圓舞曲', nameEn: 'Quick Waltz', bpmRange: [60, 90], timeSignature: '6/8', beatPattern: '重-輕-輕-重-輕-輕' },
-  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [60, 140], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
+  // bpmRange aligned to 'basic_pop' — only valid after narrowing
+  // GENRE_MELODY_COMPATIBILITY.chacha (removed melodies 3,4,6,7,8) so it
+  // always resolves to this one preset instead of switching by melody
+  // (chacha -> pop -> basic_pop/gentle_waltz/compound_ballad depending on
+  // the melody's actual time signature, before this fix).
+  { id: 'chacha', nameZh: '恰恰', nameEn: 'Cha-cha', bpmRange: [90, 130], timeSignature: '4/4', beatPattern: '輕-輕-重-輕' },
 ];
 
 // ── 拍號推導 ────────────────────────────────────────────
@@ -228,7 +233,14 @@ export const GENRE_MELODY_COMPATIBILITY: Record<string, Set<number>> = {
   tango:        new Set([1, 5]),
   giliba:       new Set([2, 5, 9]),
   rumba:        new Set([1, 5]),
-  chacha:       new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+  // 3,4,6,7,8 (3/8, 3/4, 6/8, 12/16) removed: chacha -> pop resolves to a
+  // *different* preset per melody's time signature (basic_pop for 4/4-ish,
+  // gentle_waltz or compound_ballad otherwise) — same dynamic-switching
+  // problem as waltz/quick_waltz, fixed the same way. Narrowing to melodies
+  // that all land on basic_pop means chacha (and anything borrowing it as a
+  // baseGenre) now always gets the same preset. Verified 2026-08-23; see
+  // ~/hylove/coordination/knowledge/entries/genre-to-preset-pipeline.md.
+  chacha:       new Set([1, 2, 5, 9]),
   disco:        new Set([5, 9]),
   twist:        new Set([5, 9]),
   reggae:       new Set([2, 5, 9]),

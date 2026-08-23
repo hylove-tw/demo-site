@@ -43,8 +43,11 @@ describe.each(RHYTHM_ONLY_STYLES.map((s) => [s.id, s.nameZh]))(
         });
 
         it('borrows a genre whose tempo the upstream does not cap', () => {
-            // chacha is the only unrestricted one; anything else would reject
-            // the tempo this style needs.
+            // chacha remains the most tempo-permissive genre to borrow from —
+            // this is about BPM, not melody compatibility (chacha's melody set
+            // was narrowed in the fix below; its bpmRange is irrelevant to
+            // samba/bossa_nova regardless, since applyRhythmStyle immediately
+            // overwrites bpm with the style's own range after borrowing).
             expect(style.baseGenre).toBe('chacha');
         });
 
@@ -113,10 +116,13 @@ describe('safe-melody / arranged-preset protection', () => {
         });
 
     it('samba/bossa_nova draw their safe list from safeMelodiesFor, not chacha directly', () => {
-        // chacha itself is intentionally unrestricted (GENRE_MELODY_COMPATIBILITY
-        // has no melody chacha rejects) — RHYTHM_ONLY_STYLES borrowing that as
-        // their compatibility set is exactly what caused this bug, so the fix
-        // must come from each style's own safeMelodies, not from chacha's set.
+        // chacha's own GENRE_MELODY_COMPATIBILITY was narrowed too (2026-08-23,
+        // for chacha's own dynamic-preset-switching problem — a different bug
+        // than this one), and by coincidence now equals {1,2,5,9}, the same as
+        // samba/bossa_nova's safeMelodies. That coincidence must not make this
+        // assertion pass for the wrong reason: these styles must read their own
+        // safeMelodies field, not fall through to chacha's table, regardless of
+        // whether the two currently happen to match.
         const samba = RHYTHM_ONLY_STYLES.find((s) => s.id === 'samba')!;
         expect(safeMelodiesFor('chacha', undefined)).toBeUndefined();
         expect(safeMelodiesFor(undefined, samba)).toEqual(samba.safeMelodies);
