@@ -102,6 +102,23 @@ export function StemMixer({
     };
 
     /**
+     * Safari requires the AudioContext to be created/resumed synchronously
+     * within the user gesture meant to unlock it. Everything else in this
+     * file loads stems asynchronously (fetch, then decodeAudioData), so
+     * `ensureCtx()` would otherwise only run after the first `await` in that
+     * chain — by then Safari no longer credits it to the gesture: `state`
+     * still reports 'running' and `currentTime` still advances normally, but
+     * no audio ever reaches the output device. Call this synchronously,
+     * before any `await`, at the top of every click/pointer handler that can
+     * be the first thing to touch audio.
+     */
+    const unlockAudioForGesture = () => {
+        const ctx = ensureCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+        return ctx;
+    };
+
+    /**
      * Register a buffer + gain node. Pass loop=true for optional stems so we
      * don't extend durationRef (their length shouldn't determine when music ends).
      */
@@ -279,7 +296,10 @@ export function StemMixer({
         rafRef.current = requestAnimationFrame(tick);
     };
 
-    const handlePlay = () => startPlayback(startOffsetRef.current);
+    const handlePlay = () => {
+        unlockAudioForGesture();
+        startPlayback(startOffsetRef.current);
+    };
     const handlePause = () => {
         if (ctxRef.current) startOffsetRef.current = ctxRef.current.currentTime - startTimeRef.current;
         stopSources(); setIsPlaying(false);
@@ -291,7 +311,10 @@ export function StemMixer({
     };
     // On release: actually restart playback at new position
     const handleSeekCommit = () => {
-        if (isPlaying) startPlayback(startOffsetRef.current);
+        if (isPlaying) {
+            unlockAudioForGesture();
+            startPlayback(startOffsetRef.current);
+        }
     };
 
     useEffect(() => () => { stopSources(); ctxRef.current?.close(); }, []);
@@ -301,6 +324,10 @@ export function StemMixer({
     const addOptionalStem = async (type: 'brainwave' | 'background', value: string) => {
         if (!value) return;
         if (optionalStems.some(s => s.type === type && s.value === value)) return;
+        // Still synchronous at this point (no `await` above) — this can be
+        // the very first thing to touch audio if the user adds a stem before
+        // ever pressing play, so it needs the same gesture-synchronous unlock.
+        unlockAudioForGesture();
 
         const url = type === 'brainwave'
             ? `${MUSIC_GEN_URL}/api/v1/assets/brainwave/${value}`
