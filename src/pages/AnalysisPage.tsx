@@ -44,6 +44,7 @@ const AnalysisPage: React.FC = () => {
   });
 
   const successCount = history.filter((r) => r.status === Status.Success).length;
+  const bannerPlugins = plugins.filter((p) => p.bannerImage);
 
   return (
     <div className="space-y-8">
@@ -59,6 +60,76 @@ const AnalysisPage: React.FC = () => {
           <span>所有資料僅儲存於您的瀏覽器中，不會上傳至伺服器。清除瀏覽器資料將會遺失所有內容。</span>
         </div>
       </div>
+
+      {/* 插畫式 hero banner——CTA「開始創作」在首頁才有意義（把使用者帶
+          進那個 plugin），分析功能的進入頁本身已經是「進來要做的事」，
+          不需要再有一個 CTA。插畫本身沒有文字，標題/描述/CTA 都是真正的
+          DOM 文字疊上去，才能維持可及性、跟頁面一致的字體與主題。 */}
+      {bannerPlugins.map((plugin) => {
+        const banner = plugin.bannerImage!;
+        return (
+          <div
+            key={plugin.id}
+            className="relative overflow-hidden rounded-2xl"
+            style={{ backgroundColor: '#f9ecd8' }}
+          >
+            <img
+              src={banner.image}
+              alt=""
+              aria-hidden="true"
+              // 插畫的視覺重心（腦波圓形/波形/推桿/五線譜）落在圖片右側
+              // 六成左右，左側大多是留白紙紋——用 object-position 把可視
+              // 窗口錨定在偏右的位置，手機版窄版面才不會只看到空白。容器
+              // 背景色跟插畫本身的底色完全一致，裁切到哪裡都不會露出接縫。
+              className="absolute inset-0 w-full h-full object-cover object-[80%_center] md:object-[62%_center]"
+            />
+            {/* 手機版文字滿版疊在插畫上，跟插畫本身的圖案直接重疊會看不
+                清楚——用跟插畫同色的柔和遮罩，維持色調一致但保住可讀性。 */}
+            <div className="absolute inset-0 bg-[#f9ecd8]/80 md:hidden" />
+            {/* 桌機版文字欄本身不寬（md:max-w-[26rem]），但這個頁面的
+                容器寬度會隨畫面寬度變化（見 PageWrapper 的 max-w-5xl），
+                夠寬時插畫最複雜的圖案（腦波圓形）還是會被縮放進文字欄
+                範圍內、疊到描述文字上。用漸層取代單一色塊：文字欄那側
+                維持不透明，往插畫方向漸漸透明，不管容器實際多寬，文字
+                後面永遠有一致的底色，同時盡量露出插畫。 */}
+            <div
+              className="absolute inset-0 hidden md:block"
+              style={{ background: 'linear-gradient(to right, #f9ecd8 0%, #f9ecd8 55%, rgba(249,236,216,0) 85%)' }}
+            />
+            <div className="relative z-10 px-6 py-8 md:py-10 md:max-w-[26rem]">
+              {banner.eyebrow && (
+                <div className="text-xs font-medium tracking-widest text-base-content/50 mb-2">
+                  {banner.eyebrow}
+                </div>
+              )}
+              <h2 className="text-3xl font-bold mb-2">
+                {banner.title}
+                {plugin.badge && (
+                  <span className={`badge badge-sm ${plugin.badge.color} ml-2 align-middle`}>
+                    {plugin.badge.text}
+                  </span>
+                )}
+              </h2>
+              <p className="text-base-content/70 mb-4">{banner.description}</p>
+              {banner.tags && banner.tags.length > 0 && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-base-content/50 mb-5">
+                  {banner.tags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+              )}
+              {banner.ctaLabel && (
+                <Link to={`/analysis/${plugin.id}`} className="btn btn-primary btn-sm gap-1">
+                  {banner.ctaLabel}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+          </div>
+        );
+      })}
 
       {/* 頁面標題 */}
       <div className="flex items-center justify-between">
