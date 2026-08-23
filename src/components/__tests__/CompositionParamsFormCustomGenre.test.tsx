@@ -14,19 +14,15 @@ jest.mock('../../hooks/useMusicGenPresets', () => {
     return { ...actual, useMusicGenPresets: () => new Map() };
 });
 
-const openMusicTab = () => fireEvent.click(screen.getByText('音樂設定'));
-
 describe('custom genre reveal', () => {
     it('does not show a melody/rhythm override while a real genre is selected', () => {
         render(<CompositionParamsForm value={{ genre: 'reggae', melodyPattern: 9 }} onChange={jest.fn()} />);
-        openMusicTab();
         expect(screen.queryByText('請選擇主旋律')).not.toBeInTheDocument();
         expect(screen.queryByText('請選擇伴奏節奏')).not.toBeInTheDocument();
     });
 
     it('shows the melody/rhythm override once genre is "自訂"', () => {
         render(<CompositionParamsForm value={{ genre: 'custom' }} onChange={jest.fn()} />);
-        openMusicTab();
         expect(screen.getByText('請選擇主旋律')).toBeInTheDocument();
         expect(screen.getByText('請選擇伴奏節奏')).toBeInTheDocument();
     });
@@ -40,17 +36,18 @@ describe('custom genre reveal', () => {
                 variant="compact"
             />
         );
-        openMusicTab();
-        fireEvent.change(screen.getByRole('combobox'), { target: { value: 'custom' } });
+        fireEvent.change(screen.getByRole('combobox', { name: '曲風' }), { target: { value: 'custom' } });
         expect(onChange).toHaveBeenCalledWith(
             expect.objectContaining({ genre: 'custom', beat: undefined })
         );
     });
 
-    it('defaults to the 基本設定 tab', () => {
+    // 基本設定／音樂設定 are two always-visible cards, not tab-switched — a
+    // tab bar this narrow clipped/wrapped badly at some widths.
+    it('shows 基本設定 and 音樂設定 as two cards at once, not behind a tab switch', () => {
         render(<CompositionParamsForm value={{}} onChange={jest.fn()} />);
         expect(screen.getByText('樂譜標題')).toBeInTheDocument();
-        expect(screen.queryByText('曲風')).not.toBeInTheDocument();
+        expect(screen.getByText('曲風')).toBeInTheDocument();
     });
 
     // A rhythm-only style (samba) sets `beat` directly; picking a plain genre
@@ -67,8 +64,7 @@ describe('custom genre reveal', () => {
                 variant="compact"
             />
         );
-        openMusicTab();
-        fireEvent.change(screen.getByRole('combobox'), { target: { value: 'reggae' } });
+        fireEvent.change(screen.getByRole('combobox', { name: '曲風' }), { target: { value: 'reggae' } });
         expect(onChange).toHaveBeenCalledWith(
             expect.objectContaining({ genre: 'reggae', beat: undefined })
         );

@@ -40,7 +40,6 @@ describe('MusicReportEditor accompaniment reset', () => {
         );
 
         fireEvent.click(screen.getByText('編輯設定'));
-        fireEvent.click(screen.getByText('音樂設定'));
 
         // Starts as the caller set it: the accompaniment picked for reggae.
         expect((screen.getByRole('combobox', { name: '伴奏方式' }) as HTMLSelectElement).value)
@@ -63,12 +62,10 @@ describe('MusicReportEditor accompaniment reset', () => {
         );
 
         fireEvent.click(screen.getByText('編輯設定'));
-        fireEvent.click(screen.getByText('音樂設定'));
 
-        // Something unrelated to genre/beat changes (the title, in 基本設定).
-        fireEvent.click(screen.getByText('基本設定'));
+        // Something unrelated to genre/beat changes (the title, in 基本設定 —
+        // both cards are visible at once, no tab switch needed to reach it).
         fireEvent.change(screen.getByPlaceholderText('未命名的樂譜'), { target: { value: 'y' } });
-        fireEvent.click(screen.getByText('音樂設定'));
 
         expect((screen.getByRole('combobox', { name: '伴奏方式' }) as HTMLSelectElement).value)
             .toBe('off');

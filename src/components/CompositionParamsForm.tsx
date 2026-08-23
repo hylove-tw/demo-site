@@ -19,7 +19,7 @@
 // behind an explicit "自訂" genre entry rather than a second control that can
 // silently drift from it.
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useMusicGenPresets, presetForBeat, beatOptionLabel, beatCredit } from '../hooks/useMusicGenPresets';
 import { getPresetsForTimeSignature, BEAT_PRESETS } from '../utils/beatPresets';
 import { useBeatPreview } from '../hooks/useBeatPreview';
@@ -188,7 +188,6 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     const compact = variant === 'compact';
     const set = (field: string, v: any) => onChange({ ...value, [field]: v });
 
-    const [activeTab, setActiveTab] = useState<'basic' | 'music'>('basic');
 
     // Picking a genre also picks the rhythm it maps to, so a genre backed by a
     // credited groove should say so here — this is where the choice is actually
@@ -259,6 +258,19 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
             ? <div className="divider my-2 text-xs text-base-content/50">{children}</div>
             : <div className="divider-minimal">{children}</div>;
 
+    // Two always-visible cards instead of a tab switcher — a tab bar this
+    // narrow (especially in the compact editor panel) clipped/wrapped badly
+    // at some widths, and both sections are short enough that showing them
+    // both at once costs little scroll.
+    const Card: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+        <div className={compact
+            ? 'rounded-lg border border-base-300 p-3 space-y-3'
+            : 'rounded-lg border border-base-300 p-4 space-y-4'}>
+            <h3 className={compact ? 'text-sm font-semibold' : 'font-semibold'}>{title}</h3>
+            {children}
+        </div>
+    );
+
     return (
         <div className={compact ? 'space-y-3' : 'space-y-6 p-4 border border-base-300 rounded-lg'}>
             {showPlayerMode && (
@@ -284,17 +296,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 
             {/* 基本設定／音樂設定：曲風是唯一需要做的風格選擇，同時決定作曲與伴奏
                 節奏；只有選了「自訂」才需要自己指定主旋律與伴奏節奏。 */}
-            <div className="tabs tabs-boxed">
-                <button type="button"
-                    className={`tab ${activeTab === 'basic' ? 'tab-active' : ''}`}
-                    onClick={() => setActiveTab('basic')}>基本設定</button>
-                <button type="button"
-                    className={`tab ${activeTab === 'music' ? 'tab-active' : ''}`}
-                    onClick={() => setActiveTab('music')}>音樂設定</button>
-            </div>
-
-            {activeTab === 'basic' && (
-                <div className="space-y-4">
+            <Card title="基本設定">
                     {/* 音樂類型 */}
                     <div>
                         <label className={labelCls}>
@@ -360,11 +362,9 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                     </div>
 
                     {basicTabExtra}
-                </div>
-            )}
+            </Card>
 
-            {activeTab === 'music' && (
-                <div className="space-y-4">
+            <Card title="音樂設定">
                     <Divider>曲風</Divider>
 
                     {compact ? (
@@ -638,8 +638,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                     )}
 
                     {musicTabExtra}
-                </div>
-            )}
+            </Card>
         </div>
     );
 };
