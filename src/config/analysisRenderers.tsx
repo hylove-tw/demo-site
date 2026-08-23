@@ -37,7 +37,8 @@ export interface MusicReportCustomParams {
  */
 export const renderBrainWaveMusicReport = (
     result: string | { musicXML: string; _beforeBrainData?: any; _afterBrainData?: any },
-    customParams?: MusicReportCustomParams
+    customParams?: MusicReportCustomParams,
+    reportKey?: string,
 ): React.ReactNode => {
     const musicXML = typeof result === 'string' ? result : result.musicXML;
     const brainData = typeof result === 'object' && result._beforeBrainData != null
@@ -86,6 +87,7 @@ export const renderBrainWaveMusicReport = (
             musicXML={musicXML}
             initialParams={initialParams}
             brainData={brainData}
+            cacheKey={reportKey}
         />
     );
 };
@@ -126,7 +128,8 @@ export const renderDualMusicReport = (
  */
 export const renderDualMusicReportCreative = (
     result: string | { musicXML: string; _firstBrainData?: any; _secondBrainData?: any },
-    customParams?: Record<string, any>
+    customParams?: Record<string, any>,
+    reportKey?: string,
 ): React.ReactNode => {
     const musicXML = typeof result === 'string' ? result : result.musicXML;
     const brainData = typeof result === 'object' && result._firstBrainData != null
@@ -177,6 +180,7 @@ export const renderDualMusicReportCreative = (
             musicXML={musicXML}
             initialParams={initialParams}
             brainData={brainData}
+            cacheKey={reportKey}
         />
     );
 };

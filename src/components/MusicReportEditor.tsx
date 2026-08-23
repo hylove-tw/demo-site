@@ -1,8 +1,9 @@
 // src/components/MusicReportEditor.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { exportMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, StemVolumes } from '../services/musicGenService';
+import { exportMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, fetchCachedExportState, StemVolumes } from '../services/musicGenService';
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
+import { readCachedTaskId, writeCachedTaskId } from '../utils/musicExportCache';
 import { BEAT_PRESETS } from '../utils/beatPresets';
 import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS, timeSignatureForMelody } from '../config/musicCreativeConstants';
@@ -224,6 +225,10 @@ interface MusicReportEditorProps {
     initialParams: MusicReportParams;
     onParamsChange?: (params: MusicReportParams) => void;
     brainData?: { before: any; after: any };
+    /** Stable per-report identifier (the history record's id) used to reuse
+     * a previously-completed MP3 export across page refreshes instead of
+     * resynthesizing from scratch. See src/utils/musicExportCache.ts. */
+    cacheKey?: string;
 }
 
 // 套用參數到 MusicXML
@@ -314,6 +319,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
     initialParams,
     onParamsChange,
     brainData,
+    cacheKey,
 }) => {
     // 當前生效的參數
     const [appliedParams, setAppliedParams] = useState<MusicReportParams>(initialParams);
@@ -346,6 +352,24 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                 const params = appliedParamsRef.current;
                 const bd = brainDataRef.current;
                 if (!bd) return;
+
+                // The page-load call (no mixer config) is the one a refresh
+                // repeats every time — try to reuse whatever that same
+                // report already generated instead of resynthesizing from
+                // scratch. A mixer-triggered re-export always reflects a
+                // deliberate change (new volumes/background), so it always
+                // generates fresh.
+                if (!config && cacheKey) {
+                    const cachedTaskId = readCachedTaskId(cacheKey);
+                    if (cachedTaskId) {
+                        const cached = await fetchCachedExportState(cachedTaskId, signal);
+                        if (cached) {
+                            setExportState(cached);
+                            return;
+                        }
+                    }
+                }
+
                 const volumes = config?.volumes;
                 // Map mixer stemKey volumes (e.g. "brainwave_7.83", "background_ocean")
                 // back to canonical "brainwave" / "background" keys the service expects.
@@ -377,7 +401,12 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                         natureSound:         bgSound ?? params.natureSound,
                         stemVolumes:         resolvedVolumes,
                     },
-                    setExportState,
+                    (state) => {
+                        setExportState(state);
+                        if (!config && cacheKey && state.status === 'completed' && state.taskId) {
+                            writeCachedTaskId(cacheKey, state.taskId);
+                        }
+                    },
                     signal,
                 );
             },

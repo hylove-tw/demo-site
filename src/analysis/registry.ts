@@ -33,7 +33,14 @@ export interface AnalysisPlugin {
   bannerImage?: AnalysisPluginBanner;
   requiredFiles: AnalysisRequiredFile[];
   execute: (data: any[][], customParams?: Record<string, any>) => Promise<any>;
-  renderReport: (result: any, customParams?: any) => React.ReactNode;
+  /**
+   * `reportKey` — the history record's own id (stable across page refreshes,
+   * unlike anything generated during rendering) — lets a renderer cache
+   * expensive per-report work (e.g. music-gen's MP3 synthesis) keyed to
+   * *this* report specifically. Optional and ignored by renderers that have
+   * nothing to cache.
+   */
+  renderReport: (result: any, customParams?: any, reportKey?: string) => React.ReactNode;
   customFields?: CustomField[];
   editComponent?: React.FC<{
     customParams: Record<string, any>;

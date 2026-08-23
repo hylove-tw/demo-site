@@ -1,8 +1,9 @@
 // src/components/DualMusicReportEditor.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { exportDualMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, DualStemVolumes } from '../services/musicGenService';
+import { exportDualMp3, renderScore, resolveRhythmPreset, fetchRenderedScore, fetchCachedExportState, DualStemVolumes } from '../services/musicGenService';
 import { StemMixer } from './StemMixer';
 import { useMp3Export } from '../hooks/useMp3Export';
+import { readCachedTaskId, writeCachedTaskId } from '../utils/musicExportCache';
 import { BEAT_PRESETS } from '../utils/beatPresets';
 import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
@@ -228,6 +229,10 @@ interface DualMusicReportEditorProps {
     initialParams: DualMusicReportParams;
     onParamsChange?: (params: DualMusicReportParams) => void;
     brainData?: { first: any; second: any };
+    /** Stable per-report identifier (the history record's id) used to reuse
+     * a previously-completed MP3 export across page refreshes instead of
+     * resynthesizing from scratch. See src/utils/musicExportCache.ts. */
+    cacheKey?: string;
 }
 
 // 套用參數到 MusicXML
@@ -325,6 +330,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     initialParams,
     onParamsChange,
     brainData,
+    cacheKey,
 }) => {
     // 當前生效的參數
     const [appliedParams, setAppliedParams] = useState<DualMusicReportParams>(initialParams);
@@ -351,6 +357,24 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                 const params = appliedParamsRef.current;
                 const bd = brainDataRef.current;
                 if (!bd) return;
+
+                // The page-load call (no mixer config) is the one a refresh
+                // repeats every time — try to reuse whatever that same
+                // report already generated instead of resynthesizing from
+                // scratch. A mixer-triggered re-export always reflects a
+                // deliberate change (new volumes/background), so it always
+                // generates fresh.
+                if (!config && cacheKey) {
+                    const cachedTaskId = readCachedTaskId(cacheKey);
+                    if (cachedTaskId) {
+                        const cached = await fetchCachedExportState(cachedTaskId, signal);
+                        if (cached) {
+                            setExportState(cached);
+                            return;
+                        }
+                    }
+                }
+
                 const volumes = config?.volumes;
                 const bwFreq  = config?.brainwaves?.[0];
                 const bgSound = config?.backgrounds?.[0];
@@ -383,7 +407,12 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                         natureSound:         bgSound ?? params.natureSound,
                         stemVolumes:         resolvedVolumes,
                     },
-                    setExportState,
+                    (state) => {
+                        setExportState(state);
+                        if (!config && cacheKey && state.status === 'completed' && state.taskId) {
+                            writeCachedTaskId(cacheKey, state.taskId);
+                        }
+                    },
                     signal,
                 );
             },

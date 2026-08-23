@@ -336,6 +336,45 @@ export async function exportDualMp3(
   await _submitAndPoll('/api/v1/generate-dual', payload, onStatusChange, signal);
 }
 
+/** Shared by the poll loop below and fetchCachedExportState — both turn a
+ * `GET /api/v1/tasks/{id}` response into the same ExportState shape. */
+function _mapCompletedTask(taskId: string, task: any): ExportState {
+  const downloadUrl = `${MUSIC_GEN_URL}/api/v1/download/${taskId}`;
+  const stemUrls: Record<string, string> | undefined = task.stem_urls
+    ? Object.fromEntries(
+        Object.entries(task.stem_urls as Record<string, string>).map(
+          ([k, v]) => [k, v.startsWith('http') ? v : `${MUSIC_GEN_URL}${v}`]
+        )
+      )
+    : undefined;
+  return { status: 'completed', downloadUrl, stemUrls, taskId };
+}
+
+/**
+ * Check whether a previously-generated task is still available, without
+ * submitting a new generation request. Used to skip the ~30-60s resynthesis
+ * on a page refresh when the exact same report was already rendered once —
+ * a single cheap GET replaces the full generate-and-poll cycle.
+ *
+ * Swallows all failures (network error, 404, task not completed) and
+ * returns null rather than throwing: a stale or unknown cached task id
+ * should silently fall back to a fresh generation, not surface an error.
+ */
+export async function fetchCachedExportState(
+  taskId: string,
+  signal?: AbortSignal,
+): Promise<ExportState | null> {
+  try {
+    const taskResp = await fetch(`${MUSIC_GEN_URL}/api/v1/tasks/${taskId}`, { signal });
+    if (!taskResp.ok) return null;
+    const task = await taskResp.json();
+    if (task.status !== 'completed') return null;
+    return _mapCompletedTask(taskId, task);
+  } catch {
+    return null;
+  }
+}
+
 async function _submitAndPoll(
   endpoint: string,
   payload: unknown,
@@ -371,15 +410,7 @@ async function _submitAndPoll(
     const task = await taskResp.json();
 
     if (task.status === 'completed') {
-      const downloadUrl = `${MUSIC_GEN_URL}/api/v1/download/${task_id}`;
-      const stemUrls: Record<string, string> | undefined = task.stem_urls
-        ? Object.fromEntries(
-            Object.entries(task.stem_urls as Record<string, string>).map(
-              ([k, v]) => [k, v.startsWith('http') ? v : `${MUSIC_GEN_URL}${v}`]
-            )
-          )
-        : undefined;
-      onStatusChange({ status: 'completed', downloadUrl, stemUrls, taskId: task_id });
+      onStatusChange(_mapCompletedTask(task_id, task));
       return;
     }
     if (task.status === 'failed') {

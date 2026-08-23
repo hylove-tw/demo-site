@@ -74,7 +74,7 @@ const AnalysisReportPage: React.FC = () => {
 
   const resultContent =
     config && config.renderReport ? (
-      config.renderReport(record.result, record.customParams || {})
+      config.renderReport(record.result, record.customParams || {}, String(record.id))
     ) : (
       <p>找不到對應的分析配置</p>
     );
