@@ -100,6 +100,47 @@ export function presetNameForBeat(beatId: string | undefined): string {
   return resolveRhythmPreset(beatId, '4/4');
 }
 
+/**
+ * A synthesised voice (soundfont) the pipeline can render with, as
+ * music-gen describes it.
+ *
+ * The server's own default (whatever generating with no `voice_pack` at all
+ * produces) is listed as a row with `id: ''` — normalised from the API's
+ * `id: null` — alongside the real packs, so it can sit in the same picker
+ * and carry its own preview clip. Sending `id: ''` back to the server is
+ * never done: the export payload always turns it into an omitted field
+ * (see exportMp3), which is exactly what an unset voice pack already means.
+ */
+export interface VoicePack {
+  id: string;
+  displayName: string;
+  /** Pre-rendered demo clip of this voice, for previewing before generating. */
+  previewUrl: string | null;
+}
+
+let voicePackCache: Promise<VoicePack[]> | null = null;
+
+/**
+ * Fetch the server's selectable voice packs. Never throws: an unreachable
+ * music-gen or a build that predates this feature must degrade to an empty
+ * list — the picker simply doesn't render — rather than break the editor.
+ */
+export function fetchVoicePacks(): Promise<VoicePack[]> {
+  if (voicePackCache) return voicePackCache;
+  if (!MUSIC_GEN_URL) return Promise.resolve([]);
+
+  voicePackCache = fetch(`${MUSIC_GEN_URL}/api/v1/voice-packs`)
+    .then((res) => (res.ok ? res.json() : []))
+    .then((rows: any[]) => (Array.isArray(rows) ? rows : []).map((row) => ({
+      id: row.id ?? '',
+      displayName: row.display_name ?? (row.id || '預設音色'),
+      previewUrl: row.preview_url ?? null,
+    })))
+    .catch(() => []);
+
+  return voicePackCache;
+}
+
 export type AccompanimentMode = 'replace' | 'layer' | 'off';
 export type AccompanimentHarmony = 'diatonic' | 'full';
 
@@ -151,6 +192,8 @@ export interface MusicGenExportParams {
   genre?: string;
   brainwaveFrequency?: number | null;
   natureSound?: string;
+  /** Omit (or '') for the server's own default (TimGM6mb). */
+  voicePack?: string;
   /** Per-stem volume overrides in dB (0 = unchanged) */
   stemVolumes?: StemVolumes;
 }
@@ -269,6 +312,10 @@ export async function exportMp3(
     rhythm_preset:       rhythmPreset,
     accompaniment:       params.accompaniment ?? 'replace',
     accompaniment_harmony: params.accompanimentHarmony ?? 'diatonic',
+    // Omitting this key (rather than sending '') is the server's own way of
+    // asking for its default voice — /generate-dual has no equivalent field
+    // yet, so dual-mode exports never set voicePack in the first place.
+    voice_pack:          params.voicePack || undefined,
     // Per-stem volumes
     p1_volume_db:         params.stemVolumes?.p1         ?? 0,
     p2_volume_db:         params.stemVolumes?.p2         ?? 0,

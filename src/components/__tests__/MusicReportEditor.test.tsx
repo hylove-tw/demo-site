@@ -28,6 +28,16 @@ jest.mock('../../services/musicGenService', () => ({
     fetchRenderedScore: jest.fn(() => Promise.resolve(null)),
 }));
 
+// A plain function, not jest.fn(...): CRA's resetMocks:true wipes jest.fn
+// implementations between tests, which would turn fetchVoicePacks() into a
+// bare stub returning undefined — fine for callers that `await` it (a
+// non-promise still resolves), but useVoicePacks.ts calls `.then()`
+// directly, which doesn't tolerate that. Mocking the hook itself (same
+// pattern as useMusicGenPresets below) sidesteps that entirely.
+jest.mock('../../hooks/useVoicePacks', () => ({
+    useVoicePacks: () => [],
+}));
+
 const MINIMAL_MUSICXML = '<?xml version="1.0"?><score-partwise></score-partwise>';
 
 describe('MusicReportEditor accompaniment reset', () => {

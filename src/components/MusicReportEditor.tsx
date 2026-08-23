@@ -7,6 +7,7 @@ import { readCachedTaskId, writeCachedTaskId } from '../utils/musicExportCache';
 import { readCachedScorePages, writeCachedScorePages } from '../utils/musicScoreCache';
 import { BEAT_PRESETS } from '../utils/beatPresets';
 import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
+import { useVoicePacks } from '../hooks/useVoicePacks';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS, timeSignatureForMelody } from '../config/musicCreativeConstants';
 import { CompositionParamsForm, SINGLE_INSTRUMENT_FIELDS } from './CompositionParamsForm';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
@@ -219,6 +220,7 @@ export interface MusicReportParams {
     genre?: string;
     brainwaveFrequency?: number | null;
     natureSound?: string;
+    voicePack?: string;
 }
 
 interface MusicReportEditorProps {
@@ -400,6 +402,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                         genre:               params.genre,
                         brainwaveFrequency:  bwFreq != null ? Number(bwFreq) : params.brainwaveFrequency,
                         natureSound:         bgSound ?? params.natureSound,
+                        voicePack:           params.voicePack,
                         stemVolumes:         resolvedVolumes,
                     },
                     (state) => {
@@ -514,6 +517,9 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
 
     // 根據拍號過濾可用的節奏預設
     const musicGenPresets = useMusicGenPresets();
+    const voicePacks = useVoicePacks();
+    const voicePackLabel = (id: string | undefined) =>
+        id ? (voicePacks.find(p => p.id === id)?.displayName ?? id) : '預設音色';
 
     // 取得節奏預設名稱
     const getBeatPresetName = (beatId: string | undefined) => {
@@ -723,7 +729,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                             </>
                         )}
                         <div className="divider my-3"></div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                             <div>
                                 <span className="text-base-content/60">樂器：</span>
                                 <span className="font-medium ml-2">
@@ -734,6 +740,12 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                                 <span className="text-base-content/60">節奏：</span>
                                 <span className="font-medium ml-2">
                                     {getBeatPresetName(appliedParams.beat)}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-base-content/60">音色：</span>
+                                <span className="font-medium ml-2">
+                                    {voicePackLabel(appliedParams.voicePack)}
                                 </span>
                             </div>
                             <div>

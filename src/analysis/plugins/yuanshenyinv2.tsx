@@ -26,6 +26,8 @@ const EditComponent: React.FC<{
         ? DUAL_INSTRUMENT_FIELDS
         : SINGLE_INSTRUMENT_FIELDS
     }
+    // /generate-dual has no voice_pack field yet.
+    showVoicePack={(customParams.playerMode ?? 'single') !== 'dual'}
   />
 );
 

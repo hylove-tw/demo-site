@@ -4,7 +4,21 @@
 // AnalysisDetailPage pulls in enough app-wide context (router, file manager,
 // user context, plugin registry) that a full render test would mostly be
 // re-testing that scaffolding rather than this feature.
+import React from 'react';
+import { render } from '@testing-library/react';
 import { getPlugins } from '../../registry';
+
+// /api/v1/generate-dual has no voice_pack field yet — capture what the
+// plugin's EditComponent actually passes through rather than rendering the
+// real (hook-heavy) CompositionParamsForm.
+const mockCompositionParamsForm = jest.fn();
+jest.mock('../../../components/CompositionParamsForm', () => {
+    const actual = jest.requireActual('../../../components/CompositionParamsForm');
+    return {
+        ...actual,
+        CompositionParamsForm: (props: unknown) => { mockCompositionParamsForm(props); return null; },
+    };
+});
 
 // yuanshenyinv2.tsx pulls these in for execute()/renderReport(), which in
 // turn import services/api.ts — axios there is ESM-only and doesn't
@@ -55,6 +69,25 @@ describe('yuanshenyin-v2 plugin bannerImage', () => {
         plugin?.renderReport({ musicXML: '<x/>' }, { playerMode: 'dual' }, 'report-43');
         expect(mockRenderDualMusicReportCreative).toHaveBeenCalledWith(
             { musicXML: '<x/>' }, { playerMode: 'dual' }, 'report-43'
+        );
+    });
+});
+
+describe('yuanshenyin-v2 plugin editComponent voice pack visibility', () => {
+    const plugin = getPlugins().find((p) => p.id === 'yuanshenyin-v2');
+    const EditComponent = plugin!.editComponent!;
+
+    it('shows the voice pack picker in single mode', () => {
+        render(React.createElement(EditComponent, { customParams: {}, onChange: jest.fn() }));
+        expect(mockCompositionParamsForm).toHaveBeenCalledWith(
+            expect.objectContaining({ showVoicePack: true })
+        );
+    });
+
+    it('hides the voice pack picker in dual mode', () => {
+        render(React.createElement(EditComponent, { customParams: { playerMode: 'dual' }, onChange: jest.fn() }));
+        expect(mockCompositionParamsForm).toHaveBeenCalledWith(
+            expect.objectContaining({ showVoicePack: false })
         );
     });
 });

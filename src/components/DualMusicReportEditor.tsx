@@ -600,6 +600,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                             }}
                             variant="compact"
                             instrumentFields={DUAL_INSTRUMENT_FIELDS}
+                            showVoicePack={false}
                             basicTabExtra={
                                 <div className="form-control">
                                     <label className="label cursor-pointer justify-start gap-3 py-1">

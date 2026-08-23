@@ -23,6 +23,9 @@ import React from 'react';
 import { useMusicGenPresets, presetForBeat, beatOptionLabel, beatCredit } from '../hooks/useMusicGenPresets';
 import { getPresetsForTimeSignature, BEAT_PRESETS } from '../utils/beatPresets';
 import { useBeatPreview } from '../hooks/useBeatPreview';
+import { useVoicePacks } from '../hooks/useVoicePacks';
+import { useVoicePackPreview } from '../hooks/useVoicePackPreview';
+import { readLastVoicePack, writeLastVoicePack } from '../utils/lastVoicePackCache';
 import { BeatPatternStaff } from './BeatPatternStaff';
 import {
     GENRE_BEAT_MAP,
@@ -102,6 +105,8 @@ export interface CompositionParamsFormProps {
     instrumentFields?: Array<[string, string]>;
     /** The single/dual switch only makes sense before an analysis has run. */
     showPlayerMode?: boolean;
+    /** /generate-dual has no voice_pack field yet — dual-mode callers pass false. */
+    showVoicePack?: boolean;
     /** Extra content appended to the end of the 基本設定 tab (e.g. a caller-owned checkbox). */
     basicTabExtra?: React.ReactNode;
     /** Extra content appended to the end of the 音樂設定 tab. */
@@ -204,6 +209,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     variant = 'full',
     instrumentFields,
     showPlayerMode = false,
+    showVoicePack = true,
     basicTabExtra,
     musicTabExtra,
 }) => {
@@ -218,6 +224,19 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     const preview = useBeatPreview();
     const rhythmFor = (genreId: string) =>
         presetForBeat(musicGenPresets, GENRE_BEAT_MAP[genreId]);
+
+    // 音色（voice_pack）：跟曲風/節奏正交的獨立欄位，選擇不會連動改變其他
+    // 欄位的預設值。value.voicePack 未設時，落回使用者上次選過的音色，而不
+    // 是每次都要重選——但這只是挑選器的預填值，仍要按「套用/重新生成」才
+    // 會真的生效。
+    const voicePacks = useVoicePacks();
+    const voicePackPreview = useVoicePackPreview();
+    const selectedVoicePack: string = value.voicePack ?? readLastVoicePack() ?? '';
+    const activeVoicePack = voicePacks.find((p) => p.id === selectedVoicePack);
+    const selectVoicePack = (id: string) => {
+        set('voicePack', id);
+        writeLastVoicePack(id);
+    };
 
 
     const playerMode = value.playerMode ?? 'single';
@@ -611,6 +630,87 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                                     </div>
                                 ))}
                             </div>
+                        </>
+                    )}
+
+                    {showVoicePack && voicePacks.length > 0 && (
+                        <>
+                            <Divider>音色</Divider>
+                            {compact ? (
+                                <div className={fieldCls}>
+                                    <div className="flex items-center gap-2">
+                                        <select className={selectCls} aria-label="音色"
+                                            value={selectedVoicePack}
+                                            onChange={(e) => selectVoicePack(e.target.value)}>
+                                            {voicePacks.map((pack) => (
+                                                <option key={pack.id} value={pack.id}>{pack.displayName}</option>
+                                            ))}
+                                        </select>
+                                        {activeVoicePack && voicePackPreview.canPreview(activeVoicePack) && (
+                                            <button type="button"
+                                                className="btn btn-ghost btn-xs px-2 shrink-0"
+                                                aria-label={voicePackPreview.playing === selectedVoicePack ? '停止試聽' : '試聽音色'}
+                                                title={voicePackPreview.playing === selectedVoicePack ? '停止試聽' : '試聽音色'}
+                                                onClick={() => voicePackPreview.toggle(activeVoicePack)}>
+                                                {voicePackPreview.loading === selectedVoicePack
+                                                    ? <span className="loading loading-spinner loading-xs" />
+                                                    : voicePackPreview.playing === selectedVoicePack ? '■' : '▶'}
+                                            </button>
+                                        )}
+                                    </div>
+                                    {selectedVoicePack && (
+                                        <label className={labelCls}>
+                                            <span className="label-text-alt text-base-content/50">
+                                                非預設音色排入專屬佇列，生成時間可能較長
+                                            </span>
+                                        </label>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {voicePacks.map((pack) => {
+                                        const selected = selectedVoicePack === pack.id;
+                                        return (
+                                            <button key={pack.id || 'default'} type="button"
+                                                className={`card card-compact border-2 text-left transition-all cursor-pointer
+                                                    ${selected ? 'border-primary bg-primary/10'
+                                                        : 'border-base-300 hover:border-primary/50'}`}
+                                                onClick={() => selectVoicePack(pack.id)}>
+                                                <div className="card-body p-3">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="font-bold text-sm">{pack.displayName}</span>
+                                                        {/* 試聽。用 span 而非 button：同一套理由見上方曲風卡片。 */}
+                                                        {voicePackPreview.canPreview(pack) && (
+                                                        <span
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            aria-label={`試聽 ${pack.displayName}`}
+                                                            title={voicePackPreview.playing === pack.id ? '停止試聽' : '試聽音色'}
+                                                            className="ml-auto btn btn-ghost btn-xs px-1"
+                                                            onClick={(e) => { e.stopPropagation(); voicePackPreview.toggle(pack); }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    voicePackPreview.toggle(pack);
+                                                                }
+                                                            }}
+                                                        >
+                                                            {voicePackPreview.loading === pack.id
+                                                                ? <span className="loading loading-spinner loading-xs" />
+                                                                : voicePackPreview.playing === pack.id ? '■' : '▶'}
+                                                        </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs opacity-60">
+                                                        {pack.id ? '非預設音色，生成時間可能較長' : '現行預設音色'}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </>
                     )}
 
