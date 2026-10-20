@@ -204,7 +204,7 @@ const AnalysisDetailPage: React.FC = () => {
       </div>
 
       {/* 設定卡片 */}
-      <div className="card bg-base-100 shadow-md">
+      <div className="card analysis-settings-card bg-base-100 shadow-md">
         <div className="card-body p-4 sm:p-6">
           <h2 className="card-title mb-4">分析設定</h2>
 
@@ -268,8 +268,11 @@ const AnalysisDetailPage: React.FC = () => {
 
           {/* 執行按鈕：黏在畫面底部（手機上表單很長，按鈕以前要捲到最底才看得到），
               並附上參數摘要。仍是同一顆按鈕、同一個 handleAnalyze——只改位置，
-              不另做一份送出邏輯。底部留 iOS safe area。 */}
-          <div className="sticky bottom-0 z-10 -mx-4 mt-6 -mb-4 rounded-b-box border-t border-base-300 bg-base-100/95 px-4 pt-3 sm:-mx-6 sm:-mb-6 sm:px-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur">
+              不另做一份送出邏輯。底部留 iOS safe area。
+              背景必須是實色（見 index.css 的 .sticky-cta）：原本的 bg-base-100/95
+              在 Tailwind browser runtime 下根本沒有產生，加上 backdrop-blur 與圓角，
+              底下的內容（例如黃色的提示框）會透出來。 */}
+          <div data-testid="sticky-cta" className="sticky-cta sticky bottom-0 z-10 -mx-4 mt-6 -mb-4 border-t border-base-300 bg-base-100 px-4 pt-3 sm:-mx-6 sm:-mb-6 sm:px-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
             {plugin.summarizeParams && (
               <p className="mb-2 truncate text-sm" aria-live="polite" data-testid="params-summary">
                 {plugin.summarizeParams(customParams)}

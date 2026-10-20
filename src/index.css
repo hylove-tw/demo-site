@@ -474,6 +474,25 @@ h1, h2, h3, h4, h5, h6, .card-title, .font-bold, .font-medium {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
+/* 分析設定卡片底部的固定「開始分析」列。
+ * 背景寫在這裡（CRA 編譯的 CSS）而不是用 bg-base-100/95 這種帶透明度的
+ * utility：後者在 @tailwindcss/browser runtime 下不會產生，列本身變成全透明，
+ * 只剩 backdrop-blur，底下的內容會模糊地透出來。 */
+.sticky-cta {
+  background-color: var(--color-base-100, #fff) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 -6px 16px -8px rgba(23, 36, 27, 0.12);
+}
+
+/* 卡片用 overflow: clip（不是 hidden——hidden 會讓卡片變成捲動容器，sticky
+ * 就失效）裁掉固定列在卡片底部時超出圓角的部分；列黏在畫面底部時則是直角，
+ * 不會在兩側圓角缺口露出底下的內容。 */
+.analysis-settings-card {
+  overflow: clip;
+}
+
 /* 可互動卡片 - hover 效果 */
 a.card,
 button.card,
