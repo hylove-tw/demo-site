@@ -15,8 +15,9 @@
 // actually matters for Safari's unlock rule: does AudioContext get
 // constructed synchronously within the click, before the pending stem fetch
 // has any chance to resolve.
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { StemMixer } from '../StemMixer';
+import { MUSIC_GEN_URL } from '../../config/apiBase';
 
 describe('StemMixer Safari audio unlock', () => {
     let audioContextMock: jest.Mock;
@@ -56,5 +57,67 @@ describe('StemMixer Safari audio unlock', () => {
 
         expect(audioContextMock).toHaveBeenCalledTimes(1);
         expect(resumeMock).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('StemMixer music-gen URLs', () => {
+    const stemUrl = `${MUSIC_GEN_URL}/api/v1/stems/task-1/p1`;
+    let originalAudioContext: unknown;
+    let originalFetch: unknown;
+
+    beforeEach(() => {
+        originalAudioContext = (global as any).AudioContext;
+        (global as any).AudioContext = jest.fn().mockImplementation(() => ({
+            state: 'running',
+            resume: jest.fn(),
+            close: jest.fn(),
+            currentTime: 0,
+            destination: {},
+            createGain: () => ({ gain: { value: 0, setTargetAtTime: jest.fn() }, connect: jest.fn() }),
+            decodeAudioData: jest.fn(async () => ({ duration: 1.5 })),
+        }));
+        originalFetch = global.fetch;
+        global.fetch = jest.fn(async () => ({
+            ok: true,
+            arrayBuffer: async () => new ArrayBuffer(8),
+        })) as unknown as typeof fetch;
+    });
+
+    afterEach(() => {
+        (global as any).AudioContext = originalAudioContext;
+        global.fetch = originalFetch as typeof fetch;
+    });
+
+    it('fetches stems and optional assets with a single /api/music-gen prefix', async () => {
+        expect(MUSIC_GEN_URL).toBe('/api/music-gen');
+        render(
+            <StemMixer
+                stemUrls={{ p1: stemUrl }}
+                availableBrainwaves={[{ value: '7.83', label: '舒曼波' }]}
+                availableBackgrounds={[{ value: 'ocean', label: '海浪' }]}
+                onDownload={jest.fn()}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /腦波/ }));
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(stemUrl);
+            expect(global.fetch).toHaveBeenCalledWith(`${MUSIC_GEN_URL}/api/v1/assets/brainwave/7.83`);
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /自然音效/ }));
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(`${MUSIC_GEN_URL}/api/v1/assets/background/ocean`);
+        });
+
+        const urls = (global.fetch as jest.Mock).mock.calls.map((call) => String(call[0]));
+        expect(urls).toEqual([
+            '/api/music-gen/api/v1/stems/task-1/p1',
+            '/api/music-gen/api/v1/assets/brainwave/7.83',
+            '/api/music-gen/api/v1/assets/background/ocean',
+        ]);
+        for (const url of urls) {
+            expect(url.match(/\/api\/music-gen/g)).toHaveLength(1);
+        }
     });
 });

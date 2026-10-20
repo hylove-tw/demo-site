@@ -134,8 +134,10 @@ export function StemMixer({
     }, []);
 
     const fetchAndDecode = useCallback(async (url: string): Promise<AudioBuffer> => {
-        const fullUrl = url.startsWith('http') ? url : `${MUSIC_GEN_URL}${url}`;
-        const resp = await fetch(fullUrl);
+        // Callers already pass a full URL: stem_urls are prefixed in
+        // _mapCompletedTask, and optional assets are built with MUSIC_GEN_URL
+        // below. Prefixing again yields /api/music-gen/api/music-gen/...
+        const resp = await fetch(url);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const ctx = ensureCtx();
         return ctx.decodeAudioData(await resp.arrayBuffer());

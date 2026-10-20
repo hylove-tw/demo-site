@@ -21,7 +21,7 @@ frontmatter**（`title` / `keywords` / `dateModified`），沒有 JSON-LD、
 | [`shared-logic-across-ui-paths`](entries/shared-logic-across-ui-paths.md) | 同一段「選了某選項該套用什麼參數」的邏輯，如果分別寫在兩個平行的 UI 路徑（例如卡片版跟下拉選單版）裡，遲早會 drift——要抽成共用 helper，讓兩邊呼叫同一份實作。 |
 | [`independent-beat-override-drift`](entries/independent-beat-override-drift.md) | 同一個欄位（`beat`）如果有第二個獨立的寫入入口（跳過主要決策路徑），遲早會跟綁定的其他欄位（`genre`、`accompaniment`）脫鉤；森巴顯示「流行」＋伴奏設定跨節奏殘留就是同一個根因的兩種下游表現。收斂成單一入口後，入口內每條分支是否都清乾淨舊狀態仍要逐一檢查。 |
 | [`safari-audiocontext-gesture-timing`](entries/safari-audiocontext-gesture-timing.md) | `AudioContext` 要在使用者手勢的同一個同步呼叫堆疊裡建立/`resume()`，Safari 才會真的解鎖音訊輸出；晚一個 `await` 都不算數，且失敗是靜默的（`state`/`currentTime` 照樣正常）。Chrome/Firefox 寬鬆得多，只在 Safari 才會暴露。 |
-| [`same-origin-api-base`](entries/same-origin-api-base.md) | `REACT_APP_ANALYSIS_API_BASE` / `REACT_APP_MUSIC_GEN_URL` 未設定或空白時必須是同源相對路徑（`/api/...`、`/api/music-gen`）。寫死正式站 hostname 的 build 放到別的 hostname 時，登入 cookie 不會跟著走。只設 `/` 會接成 protocol-relative 的 `//api/...`。 |
+| [`same-origin-api-base`](entries/same-origin-api-base.md) | `REACT_APP_ANALYSIS_API_BASE` / `REACT_APP_MUSIC_GEN_URL` 未設定或空白時必須是同源相對路徑（`/api/...`、`/api/music-gen`）。寫死正式站 hostname 的 build 放到別的 hostname 時，登入 cookie 不會跟著走。只設 `/` 會接成 protocol-relative 的 `//api/...`。`MUSIC_GEN_URL` 只能加一次，StemMixer 要原樣 fetch 已經接好 base 的 stem／asset URL。 |
 
 ## 什麼時候該查這裡
 

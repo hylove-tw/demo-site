@@ -39,6 +39,14 @@ gitignore 的舊 `.env` 帶去正式站。本機 `npm start` 不讀這個檔；�
 遠端後端時把絕對網址放進 `.env`。一次性的 production build 用 shell
 或 `.env.production.local` 覆寫。
 
+`MUSIC_GEN_URL` 只能加在「伺服器回的相對路徑 → 完整 URL」那一層，而且
+只加一次。music-gen 的 `stem_urls` 是 `/api/v1/stems/<id>/p1` 這種路徑，
+`_mapCompletedTask` 接上 base 之後 StemMixer 必須原樣 `fetch`。腦波與
+自然音的 asset URL 在組字串時加一次 base，再送進同一個 `fetch`。
+多加一次會變成 `/api/music-gen/api/music-gen/...`（404）。預覽音訊
+（`useBeatPreview`、`useVoicePackPreview`）拿到的仍是未加 base 的
+`/api/v1/assets/...`，所以只在播放時加一次，不要再包一層。
+
 ## 通則
 
 同一份 SPA 會被放上多個 hostname、而且登入態是 host-scoped cookie 時，
