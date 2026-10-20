@@ -82,7 +82,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
   ];
 
   return (
-    <div className="flex h-screen bg-bg">
+    <div className="flex h-dvh bg-bg">
       {/* 側邊欄 - 桌面版 */}
       <aside className="hidden lg:flex flex-col w-60 bg-bg-sidebar border-r border-border">
         {/* Logo */}
@@ -298,7 +298,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ children }) => {
       )}
 
       {/* 主內容區 */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* 頂部列 - 行動版 */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-bg-card border-b border-border">
           <button

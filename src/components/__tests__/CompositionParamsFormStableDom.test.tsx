@@ -32,7 +32,8 @@ describe.each(['full', 'compact'] as const)('CompositionParamsForm (%s) keeps it
     it('does not remount the cards when a parameter changes', () => {
         render(<Harness initial={{}} variant={variant} />);
         const titleInput = screen.getByPlaceholderText('未命名的樂譜');
-        const musicCard = screen.getByText('音樂設定').parentElement!;
+        // The tempo section (a collapse since the redesign) holds the BPM slider.
+        const musicCard = screen.getByText('節奏與調性').closest('.collapse')!;
         const rangeInput = musicCard.querySelector('input[type="range"]')!;
 
         fireEvent.click(screen.getByRole('button', { name: '小調' }));
@@ -40,7 +41,7 @@ describe.each(['full', 'compact'] as const)('CompositionParamsForm (%s) keeps it
         fireEvent.change(rangeInput, { target: { value: '70' } });
 
         expect(screen.getByPlaceholderText('未命名的樂譜')).toBe(titleInput);
-        expect(screen.getByText('音樂設定').parentElement).toBe(musicCard);
+        expect(screen.getByText('節奏與調性').closest('.collapse')).toBe(musicCard);
         expect(musicCard.querySelector('input[type="range"]')).toBe(rangeInput);
     });
 
@@ -70,9 +71,11 @@ describe('自訂 mode', () => {
 
     it('choosing a melody in 自訂 mode keeps the melody/rhythm section open', () => {
         render(<Harness initial={{ genre: CUSTOM_GENRE_ID }} />);
-        const melodySelect = screen.getByText('請選擇主旋律').closest('select')!;
-        fireEvent.change(melodySelect, { target: { value: '3' } });
-        expect(screen.getByText('請選擇主旋律').closest('select')).toBe(melodySelect);
+        // Melodies are a button grid since the redesign (was a <select>).
+        const melodyGroup = screen.getByRole('group', { name: '主旋律' });
+        fireEvent.click(screen.getByRole('button', { name: /^主旋律 3（/ }));
+        expect(screen.getByRole('group', { name: '主旋律' })).toBe(melodyGroup);
+        expect(screen.getByRole('button', { name: /^主旋律 3（/ })).toHaveAttribute('aria-pressed', 'true');
         expect(screen.getByText('請選擇伴奏節奏')).toBeInTheDocument();
     });
 });

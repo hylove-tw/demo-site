@@ -16,6 +16,7 @@
     "flat-embed": "^2.4.0",
     "highcharts": "^12.2.0",
     "highcharts-react-official": "^3.2.1",
+    "lucide-react": "1.59.0",
     "opensheetmusicdisplay": "^1.9.3",
     "osmd-audio-player": "^0.7.0",
     "react": "^19.0.0",

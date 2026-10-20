@@ -46,6 +46,13 @@ export interface AnalysisPlugin {
     customParams: Record<string, any>;
     onChange: (newParams: Record<string, any>) => void;
   }>;
+  /**
+   * One-line recap of the current customParams, shown in the sticky bar next
+   * to 開始分析 so the choice is visible where it is confirmed (e.g.
+   * "華爾滋 · 95 BPM · C 大調 · 單人 · 情緒"). Optional; plugins without
+   * parameters to recap leave it out and the bar shows only the actions.
+   */
+  summarizeParams?: (customParams: Record<string, any>) => string;
 }
 
 const plugins: AnalysisPlugin[] = [];

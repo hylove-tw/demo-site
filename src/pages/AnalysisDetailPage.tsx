@@ -205,7 +205,7 @@ const AnalysisDetailPage: React.FC = () => {
 
       {/* 設定卡片 */}
       <div className="card bg-base-100 shadow-md">
-        <div className="card-body">
+        <div className="card-body p-4 sm:p-6">
           <h2 className="card-title mb-4">分析設定</h2>
 
           {/* 檔案選擇 */}
@@ -266,25 +266,34 @@ const AnalysisDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* 執行按鈕 */}
-          <div className="card-actions justify-end mt-6">
-            <Link to="/" className="btn btn-ghost">
-              取消
-            </Link>
-            <button
-              className="btn btn-primary"
-              onClick={handleAnalyze}
-              disabled={loading || !currentUser}
-            >
-              {loading ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  分析中...
-                </>
-              ) : (
-                '開始分析'
-              )}
-            </button>
+          {/* 執行按鈕：黏在畫面底部（手機上表單很長，按鈕以前要捲到最底才看得到），
+              並附上參數摘要。仍是同一顆按鈕、同一個 handleAnalyze——只改位置，
+              不另做一份送出邏輯。底部留 iOS safe area。 */}
+          <div className="sticky bottom-0 z-10 -mx-4 mt-6 -mb-4 rounded-b-box border-t border-base-300 bg-base-100/95 px-4 pt-3 sm:-mx-6 sm:-mb-6 sm:px-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur">
+            {plugin.summarizeParams && (
+              <p className="mb-2 truncate text-sm" aria-live="polite" data-testid="params-summary">
+                {plugin.summarizeParams(customParams)}
+              </p>
+            )}
+            <div className="flex items-center justify-end gap-2">
+              <Link to="/" className="btn btn-ghost">
+                取消
+              </Link>
+              <button
+                className="btn btn-primary flex-1 sm:flex-none sm:min-w-40"
+                onClick={handleAnalyze}
+                disabled={loading || !currentUser}
+              >
+                {loading ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    分析中...
+                  </>
+                ) : (
+                  '開始分析'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
