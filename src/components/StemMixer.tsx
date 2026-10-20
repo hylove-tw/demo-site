@@ -1,7 +1,6 @@
 // src/components/StemMixer.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-
-const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/, '');
+import { MUSIC_GEN_URL } from '../config/apiBase';
 const DB_MIN = -40;
 const DB_MAX = 6;
 const CROSSFADE_S = 1.5; // crossfade duration for looping stems

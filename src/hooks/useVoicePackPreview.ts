@@ -9,9 +9,8 @@
 // id is '' — see VoicePack in musicGenService.ts).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { MUSIC_GEN_URL } from '../config/apiBase';
 import { VoicePack } from '../services/musicGenService';
-
-const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/, '');
 
 export interface VoicePackPreview {
     /** Voice pack id currently sounding, or null. */

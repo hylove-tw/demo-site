@@ -125,7 +125,7 @@ music-gen 每個生成回應都帶 `warnings` 陣列，列出「收到但不會�
 
 **注意事項**
 
-- **`REACT_APP_MUSIC_GEN_URL` 是 build 時寫死的**，換環境必須重新 build。
+- **`REACT_APP_MUSIC_GEN_URL` 沒設或空白時是同源 `/api/music-gen`**，同一份 build 可以放上任何會轉發這個路徑的 hostname。只有明確設成絕對網址時才會在 build 時寫死，換主機就要重建。正式／staging build 不要設它（`.env.production` 已把它釘成空白）。
 - demo site 只部署在 weifan-ubuntu；中國那台的 `staging_hylove/current/public` 是 Rails 的目錄，不是這個 CRA 專案。
 - 中國那台**連不到 Docker Hub**（已設 registry mirror，但 Debian apt 仍慢到無法完成 `apt-get`），所以用 `Dockerfile.nohub` 疊在既有 image 上，只安裝 Python 套件。
 - 中國那台的 `docker-compose` 版本比 daemon 新，指令前要 `export DOCKER_API_VERSION=1.39`。

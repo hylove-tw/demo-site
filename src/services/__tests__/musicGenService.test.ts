@@ -58,13 +58,24 @@ describe('fetchVoicePacks', () => {
         ]);
     });
 
-    it('degrades to an empty list without a network call when music-gen is not configured', async () => {
-        const service = loadService(undefined);
-        const fetchMock = jest.fn();
+    it('calls same-origin /api/music-gen when the env var is unset or blank', async () => {
+        for (const configured of [undefined, '', '   ', '/']) {
+            const service = loadService(configured);
+            const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
+            global.fetch = fetchMock as any;
+
+            expect(await service.fetchVoicePacks()).toEqual([]);
+            expect(fetchMock).toHaveBeenCalledWith('/api/music-gen/api/v1/voice-packs');
+        }
+    });
+
+    it('strips a trailing slash from an explicit music-gen override', async () => {
+        const service = loadService('http://music-gen.test/');
+        const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => [] });
         global.fetch = fetchMock as any;
 
-        expect(await service.fetchVoicePacks()).toEqual([]);
-        expect(fetchMock).not.toHaveBeenCalled();
+        await service.fetchVoicePacks();
+        expect(fetchMock).toHaveBeenCalledWith('http://music-gen.test/api/v1/voice-packs');
     });
 
     it('degrades to an empty list when the request fails, rather than throwing', async () => {

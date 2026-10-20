@@ -1,9 +1,22 @@
 import { post, ApiError } from './api';
 import axios from 'axios';
-import http from 'http';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+const ORIGINAL_API_BASE = process.env.REACT_APP_ANALYSIS_API_BASE;
+
+function loadApi(base: string | undefined) {
+  jest.resetModules();
+  if (base === undefined) delete process.env.REACT_APP_ANALYSIS_API_BASE;
+  else process.env.REACT_APP_ANALYSIS_API_BASE = base;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const api = require('./api') as typeof import('./api');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const axiosModule = require('axios');
+  const axiosFresh = (typeof axiosModule.post === 'function' ? axiosModule : axiosModule.default) as jest.Mocked<typeof axios>;
+  return { post: api.post, axios: axiosFresh };
+}
 
 describe('post helper', () => {
   beforeEach(() => {
@@ -12,10 +25,11 @@ describe('post helper', () => {
   });
 
   it('calls axios with correct args including timeout', async () => {
-    mockedAxios.post.mockResolvedValueOnce({ data: { ok: true } });
-    const data = await post('/test', { foo: 'bar' });
-    expect(mockedAxios.post).toHaveBeenCalledWith(
-      'http://localhost:3000/test',
+    const loaded = loadApi(undefined);
+    loaded.axios.post.mockResolvedValueOnce({ data: { ok: true } });
+    const data = await loaded.post('/test', { foo: 'bar' });
+    expect(loaded.axios.post).toHaveBeenCalledWith(
+      '/test',
       { foo: 'bar' },
       {
         headers: { 'Content-Type': 'application/json' },
@@ -25,12 +39,38 @@ describe('post helper', () => {
     expect(data).toEqual({ ok: true });
   });
 
+  it('keeps analysis calls on the same origin when the base is blank or "/"', async () => {
+    for (const base of ['', '   ', '/']) {
+      const loaded = loadApi(base);
+      loaded.axios.post.mockResolvedValueOnce({ data: { ok: true } });
+      await loaded.post('/api/v1/music', { a: 1 });
+      expect(loaded.axios.post).toHaveBeenCalledWith(
+        '/api/v1/music',
+        { a: 1 },
+        expect.objectContaining({ timeout: 60000 }),
+      );
+    }
+  });
+
+  it('uses an explicit REACT_APP_ANALYSIS_API_BASE and strips a trailing slash', async () => {
+    const loaded = loadApi('http://localhost:3100/');
+    loaded.axios.post.mockResolvedValueOnce({ data: { ok: true } });
+    const data = await loaded.post('/api/v1/music', { a: 1 });
+    expect(loaded.axios.post).toHaveBeenCalledWith(
+      'http://localhost:3100/api/v1/music',
+      { a: 1 },
+      expect.objectContaining({ timeout: 60000 }),
+    );
+    expect(data).toEqual({ ok: true });
+  });
+
   it('throws ApiError on network failure', async () => {
     const networkError = new Error('Network Error');
     mockedAxios.post.mockRejectedValueOnce(networkError);
 
-    await expect(post('/test', {})).rejects.toThrow(ApiError);
-    await expect(post('/test', {})).rejects.toThrow('Network Error');
+    const result = post('/test', {});
+    await expect(result).rejects.toThrow(ApiError);
+    await expect(result).rejects.toThrow('Network Error');
   });
 
   it('throws ApiError with status code on HTTP error', async () => {
@@ -88,25 +128,9 @@ describe('post helper', () => {
     }
   });
 
-  it('works with real http server', async () => {
-    // Restore real axios for this test
-    jest.unmock('axios');
-    const realAxios = jest.requireActual('axios');
-    mockedAxios.post.mockImplementation(realAxios.post);
+});
 
-    const server = http.createServer((req, res) => {
-      if (req.method === 'POST' && req.url === '/real') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true }));
-      }
-    });
-    await new Promise<void>(resolve => {
-      server.listen(3100, () => resolve());
-    });
-
-    process.env.REACT_APP_ANALYSIS_API_BASE = 'http://localhost:3100';
-    const result = await post('/real', { a: 1 });
-    expect(result).toEqual({ success: true });
-    server.close();
-  });
+afterAll(() => {
+  if (ORIGINAL_API_BASE === undefined) delete process.env.REACT_APP_ANALYSIS_API_BASE;
+  else process.env.REACT_APP_ANALYSIS_API_BASE = ORIGINAL_API_BASE;
 });

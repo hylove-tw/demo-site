@@ -1,3 +1,4 @@
+import { MUSIC_GEN_URL } from '../config/apiBase';
 import { timeSignatureForMelody } from '../config/musicCreativeConstants';
 
 /**
@@ -6,8 +7,6 @@ import { timeSignatureForMelody } from '../config/musicCreativeConstants';
  * Calls the music-gen service (FastAPI) to export a high-quality MP3.
  * Flow: POST /api/v1/generate → poll /api/v1/tasks/{id} → download /api/v1/download/{id}
  */
-
-const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/, '');
 
 export const isMusicGenEnabled = (): boolean => Boolean(MUSIC_GEN_URL);
 

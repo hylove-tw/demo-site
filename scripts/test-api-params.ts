@@ -22,7 +22,16 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-const API_BASE = process.env.REACT_APP_ANALYSIS_API_BASE || 'https://hylove-demo.good-nas.cc';
+// The SPA defaults to a same-origin path when this is unset. This script runs
+// in Node and needs an absolute origin (set it in the environment or `.env`).
+const API_BASE = (process.env.REACT_APP_ANALYSIS_API_BASE || '').trim().replace(/\/+$/, '');
+if (!/^https?:\/\//.test(API_BASE)) {
+  console.error(
+    'REACT_APP_ANALYSIS_API_BASE must be an absolute http(s) URL.\n' +
+    'The frontend uses same-origin /api when this is unset; this script cannot.'
+  );
+  process.exit(1);
+}
 const REQUEST_TIMEOUT = 60_000;
 
 // ── CSV 解析（複製自 src/utils/transformCSVDataToPayload.ts）──

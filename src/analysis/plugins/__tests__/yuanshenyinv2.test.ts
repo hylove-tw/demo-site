@@ -20,12 +20,9 @@ jest.mock('../../../components/CompositionParamsForm', () => {
     };
 });
 
-// yuanshenyinv2.tsx pulls these in for execute()/renderReport(), which in
-// turn import services/api.ts — axios there is ESM-only and doesn't
-// transform under this project's jest config (a pre-existing, unrelated gap
-// also hit by src/services/api.test.ts and src/App.test.tsx). Mock both so
-// this test can check the plugin's static bannerImage config without
-// tripping over that.
+// yuanshenyinv2.tsx pulls these in for execute()/renderReport(). Mock them
+// so this test can check the plugin's static bannerImage config without
+// rendering the editors.
 jest.mock('../../../config/analysisMethods', () => ({
     musicAnalysisCreative: jest.fn(),
     dualMusicAnalysisCreative: jest.fn(),
