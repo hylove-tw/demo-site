@@ -38,7 +38,7 @@ To add a new analysis plugin:
 ### Data Flow
 
 1. **File Upload**: `useFileManager` hook parses CSV/XLSX files and stores in localStorage
-2. **Analysis Execution**: Plugins call API endpoints via `src/services/api.ts` (base URL from `REACT_APP_ANALYSIS_API_BASE`)
+2. **Analysis Execution**: Plugins call API endpoints via `src/services/api.ts`. The base URL comes from `src/config/apiBase.ts`: `REACT_APP_ANALYSIS_API_BASE` when set, otherwise same-origin (paths already start with `/api/...`).
 3. **Results**: Stored in localStorage via `useAnalysisManager` hook
 4. **Rendering**: Each plugin's `renderReport` function handles visualization
 
@@ -63,7 +63,7 @@ To add a new analysis plugin:
 
 ## music-gen（音樂生成服務）
 
-demo 的音樂生成走 music-gen（`REACT_APP_MUSIC_GEN_URL`，**build 時寫死**）。
+demo 的音樂生成走 music-gen。`REACT_APP_MUSIC_GEN_URL` 有設才在 build 時寫死；沒設或空白時預設是同源的 `/api/music-gen`（見 `src/config/apiBase.ts`）。本機要打遠端後端時把絕對網址放進 gitignore 的 `.env`，不要寫進 `.env.production`。
 
 - **串接規格**：music-gen repo 的 `docs/INTEGRATION.md`——給正式站的完整契約
 - **開發紀錄**：`docs/MUSIC_GEN_INTEGRATION_NOTES.md`——本專案踩過的坑與決策理由
@@ -78,7 +78,7 @@ demo 的音樂生成走 music-gen（`REACT_APP_MUSIC_GEN_URL`，**build 時寫�
 
 ## Backend API
 
-- **Base URL**: Configured via `REACT_APP_ANALYSIS_API_BASE` in `.env`
+- **Base URL**: `REACT_APP_ANALYSIS_API_BASE` when set to an absolute origin; unset or blank means same-origin `/api/...` (pinned by `.env.production` for `npm run build`)
 - **API Documentation**: `{BASE_URL}/api-docs` (Swagger UI)
 - **OpenAPI Spec**: `{BASE_URL}/api-docs/v1/swagger.yaml`
 

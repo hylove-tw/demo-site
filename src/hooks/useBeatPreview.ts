@@ -11,9 +11,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMusicGenPresets, presetForBeat } from './useMusicGenPresets';
+import { MUSIC_GEN_URL } from '../config/apiBase';
 import { GENRE_BEAT_MAP } from '../config/musicCreativeConstants';
-
-const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/, '');
 
 export interface BeatPreview {
     /** Genre id currently sounding, or null. */

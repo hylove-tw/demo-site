@@ -1,7 +1,6 @@
 // src/components/StemMixer.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-
-const MUSIC_GEN_URL = (process.env.REACT_APP_MUSIC_GEN_URL || '').replace(/\/$/, '');
+import { MUSIC_GEN_URL } from '../config/apiBase';
 const DB_MIN = -40;
 const DB_MAX = 6;
 const CROSSFADE_S = 1.5; // crossfade duration for looping stems
@@ -135,8 +134,10 @@ export function StemMixer({
     }, []);
 
     const fetchAndDecode = useCallback(async (url: string): Promise<AudioBuffer> => {
-        const fullUrl = url.startsWith('http') ? url : `${MUSIC_GEN_URL}${url}`;
-        const resp = await fetch(fullUrl);
+        // Callers already pass a full URL: stem_urls are prefixed in
+        // _mapCompletedTask, and optional assets are built with MUSIC_GEN_URL
+        // below. Prefixing again yields /api/music-gen/api/music-gen/...
+        const resp = await fetch(url);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const ctx = ensureCtx();
         return ctx.decodeAudioData(await resp.arrayBuffer());

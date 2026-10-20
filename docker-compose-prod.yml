@@ -5,7 +5,8 @@ services:
       - "80:80"
     environment:
       - ENABLE_AUTH=true
-      - REACT_APP_ANALYSIS_API_BASE=/
+      # API bases are inlined by `npm run build`, not read from this container.
+      # Leave REACT_APP_* unset so the bundle calls same-origin /api/*.
     restart: always
     volumes:
       - "${HTPASSWD_PATH:-./.htpasswd}:/etc/nginx/.htpasswd:ro"

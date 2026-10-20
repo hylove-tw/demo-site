@@ -40,13 +40,11 @@
 ## 架構設計
 
 ```
-瀏覽器
-  └── Cloudflare (HTTPS)
-        └── VPS nginx (172.105.230.72)
-              ├── /api/v1/, /api/v2/   → Rails API (Passenger)
-              ├── /api/music-gen/      → music-gen (Python/FastAPI, port 8001)
-              ├── /assets/             → 靜態資源（長期快取）
-              └── /*                  → React SPA (public/index.html)
+瀏覽器（任一 hostname，例如 hylove.good-nas.cc、hylove-staging.good-nas.cc）
+  └── Cloudflare Worker
+        ├── /api/music-gen/*  → music-gen
+        ├── /api/*            → Rails API
+        └── /*                → 這份 SPA 的靜態 build
 ```
 
 ### 服務說明
@@ -59,15 +57,29 @@
 
 ### 環境變數
 
-環境變數在 build 時從 `.env` 讀取（`.env` 已加入 `.gitignore`，不進版控）：
+`REACT_APP_*` 在 **build 時**寫進 JS bundle，執行時改不了。API 位址沒設定或空白時，前端打**同源相對路徑**，由當下 hostname 上的 Worker 轉發：
+
+| 變數 | 未設定／空白時 | 請求長這樣 |
+|---|---|---|
+| `REACT_APP_ANALYSIS_API_BASE` | 空字串（路徑本身已含 `/api/...`） | `/api/v1/music`、`/api/v2/music` |
+| `REACT_APP_MUSIC_GEN_URL` | `/api/music-gen` | `/api/music-gen/api/v1/generate` |
+
+正式站與 staging **用同一份沒帶 API 位址的 build**。把正式站網址寫進 bundle 的話，staging（或其他 hostname）的登入 cookie 不會跟著送到那個網址。已提交的 `.env.production` 把這兩個變數釘成空白，所以即使本機 `.env` 裡留著舊的絕對網址，`npm run build` 仍走同源。只寫 `/` 也視同空白（否則接上 `/api/...` 會變成 protocol-relative 的 `//api/...`）。尾端斜線會被去掉。
+
+本機 `npm start` 不會讀 `.env.production`。要讓 dev server 打遠端後端時，寫進 gitignore 的 `.env`（分析 API 的值是 origin，不要含 `/api`；music-gen 的值要含 `/api/music-gen`）：
 
 ```env
-REACT_APP_ANALYSIS_API_BASE=https://hylove-demo.good-nas.cc
-REACT_APP_MUSIC_GEN_URL=https://hylove-demo.good-nas.cc/api/music-gen
-REACT_APP_MUSIC_APP_ID=638abd901bbf6ba1bb99d620
+REACT_APP_ANALYSIS_API_BASE=https://backend.example
+REACT_APP_MUSIC_GEN_URL=https://backend.example/api/music-gen
 ```
 
-> **注意**：`npm run build:vps` 使用 `PUBLIC_URL=/` 覆蓋資源路徑基底，但 API URL 仍從 `.env` 讀取。本機開發（`npm start）需要 `.env` 中的完整網址才能呼叫遠端 API。
+一次性的 production build 若真的要打別的後端，用 shell 或 gitignore 的 `.env.production.local`（兩者都蓋過 `.env.production`）：
+
+```bash
+REACT_APP_ANALYSIS_API_BASE=https://backend.example \
+REACT_APP_MUSIC_GEN_URL=https://backend.example/api/music-gen \
+npm run build
+```
 
 ## 開發指令
 
@@ -89,7 +101,7 @@ npm run test:e2e
 
 ### 部署拓撲總覽
 
-demo site 目前部署在三個平台，**各自獨立 build**（`PUBLIC_URL` 與 `REACT_APP_MUSIC_GEN_URL` 都是 build 時寫死的環境變數，換平台必須重新 build，不能只搬檔案）：
+API 位址跟著頁面的 hostname 走，**不必為了換主機重新 build**。`PUBLIC_URL` 仍是 build 時寫死的資源路徑前綴（根路徑 `/` 與子路徑 `/demo/` 不能共用同一份 build）：
 
 | 平台 | 網址 | 檔案位置 | 更新方式 |
 |---|---|---|---|
@@ -98,10 +110,8 @@ demo site 目前部署在三個平台，**各自獨立 build**（`PUBLIC_URL` �
 | 中國 阿里雲 | `http://8.138.157.218:8080/demo/` | `staging_hylove/current/public/demo/` | 需經 weifan-ubuntu 跳板轉送（本機無金鑰） |
 
 ```bash
-# 台灣 VPS
-PUBLIC_URL=/demo REACT_APP_MUSIC_GEN_URL=http://172.105.230.72/api/music-gen npm run build
-# 中國 阿里雲
-PUBLIC_URL=/demo REACT_APP_MUSIC_GEN_URL=http://8.138.157.218:8080/api/music-gen npm run build
+# 台灣 VPS、中國阿里雲（網站掛在 /demo/；API 走同源 /api）
+PUBLIC_URL=/demo npm run build
 ```
 
 ⚠️ **台灣 VPS 與阿里雲的網站根目錄是「半伴旅遊」（完全不同的產品），絕對不能覆蓋。** demo 掛在獨立的 `/demo/` 路徑下，靠專屬的 nginx location 提供 SPA fallback；還原方式是刪掉該目錄並移除 nginx 的 `location /demo/`，不影響任何既有檔案。weifan-ubuntu 則是唯一以根路徑（`/`）直接服務 demo 的環境。

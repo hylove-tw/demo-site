@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
+import { ANALYSIS_API_BASE } from '../config/apiBase';
 
-const API_BASE_URL = process.env.REACT_APP_ANALYSIS_API_BASE || 'http://localhost:3000';
+const API_BASE_URL = ANALYSIS_API_BASE;
 const DEFAULT_TIMEOUT = 60000; // 60 seconds
 
 export class ApiError extends Error {
