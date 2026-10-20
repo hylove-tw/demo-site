@@ -180,7 +180,11 @@ export function applyMelody(params: CompositionParams, melodyId: number): Compos
     if (!MELODY_PATTERNS.some((m) => m.id === melodyId)) return params;
 
     const next: CompositionParams = { ...params, melodyPattern: melodyId };
-    if (params.genre && !getCompatibleGenres(melodyId).some((g) => g.id === params.genre)) {
+    // 自訂 is not a real genre, so no melody is ever "compatible" with it —
+    // without this guard picking a melody in 自訂 mode silently dropped the
+    // genre, closing the 自訂 section the user was working in.
+    if (params.genre && params.genre !== CUSTOM_GENRE_ID
+        && !getCompatibleGenres(melodyId).some((g) => g.id === params.genre)) {
         delete next.genre;
     }
     return next;
@@ -202,6 +206,31 @@ export function applyRhythmStyle(params: CompositionParams, style: RhythmOnlySty
         bpm: getBpmMidpoint(style.bpmRange),
     }, style.defaultInstruments);
 }
+
+// Divider and Card live at module scope on purpose. They used to be declared
+// inside CompositionParamsForm's body, which made each render produce a *new*
+// component type — so every onChange (picking a genre, an instrument, a voice
+// pack, even one keystroke in the title) unmounted and remounted both cards'
+// entire DOM subtree. The tapped control lost focus, and on mobile the scroll
+// container lost its position: users saw the page jump up after almost every
+// choice in 音樂設定 and had to scroll back down.
+const Divider: React.FC<{ compact: boolean; children: React.ReactNode }> = ({ compact, children }) =>
+    compact
+        ? <div className="divider my-2 text-xs text-base-content/50">{children}</div>
+        : <div className="divider-minimal">{children}</div>;
+
+// Two always-visible cards instead of a tab switcher — a tab bar this
+// narrow (especially in the compact editor panel) clipped/wrapped badly
+// at some widths, and both sections are short enough that showing them
+// both at once costs little scroll.
+const Card: React.FC<{ compact: boolean; title: string; children: React.ReactNode }> = ({ compact, title, children }) => (
+    <div className={compact
+        ? 'rounded-lg border border-base-300 p-3 space-y-3'
+        : 'rounded-lg border border-base-300 p-4 space-y-4'}>
+        <h3 className={compact ? 'text-sm font-semibold' : 'font-semibold'}>{title}</h3>
+        {children}
+    </div>
+);
 
 export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     value,
@@ -294,24 +323,6 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     const fieldCls = compact ? 'form-control' : 'form-control form-control-minimal';
     const btnCls = compact ? 'btn join-item flex-1 btn-xs' : 'btn join-item flex-1 btn-sm';
 
-    const Divider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
-        compact
-            ? <div className="divider my-2 text-xs text-base-content/50">{children}</div>
-            : <div className="divider-minimal">{children}</div>;
-
-    // Two always-visible cards instead of a tab switcher — a tab bar this
-    // narrow (especially in the compact editor panel) clipped/wrapped badly
-    // at some widths, and both sections are short enough that showing them
-    // both at once costs little scroll.
-    const Card: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-        <div className={compact
-            ? 'rounded-lg border border-base-300 p-3 space-y-3'
-            : 'rounded-lg border border-base-300 p-4 space-y-4'}>
-            <h3 className={compact ? 'text-sm font-semibold' : 'font-semibold'}>{title}</h3>
-            {children}
-        </div>
-    );
-
     return (
         <div className={compact ? 'space-y-3' : 'space-y-6 p-4 border border-base-300 rounded-lg'}>
             {showPlayerMode && (
@@ -337,7 +348,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 
             {/* 基本設定／音樂設定：曲風是唯一需要做的風格選擇，同時決定作曲與伴奏
                 節奏；只有選了「自訂」才需要自己指定主旋律與伴奏節奏。 */}
-            <Card title="基本設定">
+            <Card compact={compact} title="基本設定">
                     {/* 音樂類型 */}
                     <div>
                         <label className={labelCls}>
@@ -373,7 +384,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                         </div>
                     </div>
 
-                    <Divider>音中心</Divider>
+                    <Divider compact={compact}>音中心</Divider>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className={fieldCls}>
@@ -405,8 +416,8 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                     {basicTabExtra}
             </Card>
 
-            <Card title="音樂設定">
-                    <Divider>曲風</Divider>
+            <Card compact={compact} title="音樂設定">
+                    <Divider compact={compact}>曲風</Divider>
 
                     {compact ? (
                         <div className={fieldCls}>
@@ -588,7 +599,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                         </div>
                     )}
 
-                    <Divider>{isCustom ? 'BPM（自訂範圍）' : 'BPM（依曲風決定範圍）'}</Divider>
+                    <Divider compact={compact}>{isCustom ? 'BPM（自訂範圍）' : 'BPM（依曲風決定範圍）'}</Divider>
 
                     <div>
                         <div className="flex items-center gap-4">
@@ -615,7 +626,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 
                     {instrumentFields && instrumentFields.length > 0 && (
                         <>
-                            <Divider>樂器</Divider>
+                            <Divider compact={compact}>樂器</Divider>
                             <div className={`grid grid-cols-1 ${instrumentFields.length > 3 ? 'md:grid-cols-3' : 'md:grid-cols-3'} gap-3`}>
                                 {instrumentFields.map(([field, label]) => (
                                     <div className={fieldCls} key={field}>
@@ -635,7 +646,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
 
                     {showVoicePack && voicePacks.length > 0 && (
                         <>
-                            <Divider>音色</Divider>
+                            <Divider compact={compact}>音色</Divider>
                             {compact ? (
                                 <div className={fieldCls}>
                                     <div className="flex items-center gap-2">
