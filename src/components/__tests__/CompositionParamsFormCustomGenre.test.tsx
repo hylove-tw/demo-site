@@ -17,13 +17,13 @@ jest.mock('../../hooks/useMusicGenPresets', () => {
 describe('custom genre reveal', () => {
     it('does not show a melody/rhythm override while a real genre is selected', () => {
         render(<CompositionParamsForm value={{ genre: 'reggae', melodyPattern: 9 }} onChange={jest.fn()} />);
-        expect(screen.queryByText('請選擇主旋律')).not.toBeInTheDocument();
+        expect(screen.queryByRole('group', { name: '主旋律' })).not.toBeInTheDocument();
         expect(screen.queryByText('請選擇伴奏節奏')).not.toBeInTheDocument();
     });
 
     it('shows the melody/rhythm override once genre is "自訂"', () => {
         render(<CompositionParamsForm value={{ genre: 'custom' }} onChange={jest.fn()} />);
-        expect(screen.getByText('請選擇主旋律')).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: '主旋律' })).toBeInTheDocument();
         expect(screen.getByText('請選擇伴奏節奏')).toBeInTheDocument();
     });
 

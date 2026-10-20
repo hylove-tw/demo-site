@@ -6,6 +6,7 @@ import {
   CompositionParamsForm,
   SINGLE_INSTRUMENT_FIELDS,
   DUAL_INSTRUMENT_FIELDS,
+  summarizeCompositionParams,
 } from '../../components/CompositionParamsForm';
 import bannerIllustration from '../../assets/banners/yuanshenyin-banner-illustration-only.webp';
 
@@ -71,6 +72,7 @@ const plugin: AnalysisPlugin = {
     { label: '低音域樂器', fieldName: 'p3', type: 'string', defaultValue: 'cello' },
   ],
   editComponent: EditComponent,
+  summarizeParams: (customParams) => summarizeCompositionParams(customParams, { showPlayerMode: true }),
 };
 
 registerPlugin(plugin);
