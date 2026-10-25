@@ -10,6 +10,7 @@ import { useMusicGenPresets, presetForBeat } from '../hooks/useMusicGenPresets';
 import { transposeMusicXML } from '../utils/musicXmlTranspose';
 import { KEY_CENTERS, MELODY_PATTERNS, GENRES, BRAINWAVE_FREQUENCIES, NATURE_SOUNDS, timeSignatureForMelody } from '../config/musicCreativeConstants';
 import { CompositionParamsForm, DUAL_INSTRUMENT_FIELDS } from './CompositionParamsForm';
+import MidiDownloadButton from './MidiDownloadButton';
 
 // 可選樂器列表與 MIDI program number 對照 (General MIDI)
 const INSTRUMENTS = [
@@ -828,6 +829,11 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                                 音樂下載
                             </button>
                         )}
+
+                        <MidiDownloadButton
+                            midiUrl={exportState.midiUrl}
+                            fallbackName={exportState.taskId ? `${exportState.taskId}.mid` : `${appliedParams.title || 'music'}.mid`}
+                        />
 
                         {/* 查看樂譜 */}
                         <button className="btn btn-outline btn-sm gap-1" onClick={() => setScoreOpen(true)} disabled={!scorePages?.length} title="查看樂譜">

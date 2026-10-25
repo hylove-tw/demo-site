@@ -132,3 +132,55 @@ describe('exportMp3 voice_pack payload', () => {
         expect('voice_pack' in JSON.parse(init.body)).toBe(false);
     });
 });
+
+describe('fetchCachedExportState midi_url', () => {
+    it('prefixes a relative midi_url and keeps the MP3 download', async () => {
+        const service = loadService('http://music-gen.test');
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                status: 'completed',
+                midi_url: '/api/v1/midi/task-9',
+                stem_urls: { p1: '/api/v1/stems/task-9/p1' },
+            }),
+        }) as any;
+
+        await expect(service.fetchCachedExportState('task-9')).resolves.toEqual({
+            status: 'completed',
+            downloadUrl: 'http://music-gen.test/api/v1/download/task-9',
+            stemUrls: { p1: 'http://music-gen.test/api/v1/stems/task-9/p1' },
+            taskId: 'task-9',
+            midiUrl: 'http://music-gen.test/api/v1/midi/task-9',
+        });
+    });
+
+    it('keeps the export completed and omits midiUrl when midi_url is null', async () => {
+        const service = loadService('http://music-gen.test');
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ status: 'completed', midi_url: null }),
+        }) as any;
+
+        const state = await service.fetchCachedExportState('task-9');
+        expect(state).toEqual({
+            status: 'completed',
+            downloadUrl: 'http://music-gen.test/api/v1/download/task-9',
+            stemUrls: undefined,
+            taskId: 'task-9',
+        });
+        expect(state?.status).toBe('completed');
+    });
+
+    it('omits midiUrl when an older task payload has no midi_url field', async () => {
+        const service = loadService('http://music-gen.test');
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ status: 'completed' }),
+        }) as any;
+
+        const state = await service.fetchCachedExportState('task-9');
+        expect(state?.status).toBe('completed');
+        expect(state?.midiUrl).toBeUndefined();
+        expect(state?.downloadUrl).toBe('http://music-gen.test/api/v1/download/task-9');
+    });
+});

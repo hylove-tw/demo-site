@@ -1,11 +1,14 @@
 import { MUSIC_GEN_URL } from '../config/apiBase';
 import { timeSignatureForMelody } from '../config/musicCreativeConstants';
+import { resolveMidiUrl } from './midiDownload';
 
 /**
  * musicGenService.ts
  *
  * Calls the music-gen service (FastAPI) to export a high-quality MP3.
  * Flow: POST /api/v1/generate → poll /api/v1/tasks/{id} → download /api/v1/download/{id}
+ * A completed task may also carry `midi_url` for GET /api/v1/midi/{id}.
+ * Null means "no MIDI file", not a failed MP3 export.
  */
 
 export const isMusicGenEnabled = (): boolean => Boolean(MUSIC_GEN_URL);
@@ -247,6 +250,11 @@ export interface ExportState {
   stemUrls?: Record<string, string>;
   /** Needed to fetch the score that was actually rendered. */
   taskId?: string;
+  /**
+   * One multi-track MIDI file for this task (solo or dual).
+   * Omitted when `midi_url` is null or absent — the MP3 is still ready.
+   */
+  midiUrl?: string;
 }
 
 /**
@@ -393,7 +401,16 @@ function _mapCompletedTask(taskId: string, task: any): ExportState {
         )
       )
     : undefined;
-  return { status: 'completed', downloadUrl, stemUrls, taskId };
+  // `midi_url: null` is a completed task with no MIDI file. Leave midiUrl
+  // unset so the toolbar hides that control without failing the MP3.
+  const midiUrl = resolveMidiUrl(task?.midi_url);
+  return {
+    status: 'completed',
+    downloadUrl,
+    stemUrls,
+    taskId,
+    ...(midiUrl ? { midiUrl } : {}),
+  };
 }
 
 /**
