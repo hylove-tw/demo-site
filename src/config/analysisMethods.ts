@@ -29,7 +29,8 @@ export async function musicAnalysis(
     beforeBrainData: data[0],
     afterBrainData: data[1],
   };
-  return post('/api/v1/music', payload);
+  const musicXML = await post('/api/v1/music', payload);
+  return { musicXML, _beforeBrainData: data[0], _afterBrainData: data[1] };
 }
 
 // 亨運來：H.R 評估系統

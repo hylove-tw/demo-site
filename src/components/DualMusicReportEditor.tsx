@@ -221,6 +221,7 @@ export interface DualMusicReportParams {
     keyCenter?: string;
     keyType?: string;
     melodyPattern?: number;
+    remapMelody?: boolean;
     genre?: string;
     brainwaveFrequency?: number | null;
     natureSound?: string;
@@ -347,6 +348,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
     // Stable refs so doExport (called inside the hook) sees current values
     const appliedParamsRef = useRef<DualMusicReportParams>(initialParams);
     appliedParamsRef.current = appliedParams;
+    const editedRef = useRef(false);
     const brainDataRef = useRef(brainData);
     brainDataRef.current = brainData;
 
@@ -366,10 +368,11 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                 // scratch. A mixer-triggered re-export always reflects a
                 // deliberate change (new volumes/background), so it always
                 // generates fresh.
-                if (!config && cacheKey) {
-                    const cachedTaskId = readCachedTaskId(cacheKey);
+                if (!config && cacheKey && !editedRef.current) {
+                    const cachedTaskId = readCachedTaskId(cacheKey, params.remapMelody ?? false);
                     if (cachedTaskId) {
                         const cached = await fetchCachedExportState(cachedTaskId, signal);
+                        if (signal?.aborted) return;
                         if (cached) {
                             setExportState(cached);
                             return;
@@ -390,6 +393,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                         title:               params.title,
                         bpm:                 params.bpm,
                         melodyPattern:       params.melodyPattern,
+                        remapMelody:         params.remapMelody,
                         first_p1:            params.first_p1,
                         first_p2:            params.first_p2,
                         first_p3:            params.first_p3,
@@ -410,9 +414,10 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                         stemVolumes:         resolvedVolumes,
                     },
                     (state) => {
+                        if (signal?.aborted) return;
                         setExportState(state);
-                        if (!config && cacheKey && state.status === 'completed' && state.taskId) {
-                            writeCachedTaskId(cacheKey, state.taskId);
+                        if (!config && cacheKey && !editedRef.current && state.status === 'completed' && state.taskId) {
+                            writeCachedTaskId(cacheKey, state.taskId, params.remapMelody ?? false);
                         }
                     },
                     signal,
@@ -480,12 +485,14 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                 const rendered = exportState.taskId
                     ? await fetchRenderedScore(exportState.taskId)
                     : null;
+                if (controller.signal.aborted) return;
                 const pages = await renderScore(rendered ?? processedXML,
                     { pageWidth: 2800, beatPreset, measuresPerSystem: 3 }, controller.signal);
+                if (controller.signal.aborted) return;
                 setScorePages(pages);
-                if (exportState.taskId) writeCachedScorePages(exportState.taskId, pages);
+                if (exportState.taskId && rendered) writeCachedScorePages(exportState.taskId, pages);
             } catch (err: any) {
-                if (err?.name !== 'AbortError') setScorePages(null);
+                if (!controller.signal.aborted && err?.name !== 'AbortError') setScorePages(null);
             } finally {
                 setScoreLoading(false);
             }
@@ -536,10 +543,18 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
 
     // 套用變更
     const handleApply = useCallback(() => {
+        const remapChanged = (editParams.remapMelody ?? false) !== (appliedParams.remapMelody ?? false);
+        editedRef.current = true;
+        appliedParamsRef.current = editParams;
         setAppliedParams(editParams);
         setIsEditing(false);
         onParamsChange?.(editParams);
-    }, [editParams, onParamsChange]);
+        if (remapChanged && canGenerateMp3) {
+            setExportState({ status: 'idle' });
+            setScorePages(null);
+            runSilentExport();
+        }
+    }, [editParams, appliedParams.remapMelody, onParamsChange, canGenerateMp3, setExportState, runSilentExport]);
 
     // 取消編輯
     const handleCancel = useCallback(() => {
@@ -556,6 +571,9 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
 
     return (
         <div className="p-4">
+            {appliedParams.remapMelody && (
+                <p className="alert alert-info text-sm mb-3">旋律重新對應僅套用於生成結果；原始分析預覽及下載的 MusicXML 不包含此變更。若生成樂譜無法取得，畫面會顯示原始預覽。</p>
+            )}
             {/* 設定資訊區塊 */}
             <div className="mb-6 p-4 bg-base-200 rounded-lg">
                 <div className="flex items-center justify-between mb-3">

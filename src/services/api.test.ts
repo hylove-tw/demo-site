@@ -1,5 +1,6 @@
 import { post, ApiError } from './api';
 import axios from 'axios';
+import http from 'http';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -125,6 +126,24 @@ describe('post helper', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
       expect((error as ApiError).message).toBe('無法連接到伺服器，請檢查網路連線');
+    }
+  });
+
+  it('posts to a real HTTP server', async () => {
+    const server = http.createServer((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' });
+      res.end(JSON.stringify({ success: true }));
+    });
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const address = server.address();
+      if (!address || typeof address === 'string') throw new Error('No server address');
+      const loaded = loadApi(`http://127.0.0.1:${address.port}`);
+      const realAxios = jest.requireActual('axios/dist/node/axios.cjs');
+      loaded.axios.post.mockImplementation(realAxios.post);
+      await expect(loaded.post('/real', { a: 1 })).resolves.toEqual({ success: true });
+    } finally {
+      await new Promise<void>(resolve => server.close(() => resolve()));
     }
   });
 

@@ -191,6 +191,7 @@ export interface MusicGenExportParams {
   keyCenter?: string;
   keyType?: string;
   melodyPattern?: number;
+  remapMelody?: boolean;
   genre?: string;
   brainwaveFrequency?: number | null;
   natureSound?: string;
@@ -219,6 +220,7 @@ export interface MusicGenDualExportParams {
   accompanimentHarmony?: AccompanimentHarmony;
   bpm?: number;
   melodyPattern?: number;
+  remapMelody?: boolean;
   /** @deprecated 拍號由 `melodyPattern` 決定，伺服器會忽略此欄位。 */
   time_signature?: string;
   first_p1?: string;
@@ -313,6 +315,7 @@ export async function exportMp3(
     key_center:          params.keyCenter || 'C',
     key_type:            params.keyType || 'major',
     melody,
+    remap_melody:        params.remapMelody ?? false,
     genre:               params.genre || '',
     brainwave_frequency: params.brainwaveFrequency ?? null,
     nature_sound:        params.natureSound || 'none',
@@ -358,6 +361,7 @@ export async function exportDualMp3(
     // Dual mode never forwarded this, so every duet was generated as melody 1
     // whatever the user picked, and the meter followed from that.
     melody,
+    remap_melody:        params.remapMelody ?? false,
     first_p1:             params.first_p1  || 'flute',
     first_p2:             params.first_p2  || 'piano',
     first_p3:             params.first_p3  || 'cello',

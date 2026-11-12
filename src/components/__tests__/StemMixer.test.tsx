@@ -19,6 +19,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { StemMixer } from '../StemMixer';
 import { MUSIC_GEN_URL } from '../../config/apiBase';
 
+jest.mock('../../config/apiBase', () => ({
+    ...jest.requireActual('../../config/apiBase'),
+    MUSIC_GEN_URL: '/api/music-gen',
+}));
+
 describe('StemMixer Safari audio unlock', () => {
     let audioContextMock: jest.Mock;
     let resumeMock: jest.Mock;

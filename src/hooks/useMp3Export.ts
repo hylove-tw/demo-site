@@ -61,7 +61,7 @@ export function useMp3Export<V extends StemVolumes = StemVolumes>(
         // UI reflects what's being baked into the export.
         if (config?.volumes) setStemVolumes(config.volumes as V);
         doExportRef.current(config, controller.signal).catch((err: any) => {
-            if (err?.name !== 'AbortError') {
+            if (!controller.signal.aborted && err?.name !== 'AbortError') {
                 setExportState({ status: 'failed', error: err?.message || '匯出失敗' });
             }
         });

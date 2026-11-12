@@ -1,5 +1,10 @@
 import { downloadMidiFile, filenameFromContentDisposition, resolveMidiUrl } from '../midiDownload';
 
+jest.mock('../../config/apiBase', () => ({
+    ...jest.requireActual('../../config/apiBase'),
+    MUSIC_GEN_URL: '/api/music-gen',
+}));
+
 function response(opts: {
     status?: number;
     type?: string | null;

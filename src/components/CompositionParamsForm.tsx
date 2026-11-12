@@ -813,6 +813,15 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 {customPanel}
             </Section>
 
+            <Section compact={compact}>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="checkbox checkbox-sm" checked={value.remapMelody ?? false}
+                        onChange={(e) => set('remapMelody', e.target.checked)} />
+                    <span>旋律音級重新對應（實驗性）</span>
+                </label>
+                <p className="text-xs opacity-70">開啟後將高音旋律向下移三個音級；原始分析預覽不會套用，生成後的樂譜、MIDI 與音訊才會反映。</p>
+            </Section>
+
             <CollapseSection compact={compact} title="節奏與調性" defaultOpen={compact}
                 icon={<Gauge className="size-5" aria-hidden="true" />}
                 summary={`${bpm} BPM · ${keyLabel}`}>

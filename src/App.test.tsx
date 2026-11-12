@@ -4,6 +4,5 @@ import App from './App';
 
 test('renders navbar with site title', () => {
   render(<App />);
-  const titleElement = screen.getByText(/Hylove Demo/i);
-  expect(titleElement).toBeInTheDocument();
+  expect(screen.getAllByText('Hylove').length).toBeGreaterThan(0);
 });

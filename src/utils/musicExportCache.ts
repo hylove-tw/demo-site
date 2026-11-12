@@ -15,24 +15,25 @@
 
 const STORAGE_KEY = 'musicGenTaskCache';
 
-function readAll(): Record<string, string> {
+function readAll(storageKey = STORAGE_KEY): Record<string, string> {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(storageKey);
         return raw ? JSON.parse(raw) : {};
     } catch {
         return {};
     }
 }
 
-export function readCachedTaskId(reportKey: string): string | undefined {
-    return readAll()[reportKey];
+export function readCachedTaskId(reportKey: string, remapMelody = false): string | undefined {
+    return readAll(remapMelody ? `${STORAGE_KEY}:remap` : STORAGE_KEY)[reportKey];
 }
 
-export function writeCachedTaskId(reportKey: string, taskId: string): void {
+export function writeCachedTaskId(reportKey: string, taskId: string, remapMelody = false): void {
     try {
-        const all = readAll();
+        const storageKey = remapMelody ? `${STORAGE_KEY}:remap` : STORAGE_KEY;
+        const all = readAll(storageKey);
         all[reportKey] = taskId;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+        localStorage.setItem(storageKey, JSON.stringify(all));
     } catch {
         // Best-effort — a failed cache write shouldn't break the export itself.
     }

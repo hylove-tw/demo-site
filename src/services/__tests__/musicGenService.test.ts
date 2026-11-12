@@ -184,3 +184,17 @@ describe('fetchCachedExportState midi_url', () => {
         expect(state?.downloadUrl).toBe('http://music-gen.test/api/v1/download/task-9');
     });
 });
+
+describe('remap melody request', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+    it.each([false, true])('sends %s for both single and dual requests', (enabled) => {
+        const service = loadService('http://music-gen.test');
+        const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ task_id: 't1' }) });
+        global.fetch = fetchMock as any;
+        service.exportMp3({ beforeBrainData: {}, afterBrainData: {}, remapMelody: enabled }, jest.fn()).catch(() => {});
+        service.exportDualMp3({ firstBrainData: {}, secondBrainData: {}, remapMelody: enabled }, jest.fn()).catch(() => {});
+        expect(JSON.parse(fetchMock.mock.calls[0][1].body).remap_melody).toBe(enabled);
+        expect(JSON.parse(fetchMock.mock.calls[1][1].body).remap_melody).toBe(enabled);
+    });
+});

@@ -1,5 +1,8 @@
 import { registerPlugin, getPlugins, clearPluginsForTest } from './registry';
 
+jest.mock('../services/api', () => ({ post: jest.fn() }));
+jest.mock('../config/analysisRenderers', () => ({ renderBrainWaveMusicReport: jest.fn() }));
+
 describe('plugin registry', () => {
   beforeEach(() => {
     clearPluginsForTest();

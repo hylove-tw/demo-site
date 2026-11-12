@@ -81,6 +81,7 @@ describe('MusicReportEditor score-render cache', () => {
         mockExportMp3.mockImplementation(async (_payload, onStatusChange) => {
             onStatusChange({ status: 'completed', taskId: 'brand-new-task', downloadUrl: '/x' });
         });
+        mockFetchRenderedScore.mockResolvedValue(MINIMAL_MUSICXML);
         mockRenderScore.mockResolvedValue(['<svg>fresh page</svg>']);
 
         render(
@@ -95,4 +96,15 @@ describe('MusicReportEditor score-render cache', () => {
         await waitFor(() => expect(mockRenderScore).toHaveBeenCalledTimes(1), { timeout: 3000 });
         await waitFor(() => expect(readCachedScorePages('brand-new-task')).toEqual(['<svg>fresh page</svg>']));
     });
+    it('does not cache a fallback preview as the generated score', async () => {
+        mockExportMp3.mockImplementation(async (_payload, onStatusChange) => {
+            onStatusChange({ status: 'completed', taskId: 'fallback-task', downloadUrl: '/x' });
+        });
+        mockRenderScore.mockResolvedValue(['<svg>preview</svg>']);
+        render(<MusicReportEditor musicXML={MINIMAL_MUSICXML} initialParams={{ remapMelody: true }} brainData={BRAIN_DATA} />);
+        await waitFor(() => expect(mockRenderScore).toHaveBeenCalled(), { timeout: 3000 });
+        expect(readCachedScorePages('fallback-task')).toBeUndefined();
+        expect(screen.getByText(/若生成樂譜無法取得/)).toBeInTheDocument();
+    });
+
 });

@@ -40,3 +40,13 @@ describe('report renderers carry the chosen beat through, not just genre', () =>
         expect(element.props.initialParams.beat).toBe('bossanova');
     });
 });
+
+
+it('passes the remap setting and brain data into both report editors', () => {
+    const single = renderBrainWaveMusicReport({ musicXML: '<score/>', _beforeBrainData: [1], _afterBrainData: [2] }, { remapMelody: true }) as React.ReactElement<any>;
+    const dual = renderDualMusicReportCreative({ musicXML: '<score/>', _firstBrainData: [1], _secondBrainData: [2] }, { remapMelody: true }) as React.ReactElement<any>;
+    expect(single.props.initialParams.remapMelody).toBe(true);
+    expect(single.props.brainData).toEqual({ before: [1], after: [2] });
+    expect(dual.props.initialParams.remapMelody).toBe(true);
+    expect(dual.props.brainData).toEqual({ first: [1], second: [2] });
+});

@@ -19,6 +19,7 @@ export interface MusicReportCustomParams {
     keyCenter?: string;       // 'C', 'G', 'F', ...
     keyType?: string;         // 'major' | 'minor'
     melodyPattern?: number;   // 1-9
+    remapMelody?: boolean;
     genre?: string;           // 'waltz', 'soul', ...
     /** Rhythm-only styles (森巴/巴薩諾瓦) and manual overrides set this
      * explicitly and it can diverge from GENRE_BEAT_MAP[genre] — dropping it
@@ -57,6 +58,7 @@ export const renderBrainWaveMusicReport = (
         keyCenter: customParams?.keyCenter,
         keyType: customParams?.keyType,
         melodyPattern: customParams?.melodyPattern,
+        remapMelody: customParams?.remapMelody,
         genre: customParams?.genre,
         // The style actually chosen (e.g. samba/bossa_nova, or a manual
         // override) — must win over any genre-based guess below.
@@ -152,6 +154,7 @@ export const renderDualMusicReportCreative = (
         keyCenter: customParams?.keyCenter,
         keyType: customParams?.keyType,
         melodyPattern: customParams?.melodyPattern,
+        remapMelody: customParams?.remapMelody,
         genre: customParams?.genre,
         beat: customParams?.beat,
         brainwaveFrequency: customParams?.brainwaveFrequency,
