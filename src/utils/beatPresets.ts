@@ -306,9 +306,10 @@ function generateDrumMeasure(
       pendingRestDuration += durationPerSubdivision;
     } else {
       flushRest();
-      instruments.forEach((instrument, idx) => {
+      for (let idx = 0; idx < instruments.length; idx++) {
+        const instrument = instruments[idx];
         const drumInfo = DRUM_MIDI_MAP[instrument];
-        if (!drumInfo) return;
+        if (!drumInfo) continue;
 
         notes += `
         <note${idx > 0 ? '><chord/' : ''}>
@@ -321,7 +322,7 @@ function generateDrumMeasure(
           <type>${subNoteType}</type>
           ${drumInfo.notehead ? `<notehead>${drumInfo.notehead}</notehead>` : ''}
         </note>`;
-      });
+      }
     }
   }
 

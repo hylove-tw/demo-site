@@ -264,7 +264,7 @@ export function StemMixer({
         stopSources();
         const startAt = ctx.currentTime + 0.05;
         startTimeRef.current = startAt - offset;
-        let ended = false;
+        const playback = { ended: false };
 
         for (const [name, buffer] of Object.entries(bufferRefs.current)) {
             if (loopingKeysRef.current.has(name)) {
@@ -278,7 +278,7 @@ export function StemMixer({
                 src.connect(gainRefs.current[name]);
                 src.start(startAt, offset);
                 src.onended = () => {
-                    if (ended) return; ended = true;
+                    if (playback.ended) return; playback.ended = true;
                     sourcesRef.current = [];
                     startOffsetRef.current = 0;
                     setIsPlaying(false); setProgress(0);

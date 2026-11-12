@@ -1,3 +1,4 @@
+import { apiBpm, apiGenre, apiMelody } from './musicCreativeConstants';
 // src/config/analysisMethods.ts
 import { post, ApiError } from '../services/api';
 import { instrumentZh } from './musicCreativeConstants';
@@ -210,16 +211,16 @@ export async function perfumeAnalysis(data: any[][]): Promise<any> {
 
 // 元神音創意平台：腦波影音編碼及播放系統（創意版）
 // 直接呼叫 Rails /api/v2/music（略過 music-gen），payload 需符合 v2 規格：
-// 包在 {"music": {...}} 內、樂器用中文 enum、genre 未設定時不可傳空字串。
+// 包在 {"music": {...}} 內、樂器用中文 enum；未選曲風時使用相容的基礎曲風。
 export async function musicAnalysisCreative(
   data: any[][],
   customParams?: Record<string, any>
 ): Promise<any> {
   const music: Record<string, any> = {
     title: customParams?.title || '未命名的樂譜',
-    bpm: customParams?.bpm || undefined,
-    melody: customParams?.melodyPattern || undefined,
-    genre: customParams?.genre || undefined,
+    bpm: apiBpm(customParams?.bpm, customParams?.genre, customParams?.beat) || undefined,
+    melody: apiMelody(customParams?.melodyPattern, customParams?.genre) || undefined,
+    genre: apiGenre(customParams?.genre),
     musicType: customParams?.musicType || 'emotion',
     recordingTime: customParams?.recordingTime || 5,
     keyCenter: customParams?.keyCenter || 'C',
@@ -248,9 +249,9 @@ export async function dualMusicAnalysisCreative(
 ): Promise<any> {
   const payload = {
     title: customParams?.title || '未命名的樂譜',
-    bpm: customParams?.bpm || 60,
+    bpm: apiBpm(customParams?.bpm, customParams?.genre, customParams?.beat) || 60,
     time_signature: customParams?.time_signature || '4/4',
-    genre: customParams?.genre || '',
+    genre: apiGenre(customParams?.genre),
     musicType: customParams?.musicType || 'emotion',
     keyCenter: customParams?.keyCenter || 'C',
     keyType: customParams?.keyType || 'major',

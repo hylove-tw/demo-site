@@ -198,3 +198,31 @@ describe('remap melody request', () => {
         expect(JSON.parse(fetchMock.mock.calls[1][1].body).remap_melody).toBe(enabled);
     });
 });
+
+describe('explicit base genre in generation payloads', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+    it.each([undefined, '', 'custom', 'soul'])('forwards %s safely in both modes', genre => {
+        const service = loadService('http://music-gen.test');
+        const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ task_id: 't1' }) });
+        global.fetch = fetchMock as any;
+        service.exportMp3({ beforeBrainData: {}, afterBrainData: {}, genre }, jest.fn()).catch(() => {});
+        service.exportDualMp3({ firstBrainData: {}, secondBrainData: {}, genre }, jest.fn()).catch(() => {});
+        for (const [, init] of fetchMock.mock.calls) {
+            expect(JSON.parse(init.body).genre).toBe(genre === 'soul' ? 'soul' : 'chacha');
+        }
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+});
+
+it('repairs saved soul tempo and melody for both generation paths', () => {
+    jest.useFakeTimers();
+    const service = loadService('http://music-gen.test');
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ task_id: 't1' }) });
+    global.fetch = fetchMock as any;
+    service.exportMp3({ beforeBrainData: {}, afterBrainData: {}, genre: 'soul', beat: 'soul', bpm: 30, melodyPattern: 2 }, jest.fn()).catch(() => {});
+    service.exportDualMp3({ firstBrainData: {}, secondBrainData: {}, genre: 'soul', beat: 'soul', bpm: 30, melodyPattern: 2 }, jest.fn()).catch(() => {});
+    for (const [, init] of fetchMock.mock.calls) expect(JSON.parse(init.body)).toEqual(expect.objectContaining({ bpm: 40, melody: 1, rhythm_preset: 'ballad' }));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+});

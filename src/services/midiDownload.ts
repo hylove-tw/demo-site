@@ -41,7 +41,8 @@ export function filenameFromContentDisposition(header: string | null | undefined
 }
 
 function fallbackMidiName(name: string): string {
-  const cleaned = name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleaned = Array.from(name, ch => ch.charCodeAt(0) < 32 ? ' ' : ch).join('')
+    .replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim();
   const base = cleaned || 'music';
   return base.toLowerCase().endsWith('.mid') ? base : `${base}.mid`;
 }

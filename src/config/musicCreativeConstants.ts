@@ -75,11 +75,7 @@ export const GENRES: Genre[] = [
   // waltz"），大提琴/低音提琴墊底；鋼琴獨奏華爾滋（蕭邦等）本身也是經典
   // 形式，中音部用鋼琴有直接先例。
   { id: 'waltz', nameZh: '華爾滋', nameEn: 'Waltz', description: '優雅三拍子社交舞，重音在第一拍', bpmRange: [80, 110], timeSignature: '3/4', beatPattern: '重-輕-輕', defaultInstruments: { p1: 'violin', p2: 'piano', p3: 'cello' } },
-  // bpmRange aligned to the 'ballad' preset it now maps to (see
-  // GENRE_BEAT_MAP) — full overlap, but this is a compromise, not a real
-  // fix: 30-60 was the actually-intended soul tempo, and ballad's [60,80]
-  // is the closest existing preset, not a soul-tuned one. See
-  // docs/knowledge/preset-bpm-range-mismatch.md for why.
+  // soul API 30–60 ∩ 4/4 ballad preset 40–80。只用 4/4 主旋律，避免拍號 fallback。
   //
   // nameZh 從「靈魂」改成「靈魂樂」：台灣的用法（zh-tw 維基百科詞條即為
   // 「靈魂樂」）一律帶「樂」字，光說「靈魂」在中文裡是通用詞、容易誤解成
@@ -89,12 +85,12 @@ export const GENRES: Genre[] = [
   // 鋼琴/電風琴 + 貝斯，清單裡沒有銅管或電風琴，薩克斯風是最接近的管樂
   // 替代。人聲也是合理選項（靈魂樂本質是主唱帶動），但這裡優先選有明確
   // 樂器編制證據的薩克斯風。
-  { id: 'soul', nameZh: '靈魂樂', nameEn: 'Soul', description: '福音與藍調融合，唱腔濃烈有感染力', bpmRange: [60, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
+  { id: 'soul', nameZh: '靈魂樂', nameEn: 'Soul', description: '福音與藍調融合，唱腔濃烈有感染力', bpmRange: [40, 60], timeSignature: '4/4', beatPattern: '重-輕-輕-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
   // bpmRange aligned to the 'lofi' preset (see BEAT_TO_PRESET['jazz']).
   //
   // defaultInstruments：經典藍調是吉他/口琴領奏、鋼琴、貝斯；清單沒有口琴，
   // 吉他本身就是藍調另一個主奏聲部，直接頂上。
-  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', description: '慢板社交舞曲，深情內斂的擁舞節奏', bpmRange: [70, 90], timeSignature: '4/4', beatPattern: '重-輕-輕-輕', defaultInstruments: { p1: 'guitar', p2: 'piano', p3: 'bass' } },
+  { id: 'blues', nameZh: '布魯斯', nameEn: 'Blues', description: '慢板社交舞曲，深情內斂的擁舞節奏', bpmRange: [70, 80], timeSignature: '4/4', beatPattern: '重-輕-輕-輕', defaultInstruments: { p1: 'guitar', p2: 'piano', p3: 'bass' } },
   // defaultInstruments：探戈管絃樂團（orquesta típica）以班多鈕手風琴
   // 領奏，清單沒有這項樂器，小提琴是編制裡另一個主奏聲部，直接頂上；
   // 鋼琴、貝斯都是原編制直接有的樂器。
@@ -110,14 +106,14 @@ export const GENRES: Genre[] = [
   // defaultInstruments：吉魯巴源自搖擺樂（big band swing），編制是薩克斯
   // 風/銅管領奏 + 吉他/鋼琴/貝斯節奏組——薩克斯風、鋼琴、貝斯都是原編制
   // 直接有的樂器。
-  { id: 'giliba', nameZh: '吉魯巴', nameEn: 'Jitterbug', description: '台灣社交舞快舞代表，源自搖擺舞吉特巴', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
+  { id: 'giliba', nameZh: '吉魯巴', nameEn: 'Jitterbug', description: '台灣社交舞快舞代表，源自搖擺舞吉特巴', bpmRange: [90, 120], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
   // defaultInstruments：社交舞倫巴的樂團編制融合大樂團銅管（小號/薩克斯風/
   // 長號）與古巴節奏組，薩克斯風是清單裡最接近的管樂，鋼琴、貝斯直接對應。
   { id: 'rumba', nameZh: '倫巴', nameEn: 'Rumba', description: '「愛情之舞」，慢板古巴律動、浪漫搖擺', bpmRange: [80, 100], timeSignature: '4/4', beatPattern: '重-輕-輕-重-重', defaultInstruments: { p1: 'saxophone', p2: 'piano', p3: 'bass' } },
   // defaultInstruments：迪斯可經典聲響是管樂/弦樂鋪底 + 電吉他節奏刷弦 +
   // 貝斯（常是整首歌最搶戲的聲部）；薩克斯風代表管樂層，電吉他明確對應
   // 節奏吉他，貝斯直接對應。
-  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', description: '70 年代舞廳勁曲，四四拍強烈律動', bpmRange: [90, 140], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'electric guitar', p3: 'bass' } },
+  { id: 'disco', nameZh: '迪斯可', nameEn: 'Disco', description: '70 年代舞廳勁曲，四四拍強烈律動', bpmRange: [90, 120], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'saxophone', p2: 'electric guitar', p3: 'bass' } },
   // bpmRange aligned to 'basic_pop' (see GENRE_BEAT_MAP.twist -> 'rock').
   //
   // defaultInstruments：1960 年代扭扭舞金曲（如 Chubby Checker〈The
@@ -136,14 +132,14 @@ export const GENRES: Genre[] = [
   //
   // defaultInstruments：經典搖滾四件式編制是主奏/節奏電吉他 + 貝斯 + 鼓，
   // 鍵盤/風琴是常見加入的第四聲部；電吉他、鋼琴（代鍵盤）、貝斯都直接對應。
-  { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', description: '強勁鼓點與電吉他，熱血奔放', bpmRange: [90, 130], timeSignature: '2/4', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'electric guitar', p2: 'piano', p3: 'bass' } },
+  { id: 'rock', nameZh: '搖滾', nameEn: 'Rock', description: '強勁鼓點與電吉他，熱血奔放', bpmRange: [90, 120], timeSignature: '2/4', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'electric guitar', p2: 'piano', p3: 'bass' } },
   // bpmRange aligned to 'basic_pop' (see BEAT_TO_PRESET['country']).
   //
   // defaultInstruments：鄉村樂的旋律聲部經典上是小提琴（鄉村小提琴/fiddle）
   // ，木吉他是節奏與和聲的基礎聲部，貝斯（原本常是低音提琴）墊底——三個都
   // 是清單裡的樂器直接對應，不用替代。班鳩琴/踏板鋼棒吉他清單沒有，是唯一
   // 真正缺席的部分。
-  { id: 'country', nameZh: '鄉村', nameEn: 'Country', description: '美式鄉村曲風，樸實敘事、輕快自在', bpmRange: [90, 130], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'violin', p2: 'guitar', p3: 'bass' } },
+  { id: 'country', nameZh: '鄉村', nameEn: 'Country', description: '美式鄉村曲風，樸實敘事、輕快自在', bpmRange: [90, 100], timeSignature: '4/8', beatPattern: '重-輕-重-輕', defaultInstruments: { p1: 'violin', p2: 'guitar', p3: 'bass' } },
   // bpmRange aligned to 'compound_ballad' — only valid after narrowing
   // GENRE_MELODY_COMPATIBILITY.quick_waltz (removed melody 4) so it always
   // resolves to this one preset instead of switching by melody.
@@ -321,7 +317,8 @@ export const GENRE_MELODY_COMPATIBILITY: Record<string, Set<number>> = {
   // 落到跟 waltz 其餘主旋律不同的 preset，讓 bpmRange 沒有單一交集可言。
   // 拿掉後 waltz 穩定落在 gentle_waltz，見 GENRES.waltz 的 bpmRange。
   waltz:        new Set([3, 4, 6]),
-  soul:         new Set([1, 2, 3, 4, 8, 9]),
+  // 其餘 soul 旋律拍號會使 ballad fallback，preset 的 BPM 不再涵蓋 40–60。
+  soul:         new Set([1]),
   blues:        new Set([1, 5, 8]),
   tango:        new Set([1, 5]),
   giliba:       new Set([2, 5, 9]),
@@ -544,4 +541,23 @@ export function transposeManyToNames(
   keyCenter: string,
 ): string[] {
   return diatonicValues.map((v) => getChromaticNoteName(transposeNote(v, keyCenter)));
+}
+
+// Empty/custom means a manual combination; chacha accepts all BPMs and melodies upstream.
+export function apiGenre(genre?: string): string {
+  return !genre || genre === 'custom' ? 'chacha' : genre;
+}
+
+// Old saved parameters can predate the current limits. Match the displayed
+// bounds before submitting, including rhythm-only styles that borrow chacha.
+export function apiBpm(bpm: number | undefined, genre?: string, beat?: string): number | undefined {
+  if (bpm == null) return bpm;
+  const style = RHYTHM_ONLY_STYLES.find(s => s.beat === beat);
+  const range = style?.bpmRange ?? GENRES.find(g => g.id === genre)?.bpmRange;
+  return range ? Math.min(Math.max(bpm, range[0]), range[1]) : bpm;
+}
+
+// Historical soul selections may use a meter that forces an incompatible preset.
+export function apiMelody(melody: number | undefined, genre?: string): number | undefined {
+  return genre === 'soul' ? 1 : melody;
 }

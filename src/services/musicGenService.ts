@@ -1,3 +1,4 @@
+import { apiBpm, apiGenre, apiMelody } from '../config/musicCreativeConstants';
 import { MUSIC_GEN_URL } from '../config/apiBase';
 import { timeSignatureForMelody } from '../config/musicCreativeConstants';
 import { resolveMidiUrl } from './midiDownload';
@@ -32,7 +33,7 @@ const BEAT_TO_PRESET: Record<string, string> = {
   // rnb's [75,100] used to leave a quarter of blues' range dead.
   jazz:         'lofi',
   // soul had no dedicated preset and borrowed bossa_nova (zero overlap with
-  // its own tempo range). ballad's [60,80] isn't soul-tuned either — this is
+  // its own tempo range). ballad's [40,80] isn't soul-tuned either — this is
   // the closest available compromise, not a real fix. See
   // docs/knowledge/preset-bpm-range-mismatch.md.
   soul:         'ballad',
@@ -298,14 +299,14 @@ export async function exportMp3(
     throw new Error('REACT_APP_MUSIC_GEN_URL is not configured');
   }
 
-  const melody = params.melodyPattern || 1;
+  const melody = apiMelody(params.melodyPattern, params.genre) || 1;
   // The meter follows the melody pattern; the server derives it the same way and
   // ignores any time_signature we send, so sending one only invites drift.
   const rhythmPreset = resolveRhythmPreset(params.beat, timeSignatureForMelody(melody));
 
   const payload = {
     title:               params.title || '未命名的樂譜',
-    bpm:                 params.bpm || 60,
+    bpm:                 apiBpm(params.bpm, params.genre, params.beat) || 60,
     p1:                  params.p1 || 'piano',
     p2:                  params.p2 || 'piano',
     p3:                  params.p3 || 'piano',
@@ -316,7 +317,7 @@ export async function exportMp3(
     key_type:            params.keyType || 'major',
     melody,
     remap_melody:        params.remapMelody ?? false,
-    genre:               params.genre || '',
+    genre:               apiGenre(params.genre),
     brainwave_frequency: params.brainwaveFrequency ?? null,
     nature_sound:        params.natureSound || 'none',
     rhythm_preset:       rhythmPreset,
@@ -352,12 +353,12 @@ export async function exportDualMp3(
   if (!MUSIC_GEN_URL) {
     throw new Error('REACT_APP_MUSIC_GEN_URL is not configured');
   }
-  const melody = params.melodyPattern || 1;
+  const melody = apiMelody(params.melodyPattern, params.genre) || 1;
   const rhythmPreset = resolveRhythmPreset(params.beat, timeSignatureForMelody(melody));
 
   const payload = {
     title:                params.title || '未命名的樂譜',
-    bpm:                  params.bpm || 60,
+    bpm:                  apiBpm(params.bpm, params.genre, params.beat) || 60,
     // Dual mode never forwarded this, so every duet was generated as melody 1
     // whatever the user picked, and the meter followed from that.
     melody,
@@ -374,7 +375,7 @@ export async function exportDualMp3(
     recording_time:       params.recordingTime || 5,
     key_center:           params.keyCenter || 'C',
     key_type:             params.keyType || 'major',
-    genre:                params.genre || '',
+    genre:                apiGenre(params.genre),
     brainwave_frequency:  params.brainwaveFrequency ?? null,
     nature_sound:         params.natureSound || 'none',
     rhythm_preset:        rhythmPreset,

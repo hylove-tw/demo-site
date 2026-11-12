@@ -488,7 +488,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
         };
         // Re-render once the task id arrives: only then can the server-rendered
         // score be fetched, and until it does we are drawing the upstream copy.
-    }, [processedXML, exportState.taskId]);
+    }, [processedXML, exportState.taskId, appliedParams.beat, appliedParams.melodyPattern]);
 
     // 工具列：播放 MP3
 
@@ -518,7 +518,7 @@ const MusicReportEditor: React.FC<MusicReportEditorProps> = ({
                 svg { width:100% !important; height:auto !important; display:block }
                 @media print { body { padding:0 } }
             </style></head><body>${svgContent}
-            <script>window.onload=function(){setTimeout(function(){window.print();window.close();},400)}<\/script>
+            <script>window.onload=function(){setTimeout(function(){window.print();window.close();},400)}</script>
         </body></html>`);
         win.document.close();
     }, [scorePages, appliedParams.title]);

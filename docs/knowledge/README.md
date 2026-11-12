@@ -16,7 +16,7 @@ frontmatter**（`title` / `keywords` / `dateModified`），沒有 JSON-LD、
 | 條目 | 摘要 |
 |---|---|
 | [`preset-id-key-mismatch`](entries/preset-id-key-mismatch.md) | preset 的 id 字串要跟查表用的 key 完全一致，否則查表落空會靜默 fallback，沒有任何錯誤訊息。目前有三次真實發作：對照表拼法不一致（整個節奏選不到）、呼叫端誤用 `style.id` 而非 `style.beat`（試聽按鈕消失）——同一通則，不同位置。 |
-| [`preset-bpm-range-mismatch`](entries/preset-bpm-range-mismatch.md) | 前端滑桿的 `bpmRange` 要跟後端 preset YAML 的 `bpm_range` 對齊，否則超出範圍的值會被後端靜默夾掉。reggae/disco/tango/blues/country 已對齊，soul 是妥協而非真正修好（誠實記錄了限制），waltz/quick_waltz/rock/twist/chacha/giliba 仍未處理。 |
+| [`preset-bpm-range-mismatch`](entries/preset-bpm-range-mismatch.md) | 前端滑桿的 `bpmRange` 要跟後端 preset YAML 的 `bpm_range` 對齊，否則超出範圍的值會被後端靜默夾掉。前端也須符合上游作曲 API 的曲風限制；soul 採 40–60 及 4/4 主旋律，以避免 ballad 夾值和拍號 fallback。 |
 | [`bundle-verification-unicode-escaping`](entries/bundle-verification-unicode-escaping.md) | 驗證 CRA build 產物是否對應特定原始碼時，字面 grep 中文字串必然找不到（CRA 把非 ASCII 轉義成 `\uXXXX`），用 diff 的新增行抽驗字串也不可靠；決定性做法是清快取重建後比對 bundle 的 hash/md5。 |
 | [`shared-logic-across-ui-paths`](entries/shared-logic-across-ui-paths.md) | 同一段「選了某選項該套用什麼參數」的邏輯，如果分別寫在兩個平行的 UI 路徑（例如卡片版跟下拉選單版）裡，遲早會 drift——要抽成共用 helper，讓兩邊呼叫同一份實作。 |
 | [`independent-beat-override-drift`](entries/independent-beat-override-drift.md) | 同一個欄位（`beat`）如果有第二個獨立的寫入入口（跳過主要決策路徑），遲早會跟綁定的其他欄位（`genre`、`accompaniment`）脫鉤；森巴顯示「流行」＋伴奏設定跨節奏殘留就是同一個根因的兩種下游表現。收斂成單一入口後，入口內每條分支是否都清乾淨舊狀態仍要逐一檢查。 |

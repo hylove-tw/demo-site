@@ -499,7 +499,6 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
     // "自訂": no genre backs the current melody/rhythm — both are picked by
     // hand instead of following a genre's defaults.
     const isCustom = selectedGenre === CUSTOM_GENRE_ID;
-    const genreKey = isCustom ? undefined : selectedGenre;
     const activeOption = activeOptionFor(value);
 
     const availableGenres: Genre[] =
@@ -810,6 +809,8 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                 )}
 
                 {genreDetail}
+                {selectedGenre === 'soul' && <p className="text-xs text-base-content/70">靈魂樂使用 40–60 BPM 與 4/4 主旋律 1，以配合伴奏速度；舊設定的其他主旋律會在生成時改為主旋律 1。</p>}
+                {(!selectedGenre || isCustom) && <p className="text-xs text-base-content/70">未選曲風或使用自訂時，作曲會使用恰恰作為基礎曲風；主旋律與節奏仍可自行設定。</p>}
                 {customPanel}
             </Section>
 
@@ -819,7 +820,7 @@ export const CompositionParamsForm: React.FC<CompositionParamsFormProps> = ({
                         onChange={(e) => set('remapMelody', e.target.checked)} />
                     <span>旋律音級重新對應（實驗性）</span>
                 </label>
-                <p className="text-xs opacity-70">開啟後將高音旋律向下移三個音級；原始分析預覽不會套用，生成後的樂譜、MIDI 與音訊才會反映。</p>
+                <p className="text-xs opacity-70">開啟後逐聲部判斷：第 4 級音符數量多於主音時，該聲部才向下對應三個音級，其餘保持原樣。原始分析預覽不會套用，生成後的樂譜、MIDI 與音訊才會反映結果。</p>
             </Section>
 
             <CollapseSection compact={compact} title="節奏與調性" defaultOpen={compact}

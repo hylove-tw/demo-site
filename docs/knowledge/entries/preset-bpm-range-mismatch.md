@@ -6,6 +6,9 @@ dateModified: 2026-08-23
 
 # 前端 bpmRange 要跟後端 preset 的合法範圍對齊，否則靜默夾值
 
+> 2026-11-12 更新：music-gen 的 ballad preset 現為 40–80，soul 作曲 API 為 30–60。前端採用交集 40–60 和 4/4 主旋律 1；其他 soul 旋律可能因拍號 fallback 到不同 preset，該 preset 的下限可能超過 60。舊設定在送出時同樣調整。music-gen 根據實際樂譜拍號與 tempo 決定 preset 和渲染速度；若上游回傳的樂譜與預期不同，仍可能發生 fallback 或夾值，不能保證所有上游結果一致。未選或自訂曲風時明確送 chacha，避免上游自選不相容曲風。
+
+
 跟 [preset-id-key-mismatch](preset-id-key-mismatch.md) 是同一種「兩處
 各自維護、沒對齊」的模式，但這次落差的不是識別碼拼法，是**數值範圍**。
 
@@ -52,7 +55,9 @@ preset YAML 裡，前端的 `bpmRange` 是憑經驗／感覺訂的，兩邊從�
 `~/hylove/coordination/knowledge/entries/genre-to-preset-pipeline.md`
 （那份有完整的落差表跟「dead fraction」數字，這裡不重複貼）。
 
-## 2026-08-23 更新：soul／tango／blues／country 已處理，仍留 5 個未處理
+## 2026-08-23 歷史紀錄：soul／tango／blues／country
+
+以下為當時的設定，現況以本文頂部更新為準。
 
 musicgen 評估後，這 4 個曲風各自換了不同的處理方式（都是在既有 preset
 之間重新分配，沒有新增素材）：

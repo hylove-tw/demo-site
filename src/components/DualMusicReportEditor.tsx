@@ -520,7 +520,7 @@ const DualMusicReportEditor: React.FC<DualMusicReportEditorProps> = ({
                 svg { width:100% !important; height:auto !important; display:block }
                 @media print { body { padding:0 } }
             </style></head><body>${svgContent}
-            <script>window.onload=function(){setTimeout(function(){window.print();window.close();},400)}<\/script>
+            <script>window.onload=function(){setTimeout(function(){window.print();window.close();},400)}</script>
         </body></html>`);
         win.document.close();
     }, [scorePages, appliedParams.title]);
