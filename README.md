@@ -101,11 +101,14 @@ npm run test:e2e
 
 ### 部署拓撲總覽
 
+> ⚠️ **公開站 `hylove.good-nas.cc` 由 Cloudflare Worker `hylove-demo` 提供前端，不是 weifan-ubuntu 的 nginx。** 每次前端發版都必須另外部署這個 Worker，詳見 [docs/deploy/public-worker.md](docs/deploy/public-worker.md)。只更新 `~/hylove-build` 或清快取，公開站不會換版。
+
 API 位址跟著頁面的 hostname 走，**不必為了換主機重新 build**。`PUBLIC_URL` 仍是 build 時寫死的資源路徑前綴（根路徑 `/` 與子路徑 `/demo/` 不能共用同一份 build）：
 
 | 平台 | 網址 | 檔案位置 | 更新方式 |
 |---|---|---|---|
-| weifan-ubuntu | `https://hylove.good-nas.cc/` | `/home/weifan/hylove-build` | 本機 `npm run build` 後放到該路徑，由 `music-gen-nginx-1` 容器唯讀掛載（`root /`，非 `/demo/`） |
+| **公開站** Cloudflare Worker `hylove-demo` | `https://hylove.good-nas.cc/`、`https://hylove-staging.good-nas.cc/` | Worker static assets（根路徑 build） | `npx wrangler@4 deploy --config cloudflare/wrangler.jsonc`，見 [公開站部署手冊](docs/deploy/public-worker.md) |
+| weifan-ubuntu（origin，不是公開站） | `https://hylove-origin.good-nas.cc/`（Access service token） | `/home/weifan/hylove-build` | 本機 `PUBLIC_URL=/ npm run build` 後放到該路徑，由 `music-gen-nginx-1` 容器唯讀掛載（`root /`，非 `/demo/`）；公開站的 `/api/*` 經由這裡 |
 | 台灣 VPS | `http://172.105.230.72/demo/` | `/var/www/hylove-demo` | 見下方「VPS 部署」 |
 | 中國 阿里雲 | `http://8.138.157.218:8080/demo/` | `staging_hylove/current/public/demo/` | 需經 weifan-ubuntu 跳板轉送（本機無金鑰） |
 

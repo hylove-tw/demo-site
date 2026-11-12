@@ -1,0 +1,48 @@
+// 公開站 hylove.good-nas.cc / hylove-staging.good-nas.cc 的 Cloudflare Worker 設定。
+// 部署手冊：docs/deploy/public-worker.md
+//
+// 這份設定重現 2026-11-12 線上 hylove-demo Worker（version da904937）的狀態。
+// 從 repo 根目錄執行：npx wrangler@4 deploy --config cloudflare/wrangler.jsonc
+//
+// 密鑰（CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET）已經存在 Worker 上，
+// 不寫在這裡、也絕對不要 commit。wrangler deploy 不會刪除沒列在設定檔裡的 secret。
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "hylove-demo",
+  "account_id": "e66ebb93a7088681360856ab5a07b30a",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-10-01",
+
+  // 只走 Custom Domain，不開 workers.dev 與 Preview URL（線上目前都是關閉的）。
+  // 省略這兩項時 wrangler 可能把 workers.dev 打開，造成繞過 Access 的入口。
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "hylove.good-nas.cc", "custom_domain": true },
+    { "pattern": "hylove-staging.good-nas.cc", "custom_domain": true }
+  ],
+
+  // 根路徑（PUBLIC_URL=/）的 React build。路徑相對於本檔案，也就是 repo 根目錄的 build/。
+  // 絕對不能放 /demo/ 子路徑的 build（台灣 VPS／中國用的那份）。
+  "assets": {
+    "directory": "../build",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false
+    }
+  }
+}
